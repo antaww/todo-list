@@ -1,117 +1,37 @@
+<!-- Composant principal de la todo list -->
 <script lang="ts">
-  import { flip } from 'svelte/animate';
-  import { fade } from 'svelte/transition';
   import { onMount, onDestroy } from 'svelte';
+  import { fade } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
   import type { RealtimeChannel } from '@supabase/supabase-js';
-  import { Trash2, ArrowUp, ArrowDown, Edit2 } from 'lucide-svelte';
+  import { todosStore } from './stores/todos';
+  import { listStore } from './stores/list';
   import { supabase } from './supabase';
-  import type { Todo } from './types';
+  import Card from './components/ui/Card.svelte';
+  import TodoItem from './components/TodoItem.svelte';
+  import TodoForm from './components/TodoForm.svelte';
+  import TodoHeader from './components/TodoHeader.svelte';
 
   export let listId: string;
   
-  let todos: Todo[] = [];
-  let newTodoTitle = '';
-  let loading = true;
-  let error: string | null = null;
   let subscription: RealtimeChannel | null = null;
-  let listTitle = '';
-  let titleInput: HTMLElement;
   let pollingInterval: number | null = null;
-  let isEditingTitle = false;
-  let editingTodoId: string | null = null;
-  let editingTodoTitle = '';
 
-  // Computed properties
-  $: activeTodos = todos
+  $: activeTodos = $todosStore.items
     .filter(t => !t.completed)
     .sort((a, b) => a.order - b.order);
   
-  $: completedTodos = todos
+  $: completedTodos = $todosStore.items
     .filter(t => t.completed)
     .sort((a, b) => a.order - b.order);
 
   $: {
-    if (listTitle && listTitle !== 'Untitled List') {
-      document.title = `${listTitle} - Todolist Realtime`;
+    if ($listStore.title && $listStore.title !== 'Untitled List') {
+      document.title = `${$listStore.title} - Todolist Realtime`;
     } else {
       document.title = 'Todolist Realtime';
     }
   }
-
-  // Fonction pour mettre à jour l'ordre des tâches
-  async function updateTodosOrder(items: Todo[]) {
-    try {
-      const updates = items.map((todo, index) => ({
-        id: todo.id,
-        order: index,
-        title: todo.title,
-        completed: todo.completed,
-        list_id: todo.list_id
-      }));
-
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .upsert(updates);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to update todo order';
-      await loadTodos();
-    }
-  }
-
-  async function toggleTodo(todo: Todo) {
-    const newCompleted = !todo.completed;
-    const newOrder = newCompleted ? completedTodos.length : activeTodos.length;
-    
-    // Mise à jour immédiate du front avec transition
-    const newTodos = [...todos];
-    const todoIndex = newTodos.findIndex(t => t.id === todo.id);
-    if (todoIndex !== -1) {
-      newTodos[todoIndex] = {
-        ...newTodos[todoIndex],
-        completed: newCompleted,
-        order: newOrder
-      };
-      todos = newTodos;
-    }
-
-    try {
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .update({ 
-          completed: newCompleted,
-          order: newOrder
-        })
-        .eq('id', todo.id);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to update todo';
-      await loadTodos(); // Revert en cas d'erreur
-    }
-  }
-
-  function handleTitleClick() {
-    titleInput?.focus();
-  }
-
-  function handleTitleBlur() {
-    isEditingTitle = false;
-    if (listTitle.trim() !== '') {
-      updateListTitle();
-    }
-  }
-
-  function handleTitleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      titleInput?.blur();
-    }
-  }
-
-  let retryCount = 0;
-  const MAX_RETRIES = 3;
 
   async function setupRealtimeSubscription() {
     try {
@@ -119,7 +39,6 @@
         await subscription.unsubscribe();
       }
 
-      // Canal pour les todos
       const todosChannel = supabase.channel('todos-changes')
         .on(
           'postgres_changes',
@@ -130,11 +49,10 @@
             filter: `list_id=eq.${listId}`
           },
           async () => {
-            await loadTodos();
+            await todosStore.load(listId);
           }
         );
 
-      // Canal pour les listes
       const listsChannel = supabase.channel('lists-changes')
         .on(
           'postgres_changes',
@@ -145,199 +63,60 @@
             filter: `id=eq.${listId}`
           },
           async () => {
-            await loadListTitle();
+            await listStore.initialize(listId);
           }
         );
 
-      // Souscription aux deux canaux
       await Promise.all([
         todosChannel.subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
-            error = 'Real-time connection error. Please refresh the page.';
+            todosStore.setError('Real-time connection error. Please refresh the page.');
           }
         }),
         listsChannel.subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
-            error = 'Real-time connection error. Please refresh the page.';
+            listStore.setError('Real-time connection error. Please refresh the page.');
           }
         })
       ]);
 
-      // Sauvegarder les références pour le nettoyage
       subscription = todosChannel;
     } catch (e: unknown) {
-      error = 'Failed to set up real-time updates. Please refresh the page.';
-    }
-  }
-
-  async function loadListTitle() {
-    try {
-      // Ne pas mettre à jour le titre pendant l'édition
-      if (isEditingTitle) return;
-
-      const { data, error: supabaseError } = await supabase
-        .from('lists')
-        .select('title')
-        .eq('id', listId)
-        .single();
-
-      if (supabaseError) {
-        if (supabaseError.code === '42P01') {
-          listTitle = 'Untitled List';
-          return;
-        }
-        throw supabaseError;
-      }
-      listTitle = data?.title || 'Untitled List';
-    } catch (e) {
-      listTitle = 'Untitled List';
-    }
-  }
-
-  async function updateListTitle() {
-    if (!listTitle.trim()) {
-      listTitle = 'Untitled List';
-      return;
-    }
-
-    try {
-      // Vérifier d'abord si la liste existe
-      const { data: currentData } = await supabase
-        .from('lists')
-        .select('title')
-        .eq('id', listId)
-        .single();
-
-      if (!currentData) {
-        // Si la liste n'existe pas, la créer
-        const { error: insertError } = await supabase
-          .from('lists')
-          .insert([{
-            id: listId,
-            title: listTitle.trim()
-          }]);
-
-        if (insertError) throw insertError;
-        return;
-      }
-
-      // Si le titre est le même, ne rien faire
-      if (currentData.title === listTitle.trim()) {
-        return;
-      }
-
-      // Si le titre a changé, faire la mise à jour
-      const { error: updateError } = await supabase
-        .from('lists')
-        .update({ title: listTitle.trim() })
-        .eq('id', listId);
-
-      if (updateError) throw updateError;
-    } catch (e) {
-      error = 'Failed to update list title';
-    }
-  }
-
-  async function ensureListsTableExists() {
-    try {
-      // Vérifier si la table existe déjà
-      const { error: checkError } = await supabase
-        .from('lists')
-        .select('id')
-        .limit(1);
-
-      // Si pas d'erreur, la table existe déjà
-      if (!checkError) return;
-
-      // Si la table n'existe pas, la créer directement via SQL
-      const { error: createError } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          CREATE TABLE IF NOT EXISTS lists (
-            id text PRIMARY KEY,
-            title text NOT NULL DEFAULT 'Untitled List',
-            created_at timestamptz DEFAULT now()
-          );
-          
-          ALTER TABLE lists ENABLE ROW LEVEL SECURITY;
-          
-          CREATE POLICY "Allow public access on lists"
-            ON lists
-            FOR ALL
-            TO public
-            USING (true)
-            WITH CHECK (true);
-        `
-      });
-
-      if (createError) {
-        throw new Error('Failed to create lists table');
-      }
-    } catch (e) {
-      throw new Error('Failed to ensure lists table exists');
-    }
-  }
-
-  async function initializeApp() {
-    try {
-      loading = true;
-      error = null;
-
-      const { error: testError } = await supabase
-        .from('todos')
-        .select('count', { count: 'exact', head: true });
-
-      if (testError) {
-        throw new Error('Database connection failed');
-      }
-      
-      await ensureListsTableExists();
-
-      // Vérifier si la liste existe et la créer si nécessaire
-      const { data: listData } = await supabase
-        .from('lists')
-        .select('id')
-        .eq('id', listId)
-        .single();
-
-      if (!listData) {
-        const { error: insertError } = await supabase
-          .from('lists')
-          .insert([{
-            id: listId,
-            title: 'Untitled List'
-          }]);
-
-        if (insertError) throw insertError;
-      }
-
-      await Promise.all([loadTodos(), loadListTitle()]);
-      await setupRealtimeSubscription();
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'An error occurred while initializing';
-    } finally {
-      loading = false;
+      todosStore.setError('Failed to set up real-time updates. Please refresh the page.');
     }
   }
 
   async function startPolling() {
-    // Arrêter l'ancien intervalle si existant
     if (pollingInterval) {
       clearInterval(pollingInterval);
     }
 
-    // Créer un nouvel intervalle
     pollingInterval = setInterval(async () => {
       try {
-        await Promise.all([loadTodos(), loadListTitle()]);
+        await Promise.all([
+          todosStore.load(listId),
+          listStore.initialize(listId)
+        ]);
       } catch (e) {
         console.error('Polling error:', e);
       }
     }, 1000) as unknown as number;
   }
 
-  onMount(() => {
-    initializeApp();
+  onMount(async () => {
+    todosStore.setLoading(true);
+    listStore.setLoading(true);
+
+    await Promise.all([
+      listStore.initialize(listId),
+      todosStore.load(listId)
+    ]);
+
+    await setupRealtimeSubscription();
     startPolling();
+
+    todosStore.setLoading(false);
+    listStore.setLoading(false);
   });
 
   onDestroy(() => {
@@ -350,252 +129,19 @@
       clearInterval(pollingInterval);
     }
   });
-
-  async function loadTodos() {
-    try {
-      const { data, error: supabaseError } = await supabase
-        .from('todos')
-        .select('*')
-        .eq('list_id', listId)
-        .order('order');
-      
-      if (supabaseError) throw supabaseError;
-      
-      todos = data || [];
-    } catch (e) {
-      throw new Error('Failed to load todos');
-    }
-  }
-
-  async function addTodo() {
-    if (!newTodoTitle.trim()) return;
-
-    // Création d'un ID temporaire unique
-    const tempId = 'temp_' + Date.now();
-    
-    // Ajout immédiat au front
-    const newTodo: Todo = {
-      id: tempId,
-      title: newTodoTitle.trim(),
-      completed: false,
-      order: activeTodos.length,
-      list_id: listId,
-      created_at: new Date().toISOString()
-    };
-
-    todos = [...todos, newTodo];
-    newTodoTitle = '';
-
-    try {
-      // Vérifier si la liste existe déjà
-      const { data: listData } = await supabase
-        .from('lists')
-        .select('id')
-        .eq('id', listId)
-        .single();
-
-      // Si la liste n'existe pas, la créer
-      if (!listData) {
-        const { error: listError } = await supabase
-          .from('lists')
-          .insert([{
-            id: listId,
-            title: listTitle.trim() || 'Untitled List'
-          }]);
-
-        if (listError) throw listError;
-      }
-
-      // Ajouter le todo
-      const { data, error: supabaseError } = await supabase
-        .from('todos')
-        .insert([{
-          title: newTodo.title,
-          completed: newTodo.completed,
-          order: newTodo.order,
-          list_id: newTodo.list_id
-        }])
-        .select();
-
-      if (supabaseError) throw supabaseError;
-      
-      // Mise à jour de l'ID une fois qu'on a la réponse de la DB
-      if (data && data[0]) {
-        todos = todos.map(t => t.id === tempId ? { ...t, id: data[0].id } : t);
-      }
-    } catch (e) {
-      error = 'Failed to add todo';
-      todos = todos.filter(t => t.id !== tempId); // Retirer l'item temporaire en cas d'erreur
-    }
-  }
-
-  async function deleteTodo(todo: Todo) {
-    // Mise à jour immédiate du front
-    todos = todos.filter(t => t.id !== todo.id);
-
-    try {
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .delete()
-        .eq('id', todo.id);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to delete todo';
-      await loadTodos(); // Revert en cas d'erreur
-    }
-  }
-
-  async function moveTodoUp(todo: Todo) {
-    const currentIndex = activeTodos.findIndex(t => t.id === todo.id);
-    if (currentIndex <= 0) return;
-
-    // Mise à jour immédiate du front
-    const newTodos = [...todos];
-    const activeIndex = newTodos.findIndex(t => t.id === todo.id);
-    const prevIndex = newTodos.findIndex(t => t.id === activeTodos[currentIndex - 1].id);
-    
-    const temp = newTodos[prevIndex].order;
-    newTodos[prevIndex].order = newTodos[activeIndex].order;
-    newTodos[activeIndex].order = temp;
-    todos = newTodos;
-
-    try {
-      const updates = [
-        {
-          id: newTodos[activeIndex].id,
-          order: newTodos[activeIndex].order,
-          title: newTodos[activeIndex].title,
-          completed: newTodos[activeIndex].completed,
-          list_id: newTodos[activeIndex].list_id
-        },
-        {
-          id: newTodos[prevIndex].id,
-          order: newTodos[prevIndex].order,
-          title: newTodos[prevIndex].title,
-          completed: newTodos[prevIndex].completed,
-          list_id: newTodos[prevIndex].list_id
-        }
-      ];
-
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .upsert(updates);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to move todo';
-      await loadTodos(); // Revert en cas d'erreur
-    }
-  }
-
-  async function moveTodoDown(todo: Todo) {
-    const currentIndex = activeTodos.findIndex(t => t.id === todo.id);
-    if (currentIndex === -1 || currentIndex === activeTodos.length - 1) return;
-
-    // Mise à jour immédiate du front
-    const newTodos = [...todos];
-    const activeIndex = newTodos.findIndex(t => t.id === todo.id);
-    const nextIndex = newTodos.findIndex(t => t.id === activeTodos[currentIndex + 1].id);
-    
-    const temp = newTodos[nextIndex].order;
-    newTodos[nextIndex].order = newTodos[activeIndex].order;
-    newTodos[activeIndex].order = temp;
-    todos = newTodos;
-
-    try {
-      const updates = [
-        {
-          id: newTodos[activeIndex].id,
-          order: newTodos[activeIndex].order,
-          title: newTodos[activeIndex].title,
-          completed: newTodos[activeIndex].completed,
-          list_id: newTodos[activeIndex].list_id
-        },
-        {
-          id: newTodos[nextIndex].id,
-          order: newTodos[nextIndex].order,
-          title: newTodos[nextIndex].title,
-          completed: newTodos[nextIndex].completed,
-          list_id: newTodos[nextIndex].list_id
-        }
-      ];
-
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .upsert(updates);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to move todo';
-      await loadTodos(); // Revert en cas d'erreur
-    }
-  }
-
-  function handleTitleFocus() {
-    isEditingTitle = true;
-  }
-
-  function startEditingTodo(todo: Todo) {
-    editingTodoId = todo.id;
-    editingTodoTitle = todo.title;
-  }
-
-  function handleTodoKeydown(event: KeyboardEvent, todo: Todo) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      updateTodoTitle(todo);
-    } else if (event.key === 'Escape') {
-      editingTodoId = null;
-    }
-  }
-
-  async function updateTodoTitle(todo: Todo) {
-    if (!editingTodoTitle.trim()) {
-      editingTodoId = null;
-      return;
-    }
-
-    if (editingTodoTitle.trim() === todo.title) {
-      editingTodoId = null;
-      return;
-    }
-
-    // Mise à jour immédiate du front
-    const newTodos = [...todos];
-    const todoIndex = newTodos.findIndex(t => t.id === todo.id);
-    if (todoIndex !== -1) {
-      newTodos[todoIndex] = {
-        ...newTodos[todoIndex],
-        title: editingTodoTitle.trim()
-      };
-      todos = newTodos;
-    }
-
-    try {
-      const { error: supabaseError } = await supabase
-        .from('todos')
-        .update({ title: editingTodoTitle.trim() })
-        .eq('id', todo.id);
-
-      if (supabaseError) throw supabaseError;
-    } catch (e) {
-      error = 'Failed to update todo title';
-      await loadTodos(); // Revert en cas d'erreur
-    } finally {
-      editingTodoId = null;
-    }
-  }
 </script>
 
-<div class="min-h-screen p-4">
-  <div class="max-w-2xl mx-auto backdrop-blur-lg bg-white/20 rounded-xl shadow-xl p-6 border border-white/30">
-    {#if error}
+<div class="min-h-screen p-4 max-w-2xl mx-auto">
+  <Card padding={6}>
+    {#if $todosStore.error || $listStore.error}
       <div class="mb-4 p-4 bg-red-500/30 backdrop-blur-sm text-red-50 rounded-lg border border-red-500/30" transition:fade>
-        {error}
+        {$todosStore.error || $listStore.error}
         <button 
           class="ml-2 font-bold hover:text-white"
-          on:click={() => error = null}
+          on:click={() => {
+            todosStore.setError(null);
+            listStore.setError(null);
+          }}
           aria-label="Dismiss error"
         >
           ×
@@ -603,107 +149,39 @@
       </div>
     {/if}
 
-    <div class="mb-6">
-      <input
-        type="text"
-        bind:value={listTitle}
-        bind:this={titleInput}
-        placeholder="List title..."
-        on:focus={handleTitleFocus}
-        on:blur={handleTitleBlur}
-        on:keydown={handleTitleKeydown}
-        class="w-full px-4 py-2 text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg hover:bg-black/5 transition-colors text-white placeholder-white/80"
-      />
-    </div>
+    <TodoHeader
+      title={$listStore.title}
+      isEditing={$listStore.isEditing}
+      on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
+      on:startEdit={() => listStore.setEditing(true)}
+      on:stopEdit={() => listStore.setEditing(false)}
+    />
 
-    <form 
-      on:submit|preventDefault={addTodo}
-      class="mb-6 flex gap-2"
-    >
-      <input
-        type="text"
-        bind:value={newTodoTitle}
-        placeholder="Add a new todo..."
-        class="flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 bg-black/10 border border-white/30 text-white placeholder-white/80"
-        disabled={loading}
-      />
-      <button
-        type="submit"
-        class="px-4 py-2 bg-white/30 hover:bg-white/40 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed border border-white/30 transition-colors"
-        disabled={loading || !newTodoTitle.trim()}
-      >
-        Add
-      </button>
-    </form>
+    <TodoForm
+      loading={$todosStore.loading}
+      on:add={({ detail }) => todosStore.add(listId, detail)}
+    />
 
-    {#if loading}
+    {#if $todosStore.loading}
       <div class="text-center py-4 text-white font-medium">Loading...</div>
     {:else}
       <section class="space-y-4">
         <div class="space-y-2">
           {#each activeTodos as todo (todo.id)}
-            <div
-              animate:flip={{duration: 300}}
-              transition:fade={{duration: 300}}
-              class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-black/10 rounded-lg border border-white/30 shadow-lg hover:shadow-xl transition-all group"
-            >
-              <div class="flex gap-1">
-                <button
-                  on:click={() => moveTodoUp(todo)}
-                  class="text-white/80 hover:text-white transition-colors"
-                  aria-label="Move todo up"
-                  disabled={activeTodos.indexOf(todo) === 0}
-                >
-                  <ArrowUp size={20} />
-                </button>
-                <button
-                  on:click={() => moveTodoDown(todo)}
-                  class="text-white/80 hover:text-white transition-colors"
-                  aria-label="Move todo down"
-                  disabled={activeTodos.indexOf(todo) === activeTodos.length - 1}
-                >
-                  <ArrowDown size={20} />
-                </button>
-              </div>
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                on:change={() => toggleTodo(todo)}
-                class="w-5 h-5 rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20"
+            <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+              <TodoItem
+                {todo}
+                isEditing={$todosStore.editingId === todo.id}
+                editingTitle={todo.title}
+                isFirst={activeTodos.indexOf(todo) === 0}
+                isLast={activeTodos.indexOf(todo) === activeTodos.length - 1}
+                on:toggle={() => todosStore.toggle(todo)}
+                on:delete={() => todosStore.delete(todo)}
+                on:moveUp={() => todosStore.move(todo, 'up')}
+                on:moveDown={() => todosStore.move(todo, 'down')}
+                on:startEdit={() => todosStore.setEditingId(todo.id)}
+                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
               />
-              {#if editingTodoId === todo.id}
-                <input
-                  type="text"
-                  bind:value={editingTodoTitle}
-                  on:blur={() => updateTodoTitle(todo)}
-                  on:keydown={(e) => handleTodoKeydown(e, todo)}
-                  class="flex-1 px-2 py-1 bg-black/20 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80"
-                  autofocus
-                />
-              {:else}
-                <span 
-                  class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-colors"
-                  on:click={() => startEditingTodo(todo)}
-                >
-                  {todo.title}
-                </span>
-              {/if}
-              <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  on:click={() => startEditingTodo(todo)}
-                  class="text-white/80 hover:text-white transition-colors"
-                  aria-label="Edit todo"
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  on:click={() => deleteTodo(todo)}
-                  class="text-white/80 hover:text-red-300 transition-colors"
-                  aria-label="Delete todo"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
             </div>
           {/each}
         </div>
@@ -713,71 +191,28 @@
           
           <div class="space-y-2">
             {#each completedTodos as todo (todo.id)}
-              <div
-                animate:flip={{duration: 300}}
-                transition:fade={{duration: 300}}
-                class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-black/5 rounded-lg border border-white/20 group"
-              >
-                <div class="w-[68px]"></div>
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  on:change={() => toggleTodo(todo)}
-                  class="w-5 h-5 rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20"
+              <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+                <TodoItem
+                  {todo}
+                  isEditing={$todosStore.editingId === todo.id}
+                  editingTitle={todo.title}
+                  isCompleted={true}
+                  on:toggle={() => todosStore.toggle(todo)}
+                  on:delete={() => todosStore.delete(todo)}
+                  on:startEdit={() => todosStore.setEditingId(todo.id)}
+                  on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                 />
-                {#if editingTodoId === todo.id}
-                  <input
-                    type="text"
-                    bind:value={editingTodoTitle}
-                    on:blur={() => updateTodoTitle(todo)}
-                    on:keydown={(e) => handleTodoKeydown(e, todo)}
-                    class="flex-1 px-2 py-1 bg-black/20 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80"
-                    autofocus
-                  />
-                {:else}
-                  <span 
-                    class="flex-1 text-white/90 font-medium cursor-pointer hover:text-white transition-colors"
-                    on:click={() => startEditingTodo(todo)}
-                  >
-                    {todo.title}
-                  </span>
-                {/if}
-                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    on:click={() => startEditingTodo(todo)}
-                    class="text-white/70 hover:text-white transition-colors"
-                    aria-label="Edit todo"
-                  >
-                    <Edit2 size={20} />
-                  </button>
-                  <button
-                    on:click={() => deleteTodo(todo)}
-                    class="text-white/70 hover:text-red-300 transition-colors"
-                    aria-label="Delete todo"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
               </div>
             {/each}
           </div>
         {/if}
       </section>
     {/if}
-  </div>
+  </Card>
 </div>
 
 <style>
   :global(html) {
     @apply min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 bg-fixed;
-  }
-  
-  input[type="checkbox"] {
-    @apply rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20;
-  }
-
-  /* Ajout d'une transition douce pour l'opacité */
-  :global(.todo-item) {
-    transition: opacity 0.3s ease-in-out;
   }
 </style>
