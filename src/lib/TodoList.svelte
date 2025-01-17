@@ -3,7 +3,7 @@
   import { fade } from 'svelte/transition';
   import { onMount, onDestroy } from 'svelte';
   import type { RealtimeChannel } from '@supabase/supabase-js';
-  import { Trash2, ArrowUp, ArrowDown } from 'lucide-svelte';
+  import { Trash2, ArrowUp, ArrowDown, Edit2 } from 'lucide-svelte';
   import { supabase } from './supabase';
   import type { Todo } from './types';
 
@@ -18,6 +18,8 @@
   let titleInput: HTMLElement;
   let pollingInterval: number | null = null;
   let isEditingTitle = false;
+  let editingTodoId: string | null = null;
+  let editingTodoTitle = '';
 
   // Computed properties
   $: activeTodos = todos
@@ -533,6 +535,57 @@
   function handleTitleFocus() {
     isEditingTitle = true;
   }
+
+  function startEditingTodo(todo: Todo) {
+    editingTodoId = todo.id;
+    editingTodoTitle = todo.title;
+  }
+
+  function handleTodoKeydown(event: KeyboardEvent, todo: Todo) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      updateTodoTitle(todo);
+    } else if (event.key === 'Escape') {
+      editingTodoId = null;
+    }
+  }
+
+  async function updateTodoTitle(todo: Todo) {
+    if (!editingTodoTitle.trim()) {
+      editingTodoId = null;
+      return;
+    }
+
+    if (editingTodoTitle.trim() === todo.title) {
+      editingTodoId = null;
+      return;
+    }
+
+    // Mise à jour immédiate du front
+    const newTodos = [...todos];
+    const todoIndex = newTodos.findIndex(t => t.id === todo.id);
+    if (todoIndex !== -1) {
+      newTodos[todoIndex] = {
+        ...newTodos[todoIndex],
+        title: editingTodoTitle.trim()
+      };
+      todos = newTodos;
+    }
+
+    try {
+      const { error: supabaseError } = await supabase
+        .from('todos')
+        .update({ title: editingTodoTitle.trim() })
+        .eq('id', todo.id);
+
+      if (supabaseError) throw supabaseError;
+    } catch (e) {
+      error = 'Failed to update todo title';
+      await loadTodos(); // Revert en cas d'erreur
+    } finally {
+      editingTodoId = null;
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
@@ -618,16 +671,39 @@
                 on:change={() => toggleTodo(todo)}
                 class="w-5 h-5 rounded border-white/30 text-purple-500 focus:ring-purple-500/50 bg-white/20"
               />
-              <span class="flex-1 text-white">
-                {todo.title}
-              </span>
-              <button
-                on:click={() => deleteTodo(todo)}
-                class="text-white/60 hover:text-red-400 transition-colors"
-                aria-label="Delete todo"
-              >
-                <Trash2 size={20} />
-              </button>
+              {#if editingTodoId === todo.id}
+                <input
+                  type="text"
+                  bind:value={editingTodoTitle}
+                  on:blur={() => updateTodoTitle(todo)}
+                  on:keydown={(e) => handleTodoKeydown(e, todo)}
+                  class="flex-1 px-2 py-1 bg-white/30 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/70"
+                  autofocus
+                />
+              {:else}
+                <span 
+                  class="flex-1 text-white/60 cursor-pointer hover:text-white/80 transition-colors"
+                  on:click={() => startEditingTodo(todo)}
+                >
+                  {todo.title}
+                </span>
+              {/if}
+              <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  on:click={() => startEditingTodo(todo)}
+                  class="text-white/40 hover:text-white transition-colors"
+                  aria-label="Edit todo"
+                >
+                  <Edit2 size={20} />
+                </button>
+                <button
+                  on:click={() => deleteTodo(todo)}
+                  class="text-white/40 hover:text-red-400 transition-colors"
+                  aria-label="Delete todo"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
             </div>
           {/each}
         </div>
