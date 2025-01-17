@@ -28,6 +28,14 @@
     .filter(t => t.completed)
     .sort((a, b) => a.order - b.order);
 
+  $: {
+    if (listTitle && listTitle !== 'Untitled List') {
+      document.title = `${listTitle} - Todolist Realtime`;
+    } else {
+      document.title = 'Todolist Realtime';
+    }
+  }
+
   // Fonction pour mettre à jour l'ordre des tâches
   async function updateTodosOrder(items: Todo[]) {
     try {
