@@ -11,6 +11,10 @@ A modern, reactive todo list application built with Svelte, TypeScript, and Supa
 - ⚡ Optimistic updates for instant feedback
 - 🔼 Task reordering with up/down arrows
 - 📱 Fully responsive design
+- 🔄 Automatic polling fallback for real-time updates
+- 🖊️ Inline editing for todos and list titles
+- 🎯 Focus mode while editing
+- 🗑️ Automatic cleanup of empty lists
 
 ## 🛠️ Tech Stack
 
@@ -24,7 +28,7 @@ A modern, reactive todo list application built with Svelte, TypeScript, and Supa
 ## 🏗️ Project Structure
 
 ```
-antaww-todo-list/
+todo-list/
 ├── src/
 │   ├── lib/
 │   │   ├── TodoList.svelte    # Main todo list component
@@ -40,8 +44,8 @@ antaww-todo-list/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/antaww-todo-list.git
-cd antaww-todo-list
+git clone https://github.com/antaww/todo-list.git
+cd todo-list
 ```
 
 2. Install dependencies:
@@ -81,7 +85,26 @@ CREATE TABLE lists (
   title TEXT NOT NULL DEFAULT 'Untitled List',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Enable Row Level Security
+ALTER TABLE lists ENABLE ROW LEVEL SECURITY;
+
+-- Allow public access
+CREATE POLICY "Allow public access on lists"
+  ON lists
+  FOR ALL
+  TO public
+  USING (true)
+  WITH CHECK (true);
 ```
+
+## 🔄 Real-time Updates
+
+The application uses Supabase's real-time functionality to keep todos synchronized across all clients. As a fallback mechanism, it also implements polling to ensure updates are received even if the real-time connection is interrupted.
+
+## 🧹 Automatic Cleanup
+
+Empty lists (lists without any todos) are automatically cleaned up from the database to maintain data consistency. This is handled by a SQL trigger that removes lists when their last todo is deleted.
 
 ## 🤝 Contributing
 
