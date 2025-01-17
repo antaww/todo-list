@@ -7,6 +7,8 @@
   export let disabled = false;
   export let variant: "default" | "title" | "inline" = "default";
   export let autofocus = false;
+  let className = '';
+  export { className as class };
 
   let isFocused = false;
   const dispatch = createEventDispatcher();
@@ -28,8 +30,8 @@
 
 <div class="relative w-full">
   {#if isFocused}
-    <div 
-      class="absolute inset-0 bg-white/5 rounded-lg -m-[2px]" 
+    <div
+      class="absolute inset-0 bg-white/5 rounded-lg -m-[2px]"
       transition:scale={{duration: 150, start: 0.98}}
     />
   {/if}
@@ -39,7 +41,7 @@
     {placeholder}
     {disabled}
     {autofocus}
-    class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80 transition-all duration-150 {variants[variant]}"
+    class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80 transition-all duration-150 {variants[variant]} {className}"
     on:blur={(e) => {
       handleBlur();
       dispatch('blur', e);
@@ -56,4 +58,4 @@
   input {
     width: 100%;
   }
-</style> 
+</style>

@@ -154,6 +154,7 @@
     <TodoHeader
       title={$listStore.title}
       isEditing={$listStore.isEditing}
+      {listId}
       on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
       on:startEdit={() => listStore.setEditing(true)}
       on:stopEdit={() => listStore.setEditing(false)}
