@@ -6,6 +6,7 @@
   import type { RealtimeChannel } from '@supabase/supabase-js';
   import { todosStore } from './stores/todos';
   import { listStore } from './stores/list';
+  import { historyStore } from './stores/history';
   import { supabase } from './supabase';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
@@ -25,9 +26,10 @@
     .filter(t => t.completed)
     .sort((a, b) => a.order - b.order);
 
-  $: {
-    if ($listStore.title && $listStore.title !== 'Untitled List') {
+  $: if ($listStore.title) {
+    if ($listStore.title !== 'Untitled List') {
       document.title = `${$listStore.title} - Todolist Realtime`;
+      historyStore.add(listId, $listStore.title);
     } else {
       document.title = 'Todolist Realtime';
     }
