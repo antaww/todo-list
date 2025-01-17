@@ -16,6 +16,8 @@
   let subscription: RealtimeChannel | null = null;
   let listTitle = '';
   let titleInput: HTMLElement;
+  let pollingInterval: number | null = null;
+  let isEditingTitle = false;
 
   // Computed properties
   $: activeTodos = todos
@@ -44,7 +46,6 @@
       if (supabaseError) throw supabaseError;
     } catch (e) {
       error = 'Failed to update todo order';
-      console.error('Error updating todo order:', e);
       await loadTodos();
     }
   }
@@ -77,7 +78,6 @@
       if (supabaseError) throw supabaseError;
     } catch (e) {
       error = 'Failed to update todo';
-      console.error('Error updating todo:', e);
       await loadTodos(); // Revert en cas d'erreur
     }
   }
@@ -87,6 +87,7 @@
   }
 
   function handleTitleBlur() {
+    isEditingTitle = false;
     if (listTitle.trim() !== '') {
       updateListTitle();
     }
@@ -108,38 +109,62 @@
         await subscription.unsubscribe();
       }
 
-      const channel = supabase.channel('any');
-      
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'todos'
-        },
-        () => {
-          console.log('Received database change');
-          loadTodos();
-        }
-      );
+      // Canal pour les todos
+      const todosChannel = supabase.channel('todos-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'todos',
+            filter: `list_id=eq.${listId}`
+          },
+          async () => {
+            await loadTodos();
+          }
+        );
 
-      subscription = channel;
-      
-      try {
-        await channel.subscribe();
-        console.log('Successfully subscribed to real-time updates');
-      } catch (err) {
-        console.error('Failed to subscribe:', err);
-        error = 'Real-time connection error. Please refresh the page.';
-      }
+      // Canal pour les listes
+      const listsChannel = supabase.channel('lists-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'lists',
+            filter: `id=eq.${listId}`
+          },
+          async () => {
+            await loadListTitle();
+          }
+        );
+
+      // Souscription aux deux canaux
+      await Promise.all([
+        todosChannel.subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            error = 'Real-time connection error. Please refresh the page.';
+          }
+        }),
+        listsChannel.subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            error = 'Real-time connection error. Please refresh the page.';
+          }
+        })
+      ]);
+
+      // Sauvegarder les références pour le nettoyage
+      subscription = todosChannel;
     } catch (e: unknown) {
-      console.error('Error setting up realtime subscription:', e);
       error = 'Failed to set up real-time updates. Please refresh the page.';
     }
   }
 
   async function loadListTitle() {
     try {
+      // Ne pas mettre à jour le titre pendant l'édition
+      if (isEditingTitle) return;
+
       const { data, error: supabaseError } = await supabase
         .from('lists')
         .select('title')
@@ -147,7 +172,7 @@
         .single();
 
       if (supabaseError) {
-        if (supabaseError.code === '42P01') { // Table doesn't exist
+        if (supabaseError.code === '42P01') {
           listTitle = 'Untitled List';
           return;
         }
@@ -155,7 +180,6 @@
       }
       listTitle = data?.title || 'Untitled List';
     } catch (e) {
-      console.error('Error loading list title:', e);
       listTitle = 'Untitled List';
     }
   }
@@ -167,25 +191,28 @@
     }
 
     try {
-      // Essayer d'insérer d'abord
-      const { error: insertError } = await supabase
+      // Vérifier d'abord si le titre a changé
+      const { data: currentData } = await supabase
         .from('lists')
-        .insert({ id: listId, title: listTitle.trim() });
+        .select('title')
+        .eq('id', listId)
+        .single();
 
-      // Si l'insertion échoue à cause d'un conflit (l'enregistrement existe déjà)
-      // alors faire une mise à jour
-      if (insertError) {
-        const { error: updateError } = await supabase
-          .from('lists')
-          .update({ title: listTitle.trim() })
-          .eq('id', listId);
+      // Si le titre est le même, ne rien faire
+      if (currentData?.title === listTitle.trim()) {
+        return;
+      }
 
-        if (updateError && updateError.code !== '42P01') {
-          throw updateError;
-        }
+      // Si le titre a changé, faire la mise à jour
+      const { error: updateError } = await supabase
+        .from('lists')
+        .update({ title: listTitle.trim() })
+        .eq('id', listId);
+
+      if (updateError && updateError.code !== '42P01') {
+        throw updateError;
       }
     } catch (e) {
-      console.error('Error updating list title:', e);
       error = 'Failed to update list title';
     }
   }
@@ -202,7 +229,7 @@
       if (!checkError) return;
 
       // Si la table n'existe pas, la créer directement via SQL
-      const { error } = await supabase.rpc('execute_sql', {
+      const { error: createError } = await supabase.rpc('execute_sql', {
         sql_query: `
           CREATE TABLE IF NOT EXISTS lists (
             id text PRIMARY KEY,
@@ -221,11 +248,11 @@
         `
       });
 
-      if (error) {
-        console.error('Error creating lists table:', error);
+      if (createError) {
+        throw new Error('Failed to create lists table');
       }
     } catch (e) {
-      console.error('Error ensuring lists table exists:', e);
+      throw new Error('Failed to ensure lists table exists');
     }
   }
 
@@ -234,59 +261,68 @@
       loading = true;
       error = null;
 
-      // Test Supabase connection
-      console.log('Testing Supabase connection...');
-      const { data, error: testError } = await supabase
+      const { error: testError } = await supabase
         .from('todos')
         .select('count', { count: 'exact', head: true });
 
       if (testError) {
-        console.error('Supabase connection test failed:', testError);
         throw new Error('Database connection failed');
       }
-
-      console.log('Supabase connection test successful:', data);
       
       await ensureListsTableExists();
       await Promise.all([loadTodos(), loadListTitle()]);
       await setupRealtimeSubscription();
     } catch (e) {
       error = e instanceof Error ? e.message : 'An error occurred while initializing';
-      console.error('Initialization error:', e);
     } finally {
       loading = false;
     }
   }
 
+  async function startPolling() {
+    // Arrêter l'ancien intervalle si existant
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+
+    // Créer un nouvel intervalle
+    pollingInterval = setInterval(async () => {
+      try {
+        await Promise.all([loadTodos(), loadListTitle()]);
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+    }, 1000) as unknown as number;
+  }
+
   onMount(() => {
     initializeApp();
+    startPolling();
   });
 
   onDestroy(() => {
     if (subscription) {
-      subscription.unsubscribe().catch(e => {
-        console.error('Error unsubscribing:', e);
+      subscription.unsubscribe().catch(() => {
+        // Ignorer les erreurs de désinscription
       });
+    }
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
     }
   });
 
   async function loadTodos() {
     try {
-      console.log('Loading todos for list:', listId);
       const { data, error: supabaseError } = await supabase
         .from('todos')
         .select('*')
         .eq('list_id', listId)
         .order('order');
       
-      console.log('Load todos response:', { data, error: supabaseError });
-      
       if (supabaseError) throw supabaseError;
       
       todos = data || [];
-      console.log('Updated todos:', todos);
     } catch (e) {
-      console.error('Error loading todos:', e);
       throw new Error('Failed to load todos');
     }
   }
@@ -329,7 +365,6 @@
       }
     } catch (e) {
       error = 'Failed to add todo';
-      console.error('Error adding todo:', e);
       todos = todos.filter(t => t.id !== tempId); // Retirer l'item temporaire en cas d'erreur
     }
   }
@@ -347,7 +382,6 @@
       if (supabaseError) throw supabaseError;
     } catch (e) {
       error = 'Failed to delete todo';
-      console.error('Error deleting todo:', e);
       await loadTodos(); // Revert en cas d'erreur
     }
   }
@@ -391,7 +425,6 @@
       if (supabaseError) throw supabaseError;
     } catch (e) {
       error = 'Failed to move todo';
-      console.error('Error moving todo:', e);
       await loadTodos(); // Revert en cas d'erreur
     }
   }
@@ -435,9 +468,12 @@
       if (supabaseError) throw supabaseError;
     } catch (e) {
       error = 'Failed to move todo';
-      console.error('Error moving todo:', e);
       await loadTodos(); // Revert en cas d'erreur
     }
+  }
+
+  function handleTitleFocus() {
+    isEditingTitle = true;
   }
 </script>
 
@@ -462,6 +498,7 @@
         bind:value={listTitle}
         bind:this={titleInput}
         placeholder="List title..."
+        on:focus={handleTitleFocus}
         on:blur={handleTitleBlur}
         on:keydown={handleTitleKeydown}
         class="w-full px-4 py-2 text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg hover:bg-white/10 transition-colors text-white placeholder-white/70"
