@@ -21,7 +21,7 @@
 <div class="fixed top-0 left-0 h-screen">
   {#if isOpen}
     <div class="absolute" transition:fly={{ x: -320, duration: 500 }}>
-      <Card class="w-80 h-screen rounded-none border-y-0 border-l-0" padding="p-4">
+      <Card class="w-80 h-screen !rounded-none border-y-0 border-l-0" padding="p-4">
         <div class="flex flex-col h-full gap-4">
           <div class="flex gap-2">
             <div class="flex-grow">
