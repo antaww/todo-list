@@ -588,13 +588,13 @@
   }
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-  <div class="max-w-2xl mx-auto backdrop-blur-lg bg-white/30 rounded-xl shadow-xl p-6 border border-white/20">
+<div class="min-h-screen p-4">
+  <div class="max-w-2xl mx-auto backdrop-blur-lg bg-white/20 rounded-xl shadow-xl p-6 border border-white/30">
     {#if error}
-      <div class="mb-4 p-4 bg-red-500/20 backdrop-blur-sm text-red-100 rounded-lg border border-red-500/20" transition:fade>
+      <div class="mb-4 p-4 bg-red-500/30 backdrop-blur-sm text-red-50 rounded-lg border border-red-500/30" transition:fade>
         {error}
         <button 
-          class="ml-2 font-bold"
+          class="ml-2 font-bold hover:text-white"
           on:click={() => error = null}
           aria-label="Dismiss error"
         >
@@ -612,7 +612,7 @@
         on:focus={handleTitleFocus}
         on:blur={handleTitleBlur}
         on:keydown={handleTitleKeydown}
-        class="w-full px-4 py-2 text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg hover:bg-white/10 transition-colors text-white placeholder-white/70"
+        class="w-full px-4 py-2 text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg hover:bg-black/5 transition-colors text-white placeholder-white/80"
       />
     </div>
 
@@ -624,12 +624,12 @@
         type="text"
         bind:value={newTodoTitle}
         placeholder="Add a new todo..."
-        class="flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 bg-white/20 border border-white/20 text-white placeholder-white/70"
+        class="flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 bg-black/10 border border-white/30 text-white placeholder-white/80"
         disabled={loading}
       />
       <button
         type="submit"
-        class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 transition-colors"
+        class="px-4 py-2 bg-white/30 hover:bg-white/40 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed border border-white/30 transition-colors"
         disabled={loading || !newTodoTitle.trim()}
       >
         Add
@@ -637,7 +637,7 @@
     </form>
 
     {#if loading}
-      <div class="text-center py-4 text-white">Loading...</div>
+      <div class="text-center py-4 text-white font-medium">Loading...</div>
     {:else}
       <section class="space-y-4">
         <div class="space-y-2">
@@ -645,12 +645,12 @@
             <div
               animate:flip={{duration: 300}}
               transition:fade={{duration: 300}}
-              class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-white/20 rounded-lg border border-white/20 shadow-lg hover:shadow-xl transition-all group"
+              class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-black/10 rounded-lg border border-white/30 shadow-lg hover:shadow-xl transition-all group"
             >
               <div class="flex gap-1">
                 <button
                   on:click={() => moveTodoUp(todo)}
-                  class="text-white/60 hover:text-white transition-colors"
+                  class="text-white/80 hover:text-white transition-colors"
                   aria-label="Move todo up"
                   disabled={activeTodos.indexOf(todo) === 0}
                 >
@@ -658,7 +658,7 @@
                 </button>
                 <button
                   on:click={() => moveTodoDown(todo)}
-                  class="text-white/60 hover:text-white transition-colors"
+                  class="text-white/80 hover:text-white transition-colors"
                   aria-label="Move todo down"
                   disabled={activeTodos.indexOf(todo) === activeTodos.length - 1}
                 >
@@ -669,7 +669,7 @@
                 type="checkbox"
                 checked={todo.completed}
                 on:change={() => toggleTodo(todo)}
-                class="w-5 h-5 rounded border-white/30 text-purple-500 focus:ring-purple-500/50 bg-white/20"
+                class="w-5 h-5 rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20"
               />
               {#if editingTodoId === todo.id}
                 <input
@@ -677,12 +677,12 @@
                   bind:value={editingTodoTitle}
                   on:blur={() => updateTodoTitle(todo)}
                   on:keydown={(e) => handleTodoKeydown(e, todo)}
-                  class="flex-1 px-2 py-1 bg-white/30 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/70"
+                  class="flex-1 px-2 py-1 bg-black/20 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80"
                   autofocus
                 />
               {:else}
                 <span 
-                  class="flex-1 text-white/60 cursor-pointer hover:text-white/80 transition-colors"
+                  class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-colors"
                   on:click={() => startEditingTodo(todo)}
                 >
                   {todo.title}
@@ -691,14 +691,14 @@
               <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   on:click={() => startEditingTodo(todo)}
-                  class="text-white/40 hover:text-white transition-colors"
+                  class="text-white/80 hover:text-white transition-colors"
                   aria-label="Edit todo"
                 >
                   <Edit2 size={20} />
                 </button>
                 <button
                   on:click={() => deleteTodo(todo)}
-                  class="text-white/40 hover:text-red-400 transition-colors"
+                  class="text-white/80 hover:text-red-300 transition-colors"
                   aria-label="Delete todo"
                 >
                   <Trash2 size={20} />
@@ -709,32 +709,55 @@
         </div>
 
         {#if completedTodos.length > 0}
-          <div class="my-6 border-t border-white/20" />
+          <div class="my-6 border-t border-white/30" />
           
           <div class="space-y-2">
             {#each completedTodos as todo (todo.id)}
               <div
                 animate:flip={{duration: 300}}
                 transition:fade={{duration: 300}}
-                class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-white/10 rounded-lg border border-white/10 group"
+                class="todo-item flex items-center gap-2 p-3 backdrop-blur-md bg-black/5 rounded-lg border border-white/20 group"
               >
                 <div class="w-[68px]"></div>
                 <input
                   type="checkbox"
                   checked={todo.completed}
                   on:change={() => toggleTodo(todo)}
-                  class="w-5 h-5 rounded border-white/30 text-purple-500 focus:ring-purple-500/50 bg-white/20"
+                  class="w-5 h-5 rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20"
                 />
-                <span class="flex-1 text-white/60">
-                  {todo.title}
-                </span>
-                <button
-                  on:click={() => deleteTodo(todo)}
-                  class="text-white/40 hover:text-red-400 transition-colors"
-                  aria-label="Delete todo"
-                >
-                  <Trash2 size={20} />
-                </button>
+                {#if editingTodoId === todo.id}
+                  <input
+                    type="text"
+                    bind:value={editingTodoTitle}
+                    on:blur={() => updateTodoTitle(todo)}
+                    on:keydown={(e) => handleTodoKeydown(e, todo)}
+                    class="flex-1 px-2 py-1 bg-black/20 rounded border-none focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/80"
+                    autofocus
+                  />
+                {:else}
+                  <span 
+                    class="flex-1 text-white/90 font-medium cursor-pointer hover:text-white transition-colors"
+                    on:click={() => startEditingTodo(todo)}
+                  >
+                    {todo.title}
+                  </span>
+                {/if}
+                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    on:click={() => startEditingTodo(todo)}
+                    class="text-white/70 hover:text-white transition-colors"
+                    aria-label="Edit todo"
+                  >
+                    <Edit2 size={20} />
+                  </button>
+                  <button
+                    on:click={() => deleteTodo(todo)}
+                    class="text-white/70 hover:text-red-300 transition-colors"
+                    aria-label="Delete todo"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
             {/each}
           </div>
@@ -746,11 +769,11 @@
 
 <style>
   :global(html) {
-    @apply min-h-screen bg-gradient-to-br from-blue-500 to-purple-600;
+    @apply min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 bg-fixed;
   }
   
   input[type="checkbox"] {
-    @apply rounded border-white/30 text-purple-500 focus:ring-purple-500/50 bg-white/20;
+    @apply rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20;
   }
 
   /* Ajout d'une transition douce pour l'opacité */
