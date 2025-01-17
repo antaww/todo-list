@@ -347,6 +347,26 @@
     newTodoTitle = '';
 
     try {
+      // Vérifier si la liste existe déjà
+      const { data: listData } = await supabase
+        .from('lists')
+        .select('id')
+        .eq('id', listId)
+        .single();
+
+      // Si la liste n'existe pas, la créer
+      if (!listData) {
+        const { error: listError } = await supabase
+          .from('lists')
+          .insert([{
+            id: listId,
+            title: listTitle.trim() || 'Untitled List'
+          }]);
+
+        if (listError) throw listError;
+      }
+
+      // Ajouter le todo
       const { data, error: supabaseError } = await supabase
         .from('todos')
         .insert([{
