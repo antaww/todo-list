@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import TodoList from './lib/TodoList.svelte';
   import { supabase } from './lib/supabase';
+  import Sidebar from './lib/components/Sidebar.svelte';
 
   let listId: string;
   let error: string | null = null;
@@ -34,14 +35,17 @@
   });
 </script>
 
-<main class="min-h-screen">
-  {#if error}
-    <div class="max-w-2xl mx-auto p-4 mt-4">
-      <div class="p-4 bg-red-100 text-red-700 rounded-lg">
-        {error}
+<div class="flex min-h-screen">
+  <Sidebar />
+  <main class="flex-grow">
+    {#if error}
+      <div class="max-w-2xl mx-auto p-4 mt-4">
+        <div class="p-4 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
       </div>
-    </div>
-  {:else if listId}
-    <TodoList {listId} />
-  {/if}
-</main>
+    {:else if listId}
+      <TodoList {listId} />
+    {/if}
+  </main>
+</div>

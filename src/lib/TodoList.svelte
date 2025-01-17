@@ -132,7 +132,7 @@
 </script>
 
 <div class="min-h-screen p-4 max-w-2xl mx-auto">
-  <Card padding={6}>
+  <Card padding="p-6">
     {#if $todosStore.error || $listStore.error}
       <div class="mb-4 p-4 bg-red-500/30 backdrop-blur-sm text-red-50 rounded-lg border border-red-500/30" transition:fade>
         {$todosStore.error || $listStore.error}

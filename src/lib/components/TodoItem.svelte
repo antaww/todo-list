@@ -33,7 +33,7 @@
   }
 </script>
 
-<Card variant="secondary" padding={3}>
+<Card variant="secondary" padding="p-3">
   <div class="flex items-center gap-2 group">
     {#if !isCompleted}
       <div class="flex gap-1">
