@@ -191,15 +191,28 @@
     }
 
     try {
-      // Vérifier d'abord si le titre a changé
+      // Vérifier d'abord si la liste existe
       const { data: currentData } = await supabase
         .from('lists')
         .select('title')
         .eq('id', listId)
         .single();
 
+      if (!currentData) {
+        // Si la liste n'existe pas, la créer
+        const { error: insertError } = await supabase
+          .from('lists')
+          .insert([{
+            id: listId,
+            title: listTitle.trim()
+          }]);
+
+        if (insertError) throw insertError;
+        return;
+      }
+
       // Si le titre est le même, ne rien faire
-      if (currentData?.title === listTitle.trim()) {
+      if (currentData.title === listTitle.trim()) {
         return;
       }
 
@@ -209,9 +222,7 @@
         .update({ title: listTitle.trim() })
         .eq('id', listId);
 
-      if (updateError && updateError.code !== '42P01') {
-        throw updateError;
-      }
+      if (updateError) throw updateError;
     } catch (e) {
       error = 'Failed to update list title';
     }
