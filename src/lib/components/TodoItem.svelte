@@ -5,6 +5,7 @@
   import Button from './ui/Button.svelte';
   import Input from './ui/Input.svelte';
   import Card from './ui/Card.svelte';
+  import Checkbox from '../Checkbox.svelte';
 
   export let todo: Todo;
   export let isEditing = false;
@@ -28,8 +29,13 @@
       event.preventDefault();
       dispatch('updateTitle', { todo, title: editingTitle });
     } else if (event.key === 'Escape') {
-      dispatch('startEdit', undefined);
+      dispatch('startEdit', todo);
     }
+  }
+
+  let checked = todo.completed;
+  $: if (checked !== todo.completed) {
+    dispatch('toggle', todo);
   }
 </script>
 
@@ -58,12 +64,7 @@
       </div>
     {/if}
 
-    <input
-      type="checkbox"
-      checked={todo.completed}
-      on:change={() => dispatch('toggle', todo)}
-      class="w-5 h-5 rounded border-white/50 text-purple-500 focus:ring-purple-500/50 bg-white/20"
-    />
+    <Checkbox bind:checked />
 
     {#if isEditing}
       <Input
@@ -78,7 +79,7 @@
       />
     {:else}
       <span 
-        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-colors {isCompleted ? 'text-white/90' : ''}"
+        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-colors {todo.completed ? 'line-through text-white/50' : ''}"
         on:click={() => dispatch('startEdit', todo)}
       >
         {todo.title}
