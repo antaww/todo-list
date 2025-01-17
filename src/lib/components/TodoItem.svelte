@@ -20,7 +20,7 @@
     moveUp: Todo;
     moveDown: Todo;
     updateTitle: { todo: Todo; title: string };
-    startEdit: Todo;
+    startEdit: Todo | undefined;
   }>();
 
   function handleKeydown(event: KeyboardEvent) {
@@ -71,7 +71,10 @@
       <Input
         variant="inline"
         bind:value={editingTitle}
-        on:blur={() => dispatch('updateTitle', { todo, title: editingTitle })}
+        on:blur={() => {
+          dispatch('updateTitle', { todo, title: editingTitle });
+          dispatch('startEdit', undefined);
+        }}
         on:keydown={handleKeydown}
         autofocus
       />

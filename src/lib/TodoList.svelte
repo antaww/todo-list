@@ -179,7 +179,7 @@
                 on:delete={() => todosStore.delete(todo)}
                 on:moveUp={() => todosStore.move(todo, 'up')}
                 on:moveDown={() => todosStore.move(todo, 'down')}
-                on:startEdit={() => todosStore.setEditingId(todo.id)}
+                on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
                 on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
               />
             </div>
@@ -199,7 +199,7 @@
                   isCompleted={true}
                   on:toggle={() => todosStore.toggle(todo)}
                   on:delete={() => todosStore.delete(todo)}
-                  on:startEdit={() => todosStore.setEditingId(todo.id)}
+                  on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
                   on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                 />
               </div>
