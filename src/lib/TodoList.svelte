@@ -281,6 +281,25 @@
       }
       
       await ensureListsTableExists();
+
+      // Vérifier si la liste existe et la créer si nécessaire
+      const { data: listData } = await supabase
+        .from('lists')
+        .select('id')
+        .eq('id', listId)
+        .single();
+
+      if (!listData) {
+        const { error: insertError } = await supabase
+          .from('lists')
+          .insert([{
+            id: listId,
+            title: 'Untitled List'
+          }]);
+
+        if (insertError) throw insertError;
+      }
+
       await Promise.all([loadTodos(), loadListTitle()]);
       await setupRealtimeSubscription();
     } catch (e) {
