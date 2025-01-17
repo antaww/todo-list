@@ -56,8 +56,6 @@
           <ArrowDown size={20} />
         </Button>
       </div>
-    {:else}
-      <div class="w-[68px]" />
     {/if}
 
     <input
