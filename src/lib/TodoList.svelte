@@ -93,10 +93,12 @@
 
     pollingInterval = setInterval(async () => {
       try {
-        await Promise.all([
-          todosStore.load(listId),
-          listStore.initialize(listId)
-        ]);
+        if (!$todosStore.editingId && !$listStore.isEditing) {
+          await Promise.all([
+            todosStore.load(listId),
+            listStore.initialize(listId)
+          ]);
+        }
       } catch (e) {
         console.error('Polling error:', e);
       }
