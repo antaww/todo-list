@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Button from './ui/Button.svelte';
   import Input from './ui/Input.svelte';
   import Card from './ui/Card.svelte';
@@ -8,14 +9,33 @@
   import { historyStore } from '../stores/history';
 
   let searchValue = '';
-  let isOpen = true;
+  let isOpen = false;
+  let isMobile = false;
   let currentListId = new URLSearchParams(window.location.search).get('list') || '';
 
-  $: filteredFavorites = $favoritesStore.filter(f => 
+  onMount(() => {
+    const checkMobile = () => {
+      isMobile = window.innerWidth <= 1024;
+      if (isMobile) {
+        isOpen = false;
+      } else {
+        isOpen = true;
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  });
+
+  $: filteredFavorites = $favoritesStore.filter(f =>
     f.title.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  $: filteredHistory = $historyStore.filter(h => 
+  $: filteredHistory = $historyStore.filter(h =>
     h.title.toLowerCase().includes(searchValue.toLowerCase())
   );
 
@@ -30,6 +50,9 @@
 
   function openList(id: string) {
     window.location.href = `${window.location.pathname}?list=${id}`;
+    if (isMobile) {
+      isOpen = false;
+    }
   }
 
   function clearHistory() {
@@ -37,10 +60,11 @@
   }
 </script>
 
-<div class="fixed top-0 left-0 h-screen">
+<div class="fixed top-0 left-0 h-screen z-50">
   {#if isOpen}
-    <div class="absolute" transition:fly={{ x: -320, duration: 500 }}>
-      <Card class="w-80 h-screen !rounded-none border-y-0 border-l-0" padding="p-4">
+    <div class="absolute" transition:fly={{ x: -320, duration: 300 }}>
+      <div class="fixed inset-0 bg-black/30 backdrop-blur-lg lg:hidden" on:click={toggleSidebar} transition:fade></div>
+      <Card class="w-80 h-screen !rounded-none border-y-0 border-l-0 relative" padding="p-4">
         <div class="flex flex-col h-full gap-4">
           <div class="flex gap-2">
             <div class="flex-grow">
@@ -50,7 +74,7 @@
               <PanelLeftClose size={20} />
             </Button>
           </div>
-          
+
           <div class="flex-grow flex flex-col gap-4 overflow-hidden">
             <!-- Favoris -->
             <div class="flex-shrink-0">
@@ -128,7 +152,7 @@
       </Card>
     </div>
   {:else}
-    <div class="absolute" transition:fly={{ x: -100, duration: 500 }}>
+    <div class="absolute" transition:fly={{ x: -100, duration: 300 }}>
       <div class="p-4 flex gap-2">
         <Button variant="icon" on:click={toggleSidebar} title="Show sidebar">
           <PanelLeft size={20} />
@@ -139,4 +163,4 @@
       </div>
     </div>
   {/if}
-</div> 
+</div>

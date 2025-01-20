@@ -14,14 +14,14 @@
   import TodoHeader from './components/TodoHeader.svelte';
 
   export let listId: string;
-  
+
   let subscription: RealtimeChannel | null = null;
   let pollingInterval: number | null = null;
 
   $: activeTodos = $todosStore.items
     .filter(t => !t.completed)
     .sort((a, b) => a.order - b.order);
-  
+
   $: completedTodos = $todosStore.items
     .filter(t => t.completed)
     .sort((a, b) => a.order - b.order);
@@ -135,12 +135,12 @@
   });
 </script>
 
-<div class="min-h-screen p-4 max-w-2xl mx-auto">
+<div class="min-h-screen p-4 max-w-2xl mx-auto lg:p-4 pt-20 lg:pt-4">
   <Card padding="p-6">
     {#if $todosStore.error || $listStore.error}
       <div class="mb-4 p-4 bg-red-500/30 backdrop-blur-sm text-red-50 rounded-lg border border-red-500/30" transition:fade>
         {$todosStore.error || $listStore.error}
-        <button 
+        <button
           class="ml-2 font-bold hover:text-white"
           on:click={() => {
             todosStore.setError(null);
@@ -193,7 +193,7 @@
 
         {#if completedTodos.length > 0}
           <div class="my-6 border-t border-white/30" />
-          
+
           <div class="space-y-2">
             {#each completedTodos as todo (todo.id)}
               <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
