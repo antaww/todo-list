@@ -64,23 +64,10 @@
             table: 'lists',
             filter: `id=eq.${listId}`
           },
-          async () => {
+          async (payload) => {
             await listStore.initialize(listId);
           }
         );
-
-      await Promise.all([
-        todosChannel.subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            todosStore.setError('Real-time connection error. Please refresh the page.');
-          }
-        }),
-        listsChannel.subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            listStore.setError('Real-time connection error. Please refresh the page.');
-          }
-        })
-      ]);
 
       subscription = todosChannel;
     } catch (e: unknown) {

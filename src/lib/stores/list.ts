@@ -24,9 +24,9 @@ function createListStore() {
     try {
       const { data, error: supabaseError } = await supabase
         .from("lists")
-        .select("title")
+        .select("*")
         .eq("id", listId)
-        .single();
+        .maybeSingle();
 
       if (supabaseError) {
         if (supabaseError.code === "42P01") {
@@ -35,8 +35,28 @@ function createListStore() {
         }
         throw supabaseError;
       }
-      update((state) => ({ ...state, title: data?.title || "Untitled List" }));
+
+      if (!data) {
+        // Si la liste n'existe pas, on la crée
+        const { error: insertError } = await supabase
+          .from("lists")
+          .insert([
+            {
+              id: listId,
+              title: "Untitled List",
+            },
+          ])
+          .single();
+
+        if (insertError) throw insertError;
+        
+        update((state) => ({ ...state, title: "Untitled List" }));
+        return;
+      }
+
+      update((state) => ({ ...state, title: data.title || "Untitled List" }));
     } catch (e) {
+      console.error('Error loading list title:', e);
       update((state) => ({ ...state, title: "Untitled List" }));
     }
   }
