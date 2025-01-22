@@ -15,8 +15,7 @@
 
   export let listId: string;
 
-  let subscription: RealtimeChannel | null = null;
-  let pollingInterval: number | null = null;
+  let subscription: RealtimeChannel[] = [];
 
   $: activeTodos = $todosStore.items
     .filter(t => !t.completed)
@@ -37,61 +36,112 @@
 
   async function setupRealtimeSubscription() {
     try {
-      if (subscription) {
-        await subscription.unsubscribe();
+      // Cleanup any existing subscriptions
+      for (const sub of subscription) {
+        await sub.unsubscribe();
       }
+      subscription = [];
 
-      const todosChannel = supabase.channel('todos-changes')
+      const todosChannel = supabase
+        .channel('todos-changes')
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'todos',
             filter: `list_id=eq.${listId}`
           },
           async () => {
-            await todosStore.load(listId);
+            if (!$todosStore.editingId) {
+              await todosStore.load(listId);
+            }
           }
-        );
-
-      const listsChannel = supabase.channel('lists-changes')
+        )
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'todos',
+            filter: `list_id=eq.${listId}`
+          },
+          async () => {
+            if (!$todosStore.editingId) {
+              await todosStore.load(listId);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'todos',
+            filter: `list_id=eq.${listId}`
+          },
+          async () => {
+            if (!$todosStore.editingId) {
+              await todosStore.load(listId);
+            }
+          }
+        );
+
+      const listsChannel = supabase
+        .channel('lists-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
             schema: 'public',
             table: 'lists',
             filter: `id=eq.${listId}`
           },
-          async (payload) => {
-            await listStore.initialize(listId);
+          async () => {
+            if (!$listStore.isEditing) {
+              await listStore.load(listId);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'lists',
+            filter: `id=eq.${listId}`
+          },
+          async () => {
+            if (!$listStore.isEditing) {
+              await listStore.load(listId);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'lists',
+            filter: `id=eq.${listId}`
+          },
+          async () => {
+            if (!$listStore.isEditing) {
+              await listStore.load(listId);
+            }
           }
         );
 
-      subscription = todosChannel;
+      // Subscribe to both channels
+      await Promise.all([
+        todosChannel.subscribe(),
+        listsChannel.subscribe()
+      ]);
+      
+      subscription = [todosChannel, listsChannel];
     } catch (e: unknown) {
       todosStore.setError('Failed to set up real-time updates. Please refresh the page.');
     }
-  }
-
-  async function startPolling() {
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-    }
-
-    pollingInterval = setInterval(async () => {
-      try {
-        if (!$todosStore.editingId && !$listStore.isEditing) {
-          await Promise.all([
-            todosStore.load(listId),
-            listStore.initialize(listId)
-          ]);
-        }
-      } catch (e) {
-        console.error('Polling error:', e);
-      }
-    }, 1000) as unknown as number;
   }
 
   onMount(async () => {
@@ -104,20 +154,16 @@
     ]);
 
     await setupRealtimeSubscription();
-    startPolling();
 
     todosStore.setLoading(false);
     listStore.setLoading(false);
   });
 
   onDestroy(() => {
-    if (subscription) {
-      subscription.unsubscribe().catch(() => {
+    for (const sub of subscription) {
+      sub.unsubscribe().catch(() => {
         // Ignorer les erreurs de désinscription
       });
-    }
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
     }
   });
 </script>

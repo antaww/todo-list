@@ -195,6 +195,10 @@ function createListStore() {
         update((state) => ({ ...state, error: "Failed to update list title" }));
       }
     },
+
+    destroy: () => {
+      // No need to unsubscribe from realtime channel here
+    },
   };
 }
 
