@@ -8,8 +8,8 @@
   import { favoritesStore } from '../stores/favorites';
   import { historyStore } from '../stores/history';
 
+  export let isOpen = false;
   let searchValue = '';
-  let isOpen = false;
   let isMobile = false;
   let currentListId = new URLSearchParams(window.location.search).get('list') || '';
 
@@ -61,9 +61,12 @@
 </script>
 
 <div class="fixed top-0 left-0 h-screen z-50">
+  <div 
+    class="fixed inset-0 bg-black/30 backdrop-blur-lg lg:hidden transition-all duration-300 {isOpen ? '' : 'opacity-0'}" 
+    on:click={toggleSidebar}
+  />
   {#if isOpen}
     <div class="absolute" transition:fly={{ x: -320, duration: 300 }}>
-      <div class="fixed inset-0 bg-black/30 backdrop-blur-lg lg:hidden" on:click={toggleSidebar} transition:fade></div>
       <Card class="w-80 h-screen !rounded-none border-y-0 border-l-0 relative" padding="p-4">
         <div class="flex flex-col h-full gap-4">
           <div class="flex gap-2">

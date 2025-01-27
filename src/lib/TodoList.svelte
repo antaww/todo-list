@@ -251,6 +251,6 @@
 
 <style>
   :global(html) {
-    @apply min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 bg-fixed;
+    @apply min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 bg-fixed overflow-x-hidden;
   }
 </style>
