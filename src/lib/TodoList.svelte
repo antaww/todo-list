@@ -16,14 +16,30 @@
   export let listId: string;
 
   let subscription: RealtimeChannel[] = [];
+  let sortBy: 'name' | 'date' | 'order' = 'order';
 
-  $: activeTodos = $todosStore.items
-    .filter(t => !t.completed)
-    .sort((a, b) => a.order - b.order);
+  function sortTodos(todos: any[], by: 'name' | 'date' | 'order') {
+    return [...todos].sort((a, b) => {
+      switch (by) {
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'date':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        default:
+          return a.order - b.order;
+      }
+    });
+  }
 
-  $: completedTodos = $todosStore.items
-    .filter(t => t.completed)
-    .sort((a, b) => a.order - b.order);
+  $: activeTodos = sortTodos(
+    $todosStore.items.filter(t => !t.completed),
+    sortBy
+  );
+
+  $: completedTodos = sortTodos(
+    $todosStore.items.filter(t => t.completed),
+    sortBy
+  );
 
   $: if ($listStore.title) {
     if ($listStore.title !== 'Untitled List') {
@@ -198,6 +214,7 @@
     <TodoForm
       loading={$todosStore.loading}
       on:add={({ detail }) => todosStore.add(listId, detail)}
+      on:sort={({ detail }) => sortBy = detail}
     />
 
     {#if $todosStore.loading}
