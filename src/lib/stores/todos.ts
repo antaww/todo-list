@@ -18,6 +18,8 @@ function createTodosStore() {
   });
 
   const { subscribe, update } = store;
+  let isMoving = false;
+  let lastUpdateTime = Date.now();
 
   function reorderTodos(todos: Todo[]) {
     return todos.map((todo, index) => ({
@@ -119,12 +121,18 @@ function createTodosStore() {
     },
 
     toggle: async (todo: Todo) => {
+      if (isMoving) return;
+      isMoving = true;
+      const updateStartTime = Date.now();
+      lastUpdateTime = updateStartTime;
+
       const newCompleted = !todo.completed;
       const state = get(store);
       const newOrder = newCompleted
         ? state.items.filter((t: Todo) => t.completed).length
         : state.items.filter((t: Todo) => !t.completed).length;
 
+      // Optimistic update
       update((state) => ({
         ...state,
         items: state.items.map((t: Todo) =>
@@ -145,8 +153,9 @@ function createTodosStore() {
 
         if (supabaseError) throw supabaseError;
       } catch (e) {
-        update((state) => ({ ...state, error: "Failed to update todo" }));
-        await todosStore.load(todo.list_id);
+        if (lastUpdateTime === updateStartTime) {
+          update((state) => ({ ...state, error: "Failed to update todo" }));
+        }
       }
     },
 
@@ -155,6 +164,10 @@ function createTodosStore() {
         return;
       }
 
+      const updateStartTime = Date.now();
+      lastUpdateTime = updateStartTime;
+
+      // Optimistic update
       update((state) => ({
         ...state,
         items: state.items.map((t: Todo) =>
@@ -171,12 +184,21 @@ function createTodosStore() {
 
         if (supabaseError) throw supabaseError;
       } catch (e) {
-        update((state) => ({ ...state, error: "Failed to update todo title" }));
-        await todosStore.load(todo.list_id);
+        if (lastUpdateTime === updateStartTime) {
+          update((state) => ({
+            ...state,
+            error: "Failed to update todo title",
+          }));
+        }
       }
     },
 
     move: async (todo: Todo, direction: "up" | "down") => {
+      if (isMoving) return;
+      isMoving = true;
+      const updateStartTime = Date.now();
+      lastUpdateTime = updateStartTime;
+
       const state = get(store);
       const activeTodos = reorderTodos(
         state.items
@@ -189,6 +211,7 @@ function createTodosStore() {
         (direction === "up" && currentIndex <= 0) ||
         (direction === "down" && currentIndex === activeTodos.length - 1)
       ) {
+        isMoving = false;
         return;
       }
 
@@ -197,12 +220,12 @@ function createTodosStore() {
       const targetTodo = activeTodos[targetIndex];
       const currentTodo = activeTodos[currentIndex];
 
-      // Échange les ordres des todos réorganisés
       [activeTodos[currentIndex], activeTodos[targetIndex]] = [
         { ...activeTodos[targetIndex], order: currentIndex },
         { ...activeTodos[currentIndex], order: targetIndex },
       ];
 
+      // Optimistic update
       update((state) => ({
         ...state,
         items: state.items.map((t: Todo) => {
@@ -234,9 +257,25 @@ function createTodosStore() {
           .upsert(updates);
 
         if (supabaseError) throw supabaseError;
+
+        // Ne mettre à jour que si aucune autre mise à jour n'a été faite entre temps
+        if (lastUpdateTime === updateStartTime) {
+          update((state) => ({
+            ...state,
+            items: state.items.map((t: Todo) => {
+              const updatedTodo = activeTodos.find((at) => at.id === t.id);
+              return updatedTodo || t;
+            }),
+          }));
+        }
       } catch (e) {
-        update((state) => ({ ...state, error: "Failed to move todo" }));
-        await todosStore.load(todo.list_id);
+        if (lastUpdateTime === updateStartTime) {
+          update((state) => ({ ...state, error: "Failed to move todo" }));
+        }
+      } finally {
+        if (lastUpdateTime === updateStartTime) {
+          isMoving = false;
+        }
       }
     },
   };
