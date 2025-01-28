@@ -62,7 +62,7 @@
 
 <div class="fixed top-0 left-0 h-screen z-50">
   <div 
-    class="fixed inset-0 bg-black/30 backdrop-blur-lg lg:hidden transition-all duration-300 {isOpen ? '' : 'opacity-0'}" 
+    class="fixed inset-0 bg-black/30 backdrop-blur-lg lg:hidden transition-all duration-300 pointer-events-none {isOpen ? '' : 'opacity-0'}" 
     on:click={toggleSidebar}
   />
   {#if isOpen}
