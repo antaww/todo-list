@@ -19,6 +19,13 @@ function createTodosStore() {
 
   const { subscribe, update } = store;
 
+  function reorderTodos(todos: Todo[]) {
+    return todos.map((todo, index) => ({
+      ...todo,
+      order: index,
+    }));
+  }
+
   return {
     subscribe,
     setLoading: (loading: boolean) =>
@@ -171,9 +178,11 @@ function createTodosStore() {
 
     move: async (todo: Todo, direction: "up" | "down") => {
       const state = get(store);
-      const activeTodos = state.items
-        .filter((t: Todo) => !t.completed)
-        .sort((a: Todo, b: Todo) => a.order - b.order);
+      const activeTodos = reorderTodos(
+        state.items
+          .filter((t: Todo) => !t.completed)
+          .sort((a: Todo, b: Todo) => a.order - b.order)
+      );
 
       const currentIndex = activeTodos.findIndex((t: Todo) => t.id === todo.id);
       if (
@@ -186,28 +195,34 @@ function createTodosStore() {
       const targetIndex =
         direction === "up" ? currentIndex - 1 : currentIndex + 1;
       const targetTodo = activeTodos[targetIndex];
+      const currentTodo = activeTodos[currentIndex];
+
+      // Échange les ordres des todos réorganisés
+      [activeTodos[currentIndex], activeTodos[targetIndex]] = [
+        { ...activeTodos[targetIndex], order: currentIndex },
+        { ...activeTodos[currentIndex], order: targetIndex },
+      ];
 
       update((state) => ({
         ...state,
         items: state.items.map((t: Todo) => {
-          if (t.id === todo.id) return { ...t, order: targetTodo.order };
-          if (t.id === targetTodo.id) return { ...t, order: todo.order };
-          return t;
+          const updatedTodo = activeTodos.find((at) => at.id === t.id);
+          return updatedTodo || t;
         }),
       }));
 
       try {
         const updates = [
           {
-            id: todo.id,
-            order: targetTodo.order,
-            title: todo.title,
-            completed: todo.completed,
-            list_id: todo.list_id,
+            id: currentTodo.id,
+            order: targetIndex,
+            title: currentTodo.title,
+            completed: currentTodo.completed,
+            list_id: currentTodo.list_id,
           },
           {
             id: targetTodo.id,
-            order: todo.order,
+            order: currentIndex,
             title: targetTodo.title,
             completed: targetTodo.completed,
             list_id: targetTodo.list_id,
