@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import Input from './ui/Input.svelte';
   import Button from './ui/Button.svelte';
-  import { Star } from 'lucide-svelte';
+  import { Star, Loader2 } from 'lucide-svelte';
   import { favoritesStore } from '../stores/favorites';
 
   export let title = '';
@@ -25,10 +25,10 @@
     }
   }
 
-  function handleKeydown(event: KeyboardEvent & { currentTarget: HTMLInputElement }) {
+  function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      event.currentTarget.blur();
+      (event.currentTarget as HTMLInputElement).blur();
     }
   }
 
@@ -39,6 +39,9 @@
       favoritesStore.add(listId, title);
     }
   }
+
+  let loadingPlaceholder = '';
+  $: loadingPlaceholder = title === '' ? 'Loading...' : '';
 </script>
 
 <div class="mb-6 flex gap-2 items-center">
@@ -52,13 +55,31 @@
     <Star size={20} fill={isFavorite ? 'currentColor' : 'none'} />
   </Button>
 
-  <Input
-    variant="title"
-    bind:value={title}
-    placeholder="Loading..."
-    on:focus={() => dispatch('startEdit')}
-    on:blur={handleBlur}
-    on:keydown={handleKeydown}
-    class="flex-grow"
-  />
-</div> 
+  <div class="flex-grow">
+    <Input
+      variant="title"
+      bind:value={title}
+      placeholder={loadingPlaceholder}
+      on:focus={() => dispatch('startEdit')}
+      on:blur={handleBlur}
+      on:keydown={handleKeydown}
+      class="flex-grow"
+      leftIcon={title === '' ? Loader2 : null}
+    />
+  </div>
+</div>
+
+<style>
+  :global(.loader-icon) {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style> 

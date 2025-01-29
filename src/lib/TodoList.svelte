@@ -8,6 +8,7 @@
   import { listStore } from './stores/list';
   import { historyStore } from './stores/history';
   import { supabase } from './supabase';
+  import { Loader2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
   import TodoForm from './components/TodoForm.svelte';
@@ -225,7 +226,10 @@
     />
 
     {#if $todosStore.loading}
-      <div class="text-center py-4 text-white font-medium">Loading...</div>
+      <div class="text-center py-4 text-white font-medium flex items-center justify-center gap-2">
+        <Loader2 class="animate-spin" size={20} />
+        Loading...
+      </div>
     {:else}
       <section class="space-y-4">
         <div class="space-y-2">
