@@ -12,6 +12,7 @@
   import TodoItem from './components/TodoItem.svelte';
   import TodoForm from './components/TodoForm.svelte';
   import TodoHeader from './components/TodoHeader.svelte';
+  import Alert from './components/ui/Alert.svelte';
 
   export let listId: string;
 
@@ -210,6 +211,12 @@
       on:startEdit={() => listStore.setEditing(true)}
       on:stopEdit={() => listStore.setEditing(false)}
     />
+
+    {#if $todosStore.items.length === 0}
+      <div transition:fade>
+        <Alert message="Anyone with this URL can view and edit this list. Be mindful of what you share!" />
+      </div>
+    {/if}
 
     <TodoForm
       loading={$todosStore.loading}
