@@ -39,7 +39,7 @@
   }
 </script>
 
-<Card variant="secondary" padding="p-3">
+<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 hover:outline-[3px] hover:outline-white/50">
   <div class="flex items-center gap-2 group">
     {#if !isCompleted}
       <div class="flex gap-1">
@@ -79,7 +79,7 @@
       />
     {:else}
       <span 
-        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-colors {todo.completed ? 'line-through text-white/50' : ''}"
+        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-all rounded px-2 py-1 -mx-2 -my-1 outline outline-0 hover:outline-1 hover:outline-white/20 {todo.completed ? 'line-through text-white/50' : ''}"
         on:click={() => dispatch('startEdit', todo)}
       >
         {todo.title}

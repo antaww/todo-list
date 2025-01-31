@@ -35,8 +35,8 @@
 
 <div class="min-h-screen">
   <Sidebar bind:isOpen={isSidebarOpen} />
-  <main class="transition-[margin] duration-500 {isSidebarOpen ? 'lg:ml-80' : 'lg:ml-20'} flex min-h-screen items-center justify-center lg:p-8">
-    <div class="w-full max-w-3xl">
+  <main class="transition-[margin] duration-500 {isSidebarOpen ? 'lg:ml-80' : ''} flex min-h-screen items-center justify-center lg:p-8">
+    <div class="w-full">
       {#if error}
         <div class="p-4 bg-red-100 text-red-700 rounded-lg">
           {error}

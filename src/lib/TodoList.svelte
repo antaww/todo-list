@@ -7,6 +7,7 @@
   import { todosStore } from './stores/todos';
   import { listStore } from './stores/list';
   import { historyStore } from './stores/history';
+  import { displayStore } from './stores/display';
   import { supabase } from './supabase';
   import { Loader2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
@@ -14,6 +15,8 @@
   import TodoForm from './components/TodoForm.svelte';
   import TodoHeader from './components/TodoHeader.svelte';
   import Alert from './components/ui/Alert.svelte';
+  import Button from './components/ui/Button.svelte';
+  import { FoldHorizontal, UnfoldHorizontal } from 'lucide-svelte';
 
   export let listId: string;
 
@@ -186,28 +189,25 @@
   });
 </script>
 
-<div class="min-h-screen p-4 max-w-2xl mx-auto lg:p-4 pt-20 lg:pt-4">
-  <Card padding="p-6">
-    {#if $todosStore.error || $listStore.error}
-      <div class="mb-4 p-4 bg-red-500/30 backdrop-blur-sm text-red-50 rounded-lg border border-red-500/30" transition:fade>
-        {$todosStore.error || $listStore.error}
-        <button
-          class="ml-2 font-bold hover:text-white"
-          on:click={() => {
-            todosStore.setError(null);
-            listStore.setError(null);
-          }}
-          aria-label="Dismiss error"
-        >
-          ×
-        </button>
-      </div>
+<div class="min-h-screen p-4 {$displayStore ? 'max-w-[80vw]' : 'max-w-2xl'} mx-auto lg:p-4 pt-20 lg:pt-4 transition-all duration-300 relative">
+  <Button
+    variant="icon"
+    icon={true}
+    on:click={() => displayStore.toggle()}
+    ariaLabel="Toggle wide mode"
+    class="fixed top-4 right-4 z-50 backdrop-blur-sm"
+  >
+    {#if $displayStore}
+      <FoldHorizontal size={28} />
+    {:else}
+      <UnfoldHorizontal size={28} />
     {/if}
+  </Button>
 
+  <Card class="flex-1 flex flex-col gap-4 overflow-hidden relative">
     <TodoHeader
       title={$listStore.title}
       isEditing={$listStore.isEditing}
-      {listId}
       on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
       on:startEdit={() => listStore.setEditing(true)}
       on:stopEdit={() => listStore.setEditing(false)}
