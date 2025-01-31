@@ -156,6 +156,10 @@ function createTodosStore() {
         if (lastUpdateTime === updateStartTime) {
           update((state) => ({ ...state, error: "Failed to update todo" }));
         }
+      } finally {
+        if (lastUpdateTime === updateStartTime) {
+          isMoving = false;
+        }
       }
     },
 
