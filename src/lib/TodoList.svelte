@@ -7,6 +7,7 @@
   import { todosStore } from './stores/todos';
   import { listStore } from './stores/list';
   import { historyStore } from './stores/history';
+  import { favoritesStore } from './stores/favorites';
   import { displayStore } from './stores/display';
   import { supabase } from './supabase';
   import { Loader2 } from 'lucide-svelte';
@@ -50,6 +51,11 @@
     if ($listStore.title !== 'Untitled List') {
       document.title = `${$listStore.title} - Todolist Realtime`;
       historyStore.add(listId, $listStore.title);
+      console.log('Is in favorites:', $favoritesStore.some(f => f.id === listId), 'listId:', listId, 'favorites:', $favoritesStore);
+      if ($favoritesStore.some(f => f.id === listId)) {
+        favoritesStore.updateTitle(listId, $listStore.title);
+      }
+      historyStore.updateTitle(listId, $listStore.title);
     } else {
       document.title = 'Todolist Realtime';
     }
@@ -207,10 +213,17 @@
   <Card class="flex-1 flex flex-col gap-4 overflow-hidden relative">
     <TodoHeader
       title={$listStore.title}
-      isEditing={$listStore.isEditing}
+      {listId}
       on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
       on:startEdit={() => listStore.setEditing(true)}
       on:stopEdit={() => listStore.setEditing(false)}
+      on:toggleFavorite={() => {
+        if ($favoritesStore.some(f => f.id === listId)) {
+          favoritesStore.remove(listId);
+        } else {
+          favoritesStore.add(listId, $listStore.title);
+        }
+      }}
     />
 
     {#if $todosStore.items.length === 0}

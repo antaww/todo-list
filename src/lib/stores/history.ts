@@ -39,6 +39,15 @@ function createHistoryStore() {
         return [];
       });
     },
+    updateTitle: (id: string, newTitle: string) => {
+      update((history) => {
+        const newHistory = history.map((h) => 
+          h.id === id ? { ...h, title: newTitle } : h
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+        return newHistory;
+      });
+    },
   };
 }
 

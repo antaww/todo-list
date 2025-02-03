@@ -34,6 +34,15 @@ function createFavoritesStore() {
       const favorites = get(store);
       return favorites.some((f) => f.id === id);
     },
+    updateTitle: (id: string, newTitle: string) => {
+      update((favorites) => {
+        const newFavorites = favorites.map((f) => 
+          f.id === id ? { ...f, title: newTitle } : f
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newFavorites));
+        return newFavorites;
+      });
+    },
   };
 }
 
