@@ -87,7 +87,7 @@
       />
     {:else}
       <span 
-        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition-all rounded px-2 py-1 -mx-2 -my-1 outline outline-0 hover:outline-1 hover:outline-white/20 {todo.completed ? 'line-through text-white/50' : ''}"
+        class="flex-1 text-white font-medium cursor-pointer hover:text-white/90 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 {todo.completed ? 'line-through text-white/50' : ''}"
         on:click={() => dispatch('startEdit', todo)}
       >
         {todo.title}
