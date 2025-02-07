@@ -47,8 +47,8 @@
   }
 </script>
 
-<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[3px] hover:outline-white/50 dark:hover:outline-dark-gray-300">
-  <div class="flex items-center gap-2 group">
+<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[3px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item">
+  <div class="flex items-center gap-2">
     {#if !isCompleted}
       <div class="flex gap-1">
         <Button
@@ -92,11 +92,11 @@
         on:click={() => dispatch('startEdit', todo)}
       >
         <span class="block truncate">{todo.title}</span>
-        <span class="ml-2 text-sm text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
+        <span class="text-sm text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
       </span>
     {/if}
 
-    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div class="flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
       <Button
         variant="icon"
         icon={true}
