@@ -50,7 +50,7 @@
       use:melt={$input}
     />
     <div
-      class="h-6 w-11 rounded-full bg-white/10 border border-white/20 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-purple-500/30 peer-checked:border-purple-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/30"
+      class="h-6 w-11 rounded-full bg-purple-500/20 border border-purple-400/30 dark:bg-white/10 dark:border-white/20 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-purple-500/30 peer-checked:border-purple-500 dark:peer-checked:bg-gray-500/30 dark:peer-checked:border-gray-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/30 dark:peer-focus:ring-gray-500/30"
     />
   </label>
   <Moon size={16} class="text-white/80" />
