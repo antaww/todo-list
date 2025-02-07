@@ -210,7 +210,11 @@
       variant="primary"
       class="!p-2"
       on:click={() => {
-        document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
+        if (completedTodos.length > 0) {
+          document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
       }}
     >
       <ArrowDown size={16} />
