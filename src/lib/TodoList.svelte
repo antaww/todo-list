@@ -212,7 +212,7 @@
   </Button>
 
   <Card class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex flex-col gap-4 bg-black/20 backdrop-blur-sm z-10 p-4 rounded-t-lg">
+    <div class="flex flex-col gap-4 bg-black/20 backdrop-blur-sm z-10 p-4 rounded-lg">
       <TodoHeader
         title={$listStore.title}
         {listId}
@@ -240,30 +240,32 @@
         on:sort={({ detail }) => sortBy = detail}
       />
 
-      <div class="flex gap-2 justify-center">
-        <Button
-          variant="primary"
-          class="!p-2"
-          on:click={() => {
-            document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-        >
-          <ArrowUp size={16} />
-        </Button>
-        <Button
-          variant="primary"
-          class="!p-2"
-          on:click={() => {
-            if (completedTodos.length > 0) {
-              document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
-            } else {
-              document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-          }}
-        >
-          <ArrowDown size={16} />
-        </Button>
-      </div>
+      {#if $todosStore.items.length > 0}
+        <div class="flex gap-2 justify-center">
+          <Button
+            variant="primary"
+            class="!p-2"
+            on:click={() => {
+              document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <ArrowUp size={16} />
+          </Button>
+          <Button
+            variant="primary"
+            class="!p-2"
+            on:click={() => {
+              if (completedTodos.length > 0) {
+                document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }
+            }}
+          >
+            <ArrowDown size={16} />
+          </Button>
+        </div>
+      {/if}
     </div>
 
     {#if $todosStore.loading}
