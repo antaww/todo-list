@@ -13,6 +13,7 @@
   export { className as class };
 
   let isFocused = false;
+  let textareaElement: HTMLTextAreaElement;
   const dispatch = createEventDispatcher();
 
   const variants = {
@@ -30,6 +31,20 @@
   function handleBlur() {
     isFocused = false;
   }
+
+  function adjustTextareaHeight() {
+    if (textareaElement) {
+      // Reset height to auto to get the correct scrollHeight
+      textareaElement.style.height = 'auto';
+      // Set the height to match the content
+      const newHeight = Math.max(24, textareaElement.scrollHeight);
+      textareaElement.style.height = newHeight + 'px';
+    }
+  }
+
+  $: if (value && variant === 'inline') {
+    setTimeout(adjustTextareaHeight, 0);
+  }
 </script>
 
 <div class="relative w-full">
@@ -45,26 +60,49 @@
         <svelte:component this={leftIcon} size={20} class="animate-spin" />
       </div>
     {/if}
-    <input
-      type="text"
-      bind:value
-      {placeholder}
-      {disabled}
-      {autofocus}
-      maxlength={maxLength}
-      class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
-      on:blur={(e) => {
-        handleBlur();
-        dispatch('blur', e);
-      }}
-      on:focus={(e) => {
-        handleFocus();
-        dispatch('focus', e);
-      }}
-      on:keydown
-    />
+    {#if variant === 'inline'}
+      <textarea
+        bind:value
+        bind:this={textareaElement}
+        {placeholder}
+        {disabled}
+        {autofocus}
+        maxlength={maxLength}
+        rows="1"
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        on:blur={(e) => {
+          handleBlur();
+          dispatch('blur', e);
+        }}
+        on:focus={(e) => {
+          handleFocus();
+          dispatch('focus', e);
+        }}
+        on:keydown
+        on:input={adjustTextareaHeight}
+      />
+    {:else}
+      <input
+        type="text"
+        bind:value
+        {placeholder}
+        {disabled}
+        {autofocus}
+        maxlength={maxLength}
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        on:blur={(e) => {
+          handleBlur();
+          dispatch('blur', e);
+        }}
+        on:focus={(e) => {
+          handleFocus();
+          dispatch('focus', e);
+        }}
+        on:keydown
+      />
+    {/if}
     {#if maxLength !== undefined}
-      <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-white/50 dark:text-dark-gray-400">
+      <div class="absolute right-2 top-2 text-sm text-white/50 dark:text-dark-gray-400">
         {value.length}/{maxLength}
       </div>
     {/if}
@@ -72,7 +110,11 @@
 </div>
 
 <style>
-  input {
+  input, textarea {
     width: 100%;
+  }
+  
+  textarea {
+    min-height: 24px;
   }
 </style>
