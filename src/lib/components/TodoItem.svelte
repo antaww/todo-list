@@ -37,6 +37,14 @@
   $: if (checked !== todo.completed) {
     dispatch('toggle', todo);
   }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
 </script>
 
 <Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 hover:outline-[3px] hover:outline-white/50">
@@ -83,6 +91,7 @@
         on:click={() => dispatch('startEdit', todo)}
       >
         {todo.title}
+        <span class="ml-2 text-sm text-white/50">{formatDate(todo.created_at)}</span>
       </span>
     {/if}
 
