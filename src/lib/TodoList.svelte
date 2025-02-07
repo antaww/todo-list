@@ -236,36 +236,10 @@
 
       <TodoForm
         loading={$todosStore.loading}
+        hasCompletedTodos={completedTodos.length > 0}
         on:add={({ detail }) => todosStore.add(listId, detail)}
         on:sort={({ detail }) => sortBy = detail}
       />
-
-      {#if $todosStore.items.length > 0}
-        <div class="flex gap-2 justify-center">
-          <Button
-            variant="primary"
-            class="!p-2"
-            on:click={() => {
-              document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            <ArrowUp size={16} />
-          </Button>
-          <Button
-            variant="primary"
-            class="!p-2"
-            on:click={() => {
-              if (completedTodos.length > 0) {
-                document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
-              } else {
-                document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-              }
-            }}
-          >
-            <ArrowDown size={16} />
-          </Button>
-        </div>
-      {/if}
     </div>
 
     {#if $todosStore.loading}
