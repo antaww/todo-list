@@ -10,7 +10,7 @@
   import { favoritesStore } from './stores/favorites';
   import { displayStore } from './stores/display';
   import { supabase } from './supabase';
-  import { Loader2 } from 'lucide-svelte';
+  import { ArrowDown, ArrowUp, Loader2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
   import TodoForm from './components/TodoForm.svelte';
@@ -196,6 +196,27 @@
 </script>
 
 <div class="min-h-screen p-4 {$displayStore ? 'max-w-[80vw]' : 'max-w-2xl'} mx-auto lg:p-4 pt-20 lg:pt-4 transition-all duration-300 relative">
+  <div class="flex gap-2 justify-center mb-4">
+    <Button
+      variant="primary"
+      class="!p-2"
+      on:click={() => {
+        document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <ArrowUp size={16} />
+    </Button>
+    <Button
+      variant="primary"
+      class="!p-2"
+      on:click={() => {
+        document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <ArrowDown size={16} />
+    </Button>
+  </div>
+
   <Button
     variant="icon"
     icon={true}
@@ -245,7 +266,7 @@
       </div>
     {:else}
       <section class="space-y-4">
-        <div class="space-y-2">
+        <div class="space-y-2" id="active-todos">
           {#each activeTodos as todo (todo.id)}
             <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
               <TodoItem
@@ -268,7 +289,7 @@
         {#if completedTodos.length > 0}
           <div class="my-6 border-t border-white/30" />
 
-          <div class="space-y-2">
+          <div class="space-y-2" id="completed-todos">
             {#each completedTodos as todo (todo.id)}
               <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
                 <TodoItem
