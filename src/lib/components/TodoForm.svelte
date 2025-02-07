@@ -42,6 +42,7 @@
       bind:value={newTodoTitle}
       placeholder="Add a new todo..."
       disabled={loading}
+      maxLength={150}
     />
     <Button
       type="submit"

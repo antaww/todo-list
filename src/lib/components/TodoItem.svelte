@@ -78,6 +78,7 @@
       <Input
         variant="inline"
         bind:value={editingTitle}
+        maxLength={150}
         on:blur={() => {
           dispatch('updateTitle', { todo, title: editingTitle });
           dispatch('startEdit', undefined);

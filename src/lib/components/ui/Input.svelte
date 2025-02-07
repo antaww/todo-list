@@ -8,6 +8,7 @@
   export let variant: "default" | "title" | "inline" = "default";
   export let autofocus = false;
   export let leftIcon: any = null;
+  export let maxLength: number | undefined = undefined;
   let className = '';
   export { className as class };
 
@@ -50,7 +51,8 @@
       {placeholder}
       {disabled}
       {autofocus}
-      class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {paddingLeft} {className}"
+      maxlength={maxLength}
+      class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
       on:blur={(e) => {
         handleBlur();
         dispatch('blur', e);
@@ -61,6 +63,11 @@
       }}
       on:keydown
     />
+    {#if maxLength !== undefined}
+      <div class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-white/50 dark:text-dark-gray-400">
+        {value.length}/{maxLength}
+      </div>
+    {/if}
   </div>
 </div>
 
