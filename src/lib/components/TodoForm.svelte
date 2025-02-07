@@ -46,13 +46,14 @@
     <Button
       type="submit"
       disabled={loading || !newTodoTitle.trim()}
+      variant="primary"
     >
       Add
     </Button>
   </form>
 
   <div class="flex items-center gap-2">
-    <span class="text-white text-sm">Sort by:</span>
+    <span class="text-white dark:text-dark-gray-800">Sort by:</span>
     <Select
       value={sortBy}
       options={sortOptions}

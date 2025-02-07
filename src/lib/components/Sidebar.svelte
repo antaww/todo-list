@@ -7,6 +7,7 @@
   import { fade, fly } from 'svelte/transition';
   import { favoritesStore } from '../stores/favorites';
   import { historyStore } from '../stores/history';
+  import DarkModeSwitch from './ui/DarkModeSwitch.svelte';
 
   export let isOpen = false;
   let searchValue = '';
@@ -147,10 +148,13 @@
             </div>
           </div>
 
-          <Button on:click={createNewList} variant="primary" class="flex items-center justify-center gap-2" title="Create new list">
-            <Plus size={20} />
-            New list
-          </Button>
+          <div class="flex flex-col gap-4">
+            <DarkModeSwitch />
+            <Button on:click={createNewList} variant="primary" class="flex items-center justify-center gap-2" title="Create new list">
+              <Plus size={20} />
+              New list
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

@@ -61,7 +61,7 @@
     icon={true}
     on:click={toggleFavorite}
     title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-    class={isFavorite ? 'text-yellow-400' : 'text-white/30 hover:text-white/50'}>
+    class="!text-yellow-400">
     <Star size={20} fill={isFavorite ? 'currentColor' : 'none'} />
   </Button>
 

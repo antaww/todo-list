@@ -7,19 +7,19 @@
   export { className as class };
 
   const variants = {
-    primary: "border-white/30",
-    secondary: "border-white/30"
+    primary: "border-white/30 dark:border-[#333]",
+    secondary: "border-white/30 dark:border-[#333]"
   };
 
   if (!background) {
     if (variant === 'secondary') {
-      background = 'bg-white/10';
+      background = 'bg-white/10 dark:bg-black';
     } else if (variant === 'primary') {
-      background = 'bg-white/20';
+      background = 'bg-white/20 dark:bg-black';
     }
   }
 </script>
 
-<div class="backdrop-blur-lg rounded-xl shadow-xl {padding} border transition-all {background} {variants[variant]} {className}">
+<div class="backdrop-blur-lg rounded-xl shadow-xl {padding} border transition-all {background} {variants[variant]} {className} dark:shadow-black/50">
   <slot />
 </div> 
