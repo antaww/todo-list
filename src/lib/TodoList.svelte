@@ -17,6 +17,7 @@
   import TodoHeader from './components/TodoHeader.svelte';
   import Alert from './components/ui/Alert.svelte';
   import Button from './components/ui/Button.svelte';
+  import ScrollArea from './components/ui/ScrollArea.svelte';
   import { FoldHorizontal, UnfoldHorizontal } from 'lucide-svelte';
 
   export let listId: string;
@@ -195,32 +196,7 @@
   });
 </script>
 
-<div class="min-h-screen p-4 {$displayStore ? 'max-w-[80vw]' : 'max-w-2xl'} mx-auto lg:p-4 pt-20 lg:pt-4 transition-all duration-300 relative">
-  <div class="flex gap-2 justify-center mb-4">
-    <Button
-      variant="primary"
-      class="!p-2"
-      on:click={() => {
-        document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
-      }}
-    >
-      <ArrowUp size={16} />
-    </Button>
-    <Button
-      variant="primary"
-      class="!p-2"
-      on:click={() => {
-        if (completedTodos.length > 0) {
-          document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-      }}
-    >
-      <ArrowDown size={16} />
-    </Button>
-  </div>
-
+<div class="min-h-screen p-4 {$displayStore ? 'max-w-[80vw]' : 'max-w-2xl'} mx-auto lg:p-4 pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
   <Button
     variant="icon"
     icon={true}
@@ -235,33 +211,60 @@
     {/if}
   </Button>
 
-  <Card class="flex-1 flex flex-col gap-4 overflow-hidden relative">
-    <TodoHeader
-      title={$listStore.title}
-      {listId}
-      on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
-      on:startEdit={() => listStore.setEditing(true)}
-      on:stopEdit={() => listStore.setEditing(false)}
-      on:toggleFavorite={() => {
-        if ($favoritesStore.some(f => f.id === listId)) {
-          favoritesStore.remove(listId);
-        } else {
-          favoritesStore.add(listId, $listStore.title);
-        }
-      }}
-    />
+  <Card class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex flex-col gap-4 bg-black/20 backdrop-blur-sm z-10 p-4 rounded-t-lg">
+      <TodoHeader
+        title={$listStore.title}
+        {listId}
+        on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
+        on:startEdit={() => listStore.setEditing(true)}
+        on:stopEdit={() => listStore.setEditing(false)}
+        on:toggleFavorite={() => {
+          if ($favoritesStore.some(f => f.id === listId)) {
+            favoritesStore.remove(listId);
+          } else {
+            favoritesStore.add(listId, $listStore.title);
+          }
+        }}
+      />
 
-    {#if $todosStore.items.length === 0}
-      <div transition:fade>
-        <Alert message="Anyone with this URL can view and edit this list. Be mindful of what you share!" />
+      {#if $todosStore.items.length === 0}
+        <div transition:fade>
+          <Alert message="Anyone with this URL can view and edit this list. Be mindful of what you share!" />
+        </div>
+      {/if}
+
+      <TodoForm
+        loading={$todosStore.loading}
+        on:add={({ detail }) => todosStore.add(listId, detail)}
+        on:sort={({ detail }) => sortBy = detail}
+      />
+
+      <div class="flex gap-2 justify-center">
+        <Button
+          variant="primary"
+          class="!p-2"
+          on:click={() => {
+            document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <ArrowUp size={16} />
+        </Button>
+        <Button
+          variant="primary"
+          class="!p-2"
+          on:click={() => {
+            if (completedTodos.length > 0) {
+              document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }}
+        >
+          <ArrowDown size={16} />
+        </Button>
       </div>
-    {/if}
-
-    <TodoForm
-      loading={$todosStore.loading}
-      on:add={({ detail }) => todosStore.add(listId, detail)}
-      on:sort={({ detail }) => sortBy = detail}
-    />
+    </div>
 
     {#if $todosStore.loading}
       <div class="text-center py-4 text-white font-medium flex items-center justify-center gap-2">
@@ -269,48 +272,52 @@
         Loading...
       </div>
     {:else}
-      <section class="space-y-4">
-        <div class="space-y-2" id="active-todos">
-          {#each activeTodos as todo (todo.id)}
-            <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
-              <TodoItem
-                {todo}
-                isEditing={$todosStore.editingId === todo.id}
-                editingTitle={todo.title}
-                isFirst={activeTodos.indexOf(todo) === 0}
-                isLast={activeTodos.indexOf(todo) === activeTodos.length - 1}
-                on:toggle={() => todosStore.toggle(todo)}
-                on:delete={() => todosStore.delete(todo)}
-                on:moveUp={() => todosStore.move(todo, 'up')}
-                on:moveDown={() => todosStore.move(todo, 'down')}
-                on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
-              />
+      <div class="h-[calc(100vh-20rem)]">
+        <ScrollArea class="h-full" scrollColorClass="bg-white/20">
+          <section class="space-y-4 p-4">
+            <div class="space-y-2" id="active-todos">
+              {#each activeTodos as todo (todo.id)}
+                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+                  <TodoItem
+                    {todo}
+                    isEditing={$todosStore.editingId === todo.id}
+                    editingTitle={todo.title}
+                    isFirst={activeTodos.indexOf(todo) === 0}
+                    isLast={activeTodos.indexOf(todo) === activeTodos.length - 1}
+                    on:toggle={() => todosStore.toggle(todo)}
+                    on:delete={() => todosStore.delete(todo)}
+                    on:moveUp={() => todosStore.move(todo, 'up')}
+                    on:moveDown={() => todosStore.move(todo, 'down')}
+                    on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
+                    on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                  />
+                </div>
+              {/each}
             </div>
-          {/each}
-        </div>
 
-        {#if completedTodos.length > 0}
-          <div class="my-6 border-t border-white/30" />
+            {#if completedTodos.length > 0}
+              <div class="my-6 border-t border-white/30" />
 
-          <div class="space-y-2" id="completed-todos">
-            {#each completedTodos as todo (todo.id)}
-              <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
-                <TodoItem
-                  {todo}
-                  isEditing={$todosStore.editingId === todo.id}
-                  editingTitle={todo.title}
-                  isCompleted={true}
-                  on:toggle={() => todosStore.toggle(todo)}
-                  on:delete={() => todosStore.delete(todo)}
-                  on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                  on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
-                />
+              <div class="space-y-2" id="completed-todos">
+                {#each completedTodos as todo (todo.id)}
+                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+                    <TodoItem
+                      {todo}
+                      isEditing={$todosStore.editingId === todo.id}
+                      editingTitle={todo.title}
+                      isCompleted={true}
+                      on:toggle={() => todosStore.toggle(todo)}
+                      on:delete={() => todosStore.delete(todo)}
+                      on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
+                      on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                    />
+                  </div>
+                {/each}
               </div>
-            {/each}
-          </div>
-        {/if}
-      </section>
+            {/if}
+          </section>
+        </ScrollArea>
+      </div>
     {/if}
   </Card>
 </div>
