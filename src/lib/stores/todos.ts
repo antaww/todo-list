@@ -1,6 +1,8 @@
 import { writable, get } from "svelte/store";
 import type { Todo } from "../types";
 import { supabase } from "../supabase";
+import { lastSeenStore } from "../helpers/lastSeen";
+import { addToast } from "../components/ui/Toaster.svelte";
 
 export interface TodosState {
   items: Todo[];
@@ -20,6 +22,7 @@ function createTodosStore() {
   const { subscribe, update } = store;
   let isMoving = false;
   let lastUpdateTime = Date.now();
+  let currentListId: string | null = null;
 
   function reorderTodos(todos: Todo[]) {
     return todos.map((todo, index) => ({
@@ -39,6 +42,9 @@ function createTodosStore() {
 
     load: async (listId: string) => {
       try {
+        currentListId = listId;
+        const lastSeen = get(lastSeenStore);
+
         const { data, error: supabaseError } = await supabase
           .from("todos")
           .select("*")
@@ -46,6 +52,25 @@ function createTodosStore() {
           .order("order");
 
         if (supabaseError) throw supabaseError;
+
+        // Vérifier les nouvelles tâches depuis la dernière visite
+        if (data) {
+          const newTodos = data.filter(todo => {
+            const createdAt = new Date(todo.created_at).getTime();
+            return createdAt > lastSeen;
+          });
+
+          if (newTodos.length > 0 && currentListId === listId) {
+            console.log('newTodos', newTodos);
+            addToast({
+              data: {
+                title: 'Nouvelles tâches',
+                description: `${newTodos.length} nouvelle${newTodos.length > 1 ? 's' : ''} tâche${newTodos.length > 1 ? 's' : ''} ajoutée${newTodos.length > 1 ? 's' : ''} depuis votre dernière visite.`,
+                type: 'info'
+              }
+            });
+          }
+        }
 
         update((state) => ({ ...state, items: data || [], error: null }));
       } catch (e) {

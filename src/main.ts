@@ -7,11 +7,11 @@ window.onerror = function(msg, url, line, col, error) {
   return false;
 };
 
-// Global promise rejection handler
+/* // Global promise rejection handler
 window.onunhandledrejection = function(event) {
   console.error('Unhandled promise rejection:', event.reason);
 };
-
+ */
 let app;
 
 try {

@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import TodoList from './lib/TodoList.svelte';
   import { supabase } from './lib/supabase';
   import Sidebar from './lib/components/Sidebar.svelte';
+  import { startLastSeenTracking } from './lib/helpers/lastSeen';
+  import Toaster from './lib/components/ui/Toaster.svelte';
 
   let listId: string;
   let error: string | null = null;
   let isSidebarOpen = true;
+  let cleanup: (() => void) | null = null;
 
   onMount(() => {
     try {
@@ -26,12 +29,23 @@
           console.error('Supabase connection error in App:', err);
           error = 'Database connection error. Please refresh the page.';
         });
+
+      // Démarrer le tracking du last seen
+      cleanup = startLastSeenTracking();
     } catch (e) {
       console.error('Error in App initialization:', e);
       error = 'Failed to initialize application. Please refresh the page.';
     }
   });
+
+  onDestroy(() => {
+    if (cleanup) {
+      cleanup();
+    }
+  });
 </script>
+
+<Toaster />
 
 <div class="min-h-screen">
   <Sidebar bind:isOpen={isSidebarOpen} />
