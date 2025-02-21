@@ -8,11 +8,12 @@
 		states: { checked }
 	} = createSwitch();
 
-	let inputElement: HTMLInputElement | undefined = undefined;
-	
+	const STORAGE_KEY = 'todo-list-theme';
 	const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-	const localStorageTheme = localStorage.getItem('theme');
+	const localStorageTheme = localStorage.getItem(STORAGE_KEY);
 	const isDark = localStorageTheme ? localStorageTheme === 'dark' : prefersDark;
+	
+	let inputElement: HTMLInputElement | undefined = undefined;
 	
 	onMount(() => {
 		if (isDark) {
@@ -24,10 +25,10 @@
 			if (checked === undefined) return;
 			if (checked) {
 				document.documentElement.classList.add('dark');
-				localStorage.setItem('theme', 'dark');
+				localStorage.setItem(STORAGE_KEY, 'dark');
 			} else {
 				document.documentElement.classList.remove('dark');
-				localStorage.setItem('theme', 'light');
+				localStorage.setItem(STORAGE_KEY, 'light');
 			}
 		});
 
