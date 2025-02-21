@@ -10,20 +10,27 @@
 
 	let inputElement: HTMLInputElement | undefined = undefined;
 	
-	$: prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-	$: localStorageTheme = localStorage.getItem('theme');
-	$: isDark = $checked || localStorageTheme === 'dark' || prefersDark;
-
-	// Handle dark mode toggle
-	$: if ($checked) {
-		document.documentElement.classList.add('dark');
-		localStorage.setItem('theme', 'dark');
-	} else {
-		document.documentElement.classList.remove('dark');
-		localStorage.setItem('theme', 'light');
-	}
-
+	const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	const localStorageTheme = localStorage.getItem('theme');
+	const isDark = localStorageTheme ? localStorageTheme === 'dark' : prefersDark;
+	
 	onMount(() => {
+		if (isDark) {
+			$checked = true;
+		}
+
+		// Handle dark mode toggle
+		checked.subscribe((checked) => {
+			if (checked === undefined) return;
+			if (checked) {
+				document.documentElement.classList.add('dark');
+				localStorage.setItem('theme', 'dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+				localStorage.setItem('theme', 'light');
+			}
+		});
+
 		inputElement?.addEventListener('change', () => {
 			$checked = !inputElement!.checked;
 		});
