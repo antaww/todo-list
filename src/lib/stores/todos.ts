@@ -3,6 +3,7 @@ import type { Todo } from "../types";
 import { supabase } from "../supabase";
 import { lastSeenStore } from "../helpers/lastSeen";
 import { addToast } from "../components/ui/Toaster.svelte";
+import { historyStore } from "./history";
 
 export interface TodosState {
   items: Todo[];
@@ -10,6 +11,9 @@ export interface TodosState {
   error: string | null;
   editingId: string | null;
 }
+
+// Time in milliseconds to consider a new task
+const newTasksThreshold = 200;
 
 function createTodosStore() {
   const store = writable<TodosState>({
@@ -53,21 +57,24 @@ function createTodosStore() {
 
         if (supabaseError) throw supabaseError;
 
-        // Vérifier les nouvelles tâches depuis la dernière visite
-        if (data) {
+        // Check if there are new tasks since the last visit
+        // Only if we already have loaded the list before
+        if (data && get(historyStore).some((h) => h.id === listId)) {
           const newTodos = data.filter(todo => {
             const createdAt = new Date(todo.created_at).getTime();
-            return createdAt > lastSeen;
+            const diff = createdAt - lastSeen;
+            return diff > newTasksThreshold;
           });
 
           if (newTodos.length > 0 && currentListId === listId) {
-            console.log('newTodos', newTodos);
             addToast({
               data: {
-                title: 'Nouvelles tâches',
-                description: `${newTodos.length} nouvelle${newTodos.length > 1 ? 's' : ''} tâche${newTodos.length > 1 ? 's' : ''} ajoutée${newTodos.length > 1 ? 's' : ''} depuis votre dernière visite.`,
-                type: 'info'
-              }
+                title: "Nouvelles tâches",
+                description: `${newTodos.length} nouvelle${newTodos.length > 1 ? "s" : ""} tâche${
+                  newTodos.length > 1 ? "s" : ""
+                } ajoutée${newTodos.length > 1 ? "s" : ""} depuis votre dernière visite.`,
+                type: "info",
+              },
             });
           }
         }

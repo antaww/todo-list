@@ -8,7 +8,7 @@ export const lastSeenStore = persistentStore<number>(STORAGE_KEY, 0);
 export function startLastSeenTracking() {
 	let interval: NodeJS.Timeout | null = null;
 
-	const updateLastSeen = () => {
+    const updateLastSeen = () => {
 		lastSeenStore.set(Date.now());
 	};
 
@@ -25,19 +25,20 @@ export function startLastSeenTracking() {
 		}
 	};
 
-	// Gérer le changement de visibilité
 	const handleVisibilityChange = () => {
-		if (document.visibilityState === 'hidden') {
-			updateLastSeen();
+		if (document.visibilityState) {
 			stopInterval();
+			updateLastSeen();
 		} else {
 			updateLastSeen();
 			startInterval();
 		}
-	};
+	};;
 
 	// Démarrer l'interval initial
-	startInterval();
+    startInterval();
+
+	// Écouter les changements de visibilité et de focus
 	document.addEventListener('visibilitychange', handleVisibilityChange);
 
 	// Cleanup function
