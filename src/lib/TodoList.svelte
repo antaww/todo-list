@@ -52,7 +52,6 @@
     if ($listStore.title !== 'Untitled List') {
       document.title = `${$listStore.title} - Todolist Realtime`;
       historyStore.add(listId, $listStore.title);
-      console.log('Is in favorites:', $favoritesStore.some(f => f.id === listId), 'listId:', listId, 'favorites:', $favoritesStore);
       if ($favoritesStore.some(f => f.id === listId)) {
         favoritesStore.updateTitle(listId, $listStore.title);
       }
