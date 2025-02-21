@@ -212,7 +212,7 @@
   </Button>
 
   <Card class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex flex-col gap-4 bg-black/20 backdrop-blur-sm z-10 p-4 rounded-lg">
+    <div class="flex flex-col gap-4 bg-white/05 border border-white/20 shadow-lg backdrop-blur-sm z-10 p-4 rounded-lg">
       <TodoHeader
         title={$listStore.title}
         {listId}

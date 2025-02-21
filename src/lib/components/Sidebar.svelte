@@ -80,7 +80,7 @@
             </Button>
           </div>
 
-          <div class="flex-grow flex flex-col gap-4 overflow-hidden">
+          <div class="flex-grow flex flex-col gap-4">
             <!-- Favoris -->
             <div class="h-[40%] flex flex-col min-h-0">
               <div class="flex items-center gap-2 px-2 mb-2 flex-shrink-0">

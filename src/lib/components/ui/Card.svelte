@@ -20,6 +20,6 @@
   }
 </script>
 
-<div class="backdrop-blur-lg rounded-xl shadow-xl {padding} border transition-all {background} {variants[variant]} {className} dark:shadow-black/50">
+<div class="backdrop-blur-lg rounded-xl shadow-lg {padding} border transition-all {background} {variants[variant]} {className} dark:shadow-black/50">
   <slot />
 </div> 

@@ -1,57 +1,57 @@
 <script lang="ts">
-  import { createSwitch, melt } from '@melt-ui/svelte';
-  import { onMount } from 'svelte';
-  import { Moon, Sun } from 'lucide-svelte';
+	import { createSwitch, melt } from '@melt-ui/svelte';
+	import { Moon, Sun } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
-  const isDark = localStorage.theme === 'dark' || 
-    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	const {
+		elements: { root, input },
+		states: { checked }
+	} = createSwitch();
 
-  const {
-    elements: { root, input },
-    states: { checked }
-  } = createSwitch({
-    defaultChecked: isDark
-  });
+	let inputElement: HTMLInputElement | undefined = undefined;
+	
+	$: prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	$: localStorageTheme = localStorage.getItem('theme');
+	$: isDark = $checked || localStorageTheme === 'dark' || prefersDark;
 
-  // Handle dark mode toggle
-  $: if ($checked !== undefined) {
-    if ($checked) {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-    }
-  }
+	// Handle dark mode toggle
+	$: if ($checked) {
+		document.documentElement.classList.add('dark');
+		localStorage.setItem('theme', 'dark');
+	} else {
+		document.documentElement.classList.remove('dark');
+		localStorage.setItem('theme', 'light');
+	}
 
-  // Watch system preference changes
-  onMount(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!('theme' in localStorage)) {
-        checked.set(e.matches);
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  });
+	onMount(() => {
+		inputElement?.addEventListener('change', () => {
+			$checked = !inputElement!.checked;
+		});
+	});
 </script>
 
 <div class="flex items-center gap-2 px-2">
-  <Sun size={16} class="text-white/80" />
-  <label
-    use:melt={$root}
-    class="relative inline-flex cursor-pointer items-center"
-  >
-    <input
-      type="checkbox"
-      class="peer sr-only"
-      use:melt={$input}
-    />
-    <div
-      class="h-6 w-11 rounded-full bg-purple-500/20 border border-purple-400/30 dark:bg-white/10 dark:border-white/20 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-purple-500/30 peer-checked:border-purple-500 dark:peer-checked:bg-gray-500/30 dark:peer-checked:border-gray-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/30 dark:peer-focus:ring-gray-500/30"
-    />
-  </label>
-  <Moon size={16} class="text-white/80" />
+	<Sun size={16} class="text-white/80" />
+	<label
+		use:melt={$root}
+		class="relative inline-flex cursor-pointer items-center"
+	>
+		<input
+			type="checkbox"
+			class="peer sr-only"
+			use:melt={$input}
+			checked={$checked}
+			bind:this={inputElement}
+		/>
+		<div
+			class="h-6 w-11 rounded-full bg-purple-500/20 border border-white/30
+			dark:bg-white/10 dark:border-white/20
+			after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-['']
+			dark:peer-focus:ring-gray-500/30 dark:peer-checked:bg-gray-500/30 dark:peer-checked:border-gray-500
+			peer-checked:bg-purple-500/30 peer-checked:border-purple-500
+			peer-checked:after:translate-x-full peer-checked:after:border-white
+			peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/30"
+		/>
+	</label>
+	<Moon size={16} class="text-white/80" />
 </div> 
