@@ -1,5 +1,7 @@
 # ✨ Svelte Todo List
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-realtime--todolist.pages.dev-brightgreen)](https://realtime-todolist.pages.dev/)
+
 A modern, reactive todo list application built with Svelte, TypeScript, and Supabase. Features real-time updates, multiple lists support, and a beautiful glassmorphism design.
 
 ## 🚀 Features
