@@ -88,10 +88,10 @@
       />
     {:else}
       <span 
-        class="flex-1 text-white dark:text-dark-foreground font-medium cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} overflow-hidden"
+        class="flex-1 text-white dark:text-dark-foreground font-medium cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words"
         on:click={() => dispatch('startEdit', todo)}
       >
-        <span class="block truncate">{todo.title}</span>
+        <span class="block">{todo.title}</span>
         <span class="text-sm text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
       </span>
     {/if}
