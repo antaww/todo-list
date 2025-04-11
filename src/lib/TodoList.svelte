@@ -247,12 +247,12 @@
         Loading...
       </div>
     {:else}
-      <div class="h-[calc(100vh-20rem)]">
+      <div class="h-[calc(100vh-20rem)] max-w-full">
         <ScrollArea class="h-full" scrollColorClass="bg-white/20">
-          <section class="space-y-4 p-4">
+          <section class="space-y-4 p-4 overflow-hidden {$displayStore ? '' : 'w-[38rem]'}">
             <div class="space-y-2" id="active-todos">
               {#each activeTodos as todo (todo.id)}
-                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}} class="w-full">
                   <TodoItem
                     {todo}
                     isEditing={$todosStore.editingId === todo.id}
@@ -275,7 +275,7 @@
 
               <div class="space-y-2" id="completed-todos">
                 {#each completedTodos as todo (todo.id)}
-                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}} class="w-full">
                     <TodoItem
                       {todo}
                       isEditing={$todosStore.editingId === todo.id}

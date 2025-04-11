@@ -47,8 +47,8 @@
   }
 </script>
 
-<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[3px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item">
-  <div class="flex items-center gap-2">
+<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[3px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item w-full max-w-full">
+  <div class="flex items-center gap-2 w-full overflow-hidden">
     {#if !isCompleted}
       <div class="flex gap-1">
         <Button
@@ -79,6 +79,7 @@
         variant="inline"
         bind:value={editingTitle}
         maxLength={150}
+        class="min-w-0"
         on:blur={() => {
           dispatch('updateTitle', { todo, title: editingTitle });
           dispatch('startEdit', undefined);
@@ -88,15 +89,15 @@
       />
     {:else}
       <span 
-        class="flex-1 text-white dark:text-dark-foreground font-medium cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words"
+        class="flex-1 text-white dark:text-dark-foreground font-medium cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
         on:click={() => dispatch('startEdit', todo)}
       >
-        <span class="block">{todo.title}</span>
+        <span class="block break-words">{todo.title}</span>
         <span class="text-sm text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
       </span>
     {/if}
 
-    <div class="flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+    <div class="flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
       <Button
         variant="icon"
         icon={true}
