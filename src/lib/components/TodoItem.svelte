@@ -107,10 +107,11 @@
         <Edit2 size={20} />
       </Button>
       <Button
-        variant="danger"
+        variant="icon"
         icon={true}
         on:click={() => dispatch('delete', todo)}
         ariaLabel="Delete todo"
+        class="hover:text-red-500 transition-colors"
       >
         <Trash2 size={20} />
       </Button>

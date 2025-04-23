@@ -12,7 +12,7 @@
   const variants = {
     primary: "bg-white/30 hover:bg-white/40 text-white font-medium border border-white/30 dark:bg-white dark:hover:bg-white/90 dark:text-black dark:border-transparent",
     icon: "text-white hover:opacity-80 dark:text-dark-gray-600 dark:hover:text-dark-foreground",
-    danger: "text-white/80 hover:text-red-300 dark:text-dark-gray-600 dark:hover:text-red-400"
+    danger: "bg-red-500/70 hover:bg-red-600/80 text-white font-medium border border-red-500/30 dark:bg-red-500 dark:hover:bg-red-600 dark:text-white dark:border-transparent"
   };
 </script>
 

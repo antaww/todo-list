@@ -314,6 +314,33 @@ function createTodosStore() {
         }
       }
     },
+
+    deleteAllCompleted: async (listId: string) => {
+      const state = get(store);
+      const completedTodos = state.items.filter((t: Todo) => t.completed);
+      
+      if (completedTodos.length === 0) return;
+      
+      // Optimistic update
+      update((state) => ({
+        ...state,
+        items: state.items.filter((t: Todo) => !t.completed),
+      }));
+
+      try {
+        const completedIds = completedTodos.map((todo) => todo.id);
+        
+        const { error: supabaseError } = await supabase
+          .from("todos")
+          .delete()
+          .in("id", completedIds);
+
+        if (supabaseError) throw supabaseError;
+      } catch (e) {
+        update((state) => ({ ...state, error: "Failed to delete completed todos" }));
+        await todosStore.load(listId);
+      }
+    },
   };
 }
 

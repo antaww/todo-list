@@ -10,7 +10,7 @@
   import { favoritesStore } from './stores/favorites';
   import { displayStore } from './stores/display';
   import { supabase } from './supabase';
-  import { ArrowDown, ArrowUp, Loader2 } from 'lucide-svelte';
+  import { ArrowDown, ArrowUp, Loader2, Trash2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
   import TodoForm from './components/TodoForm.svelte';
@@ -18,12 +18,15 @@
   import Alert from './components/ui/Alert.svelte';
   import Button from './components/ui/Button.svelte';
   import ScrollArea from './components/ui/ScrollArea.svelte';
+  import Dialog from './components/ui/Dialog.svelte';
+  import { addToast } from './components/ui/Toaster.svelte';
   import { FoldHorizontal, UnfoldHorizontal } from 'lucide-svelte';
 
   export let listId: string;
 
   let subscription: RealtimeChannel[] = [];
   let sortBy: 'name' | 'date' | 'order' = 'order';
+  let deleteDialogOpen = false;
 
   function sortTodos(todos: any[], by: 'name' | 'date' | 'order') {
     return [...todos].sort((a, b) => {
@@ -47,6 +50,29 @@
     $todosStore.items.filter(t => t.completed),
     sortBy
   );
+  
+  function openDeleteDialog() {
+    deleteDialogOpen = true;
+  }
+  
+  function handleConfirmDelete() {
+    const tasksToDelete = completedTodos.length;
+    
+    todosStore.deleteAllCompleted(listId);
+    deleteDialogOpen = false;
+    
+    addToast({
+      data: {
+        title: "Tasks deleted",
+        description: `Successfully deleted ${tasksToDelete} completed ${tasksToDelete === 1 ? 'task' : 'tasks'}.`,
+        type: "success"
+      }
+    });
+  }
+  
+  function handleCancelDelete() {
+    deleteDialogOpen = false;
+  }
 
   $: if ($listStore.title) {
     if ($listStore.title !== 'Untitled List') {
@@ -272,6 +298,22 @@
 
             {#if completedTodos.length > 0}
               <div class="my-6 border-t border-white/30" />
+              
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedTodos.length})</h3>
+                {#if completedTodos.length > 0}
+                  <Button
+                    variant="icon"
+                    icon={true}
+                    on:click={openDeleteDialog}
+                    ariaLabel="Delete all completed tasks"
+                    title="Delete all completed tasks"
+                    class="hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </Button>
+                {/if}
+              </div>
 
               <div class="space-y-2" id="completed-todos">
                 {#each completedTodos as todo (todo.id)}
@@ -296,6 +338,17 @@
     {/if}
   </Card>
 </div>
+
+<Dialog
+  open={deleteDialogOpen}
+  title="Delete completed tasks"
+  description="Are you sure you want to permanently delete all completed tasks? This action cannot be undone."
+  confirmLabel="Delete all"
+  cancelLabel="Cancel"
+  variant="danger"
+  on:confirm={handleConfirmDelete}
+  on:cancel={handleCancelDelete}
+/>
 
 <style>
   :global(html) {
