@@ -9,6 +9,7 @@
   export let autofocus = false;
   export let leftIcon: any = null;
   export let maxLength: number | undefined = undefined;
+  export let size: "default" | "sm" = "default";
   let className = '';
   export { className as class };
 
@@ -22,7 +23,13 @@
     inline: "px-2 py-1 bg-black/20 dark:bg-black border-none"
   };
 
+  const sizes = {
+    default: "",
+    sm: "text-sm py-1"
+  };
+
   $: paddingLeft = leftIcon && variant === 'title' ? 'pl-12' : 'pl-4';
+  $: sizeClass = sizes[size];
 
   function handleFocus() {
     isFocused = true;
@@ -66,10 +73,9 @@
         bind:this={textareaElement}
         {placeholder}
         {disabled}
-        {autofocus}
         maxlength={maxLength}
         rows="1"
-        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
         on:blur={(e) => {
           handleBlur();
           dispatch('blur', e);
@@ -87,9 +93,8 @@
         bind:value
         {placeholder}
         {disabled}
-        {autofocus}
         maxlength={maxLength}
-        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
         on:blur={(e) => {
           handleBlur();
           dispatch('blur', e);

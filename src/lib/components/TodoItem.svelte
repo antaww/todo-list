@@ -47,18 +47,19 @@
   }
 </script>
 
-<Card variant="secondary" padding="p-3" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[3px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full">
-  <div class="flex items-center gap-2 overflow-hidden">
+<Card variant="secondary" padding="p-1.5" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full">
+  <div class="flex items-center overflow-hidden">
     {#if !isCompleted}
-      <div class="flex gap-1">
+      <div class="flex gap-0.5 mr-2">
         <Button
           variant="icon"
           icon={true}
           on:click={() => dispatch('moveUp', todo)}
           disabled={isFirst}
           ariaLabel="Move todo up"
+          class="h-6 w-6"
         >
-          <ArrowUp size={20} />
+          <ArrowUp size={14} />
         </Button>
         <Button
           variant="icon"
@@ -66,13 +67,14 @@
           on:click={() => dispatch('moveDown', todo)}
           disabled={isLast}
           ariaLabel="Move todo down"
+          class="h-6 w-6"
         >
-          <ArrowDown size={20} />
+          <ArrowDown size={14} />
         </Button>
       </div>
     {/if}
 
-    <Checkbox bind:checked />
+    <Checkbox bind:checked size="h-3 w-3" />
 
     {#if isEditing}
       <Input
@@ -80,6 +82,7 @@
         bind:value={editingTitle}
         maxLength={150}
         class="min-w-0"
+        size="sm"
         on:blur={() => {
           dispatch('updateTitle', { todo, title: editingTitle });
           dispatch('startEdit', undefined);
@@ -89,31 +92,32 @@
       />
     {:else}
       <span
-        class="flex-1 text-white dark:text-dark-foreground font-medium cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-2 py-1 mx-2 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
+        class="flex-1 text-white dark:text-dark-foreground text-xs cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
         on:click={() => dispatch('startEdit', todo)}
       >
         <span class="block break-words">{todo.title}</span>
-        <span class="text-sm text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
+        <span class="text-[10px] text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
       </span>
     {/if}
 
-    <div class="flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
+    <div class="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
       <Button
         variant="icon"
         icon={true}
         on:click={() => dispatch('startEdit', todo)}
         ariaLabel="Edit todo"
+        class="h-6 w-6"
       >
-        <Edit2 size={20} />
+        <Edit2 size={16} />
       </Button>
       <Button
         variant="icon"
         icon={true}
         on:click={() => dispatch('delete', todo)}
         ariaLabel="Delete todo"
-        class="hover:text-red-500 transition-colors"
+        class="hover:text-red-500 transition-colors h-6 w-6"
       >
-        <Trash2 size={20} />
+        <Trash2 size={16} />
       </Button>
     </div>
   </div>
