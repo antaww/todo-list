@@ -50,17 +50,17 @@
     $todosStore.items.filter(t => t.completed),
     sortBy
   );
-  
+
   function openDeleteDialog() {
     deleteDialogOpen = true;
   }
-  
+
   function handleConfirmDelete() {
     const tasksToDelete = completedTodos.length;
-    
+
     todosStore.deleteAllCompleted(listId);
     deleteDialogOpen = false;
-    
+
     addToast({
       data: {
         title: "Tasks deleted",
@@ -69,7 +69,7 @@
       }
     });
   }
-  
+
   function handleCancelDelete() {
     deleteDialogOpen = false;
   }
@@ -190,7 +190,7 @@
         todosChannel.subscribe(),
         listsChannel.subscribe()
       ]);
-      
+
       subscription = [todosChannel, listsChannel];
     } catch (e: unknown) {
       todosStore.setError('Failed to set up real-time updates. Please refresh the page.');
@@ -275,10 +275,10 @@
     {:else}
       <div class="h-[calc(100vh-20rem)] max-w-full">
         <ScrollArea class="h-full" scrollColorClass="bg-white/20">
-          <section class="space-y-4 p-4 overflow-hidden {$displayStore ? '' : 'w-[38rem]'}">
+          <section class="space-y-4 p-4 overflow-hidden max-w-full">
             <div class="space-y-2" id="active-todos">
               {#each activeTodos as todo (todo.id)}
-                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}} class="w-full">
+                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
                   <TodoItem
                     {todo}
                     isEditing={$todosStore.editingId === todo.id}
@@ -298,7 +298,7 @@
 
             {#if completedTodos.length > 0}
               <div class="my-6 border-t border-white/30" />
-              
+
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedTodos.length})</h3>
                 {#if completedTodos.length > 0}
@@ -317,7 +317,7 @@
 
               <div class="space-y-2" id="completed-todos">
                 {#each completedTodos as todo (todo.id)}
-                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}} class="w-full">
+                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
                     <TodoItem
                       {todo}
                       isEditing={$todosStore.editingId === todo.id}
