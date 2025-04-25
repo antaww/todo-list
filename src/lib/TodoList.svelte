@@ -221,7 +221,7 @@
   });
 </script>
 
-<div class="min-h-screen p-4 {$displayStore ? 'max-w-[80vw]' : 'max-w-2xl'} mx-auto lg:p-4 pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
+<div class="min-h-screen p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
   <Button
     variant="icon"
     icon={true}
@@ -237,7 +237,7 @@
   </Button>
 
   <Card class="flex-1 flex flex-col overflow-hidden">
-    <div class="flex flex-col gap-4 bg-white/05 border border-white/20 shadow-lg backdrop-blur-sm z-10 p-4 rounded-lg">
+    <div class="flex flex-col sm:gap-4 bg-white/05 border border-white/20 shadow-lg backdrop-blur-sm z-10 p-2 sm:p-4 rounded-lg">
       <TodoHeader
         title={$listStore.title}
         {listId}
@@ -273,9 +273,9 @@
         Loading...
       </div>
     {:else}
-      <div class="h-[calc(100vh-20rem)] max-w-full">
+      <div class="h-[calc(100vh-17rem)] sm:h-[calc(100vh-20rem)] max-w-full">
         <ScrollArea class="h-full" scrollColorClass="bg-white/20">
-          <section class="space-y-4 p-4 overflow-hidden max-w-full">
+          <section class="space-y-4 p-2 sm:p-4 overflow-hidden max-w-full">
             <div class="space-y-2" id="active-todos">
               {#each activeTodos as todo (todo.id)}
                 <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>

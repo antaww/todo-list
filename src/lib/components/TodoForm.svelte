@@ -36,10 +36,10 @@
   }
 </script>
 
-<div class="mb-6 space-y-2">
+<div class="mb-4 sm:mb-6 space-y-2">
   <form 
     on:submit|preventDefault={handleSubmit}
-    class="flex gap-2"
+    class="flex gap-1 sm:gap-2"
   >
     <Input
       bind:value={newTodoTitle}
@@ -56,19 +56,19 @@
     </Button>
   </form>
 
-  <div class="flex flex-wrap items-center justify-between gap-2">
-    <div class="flex items-center gap-2 flex-nowrap">
-      <span class="text-white whitespace-nowrap dark:text-dark-gray-800">Sort by:</span>
+  <div class="flex flex-wrap items-center justify-between gap-1 sm:gap-2">
+    <div class="flex items-center gap-1 sm:gap-2 flex-nowrap">
+      <span class="text-sm sm:text-base text-white whitespace-nowrap dark:text-dark-gray-800">Sort by:</span>
       <Select
         value={$sortBy}
         options={sortOptions}
         on:change={handleSortChange}
       />
     </div>
-    <div class="flex gap-2">
+    <div class="flex gap-1 sm:gap-2">
       <Button
         variant="primary"
-        class="!p-2"
+        class="!p-1 sm:!p-2"
         on:click={() => {
           document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' });
         }}
@@ -77,7 +77,7 @@
       </Button>
       <Button
         variant="primary"
-        class="!p-2"
+        class="!p-1 sm:!p-2"
         on:click={() => {
           if (hasCompletedTodos) {
             document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });

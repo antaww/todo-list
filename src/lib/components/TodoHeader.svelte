@@ -40,14 +40,14 @@
 </script>
 
 <!-- En-tête de la todo list avec le titre éditable -->
-<div class="mb-6 flex gap-2 items-center">
+<div class="sm:mb-4 flex gap-1 sm:gap-2 items-center">
   <Button
     variant="icon"
     icon={true}
     on:click={toggleFavorite}
     title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     class="!text-yellow-400">
-    <Star size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+    <Star size={20} class="block" fill={isFavorite ? 'currentColor' : 'none'} />
   </Button>
 
   <div class="flex-grow">
@@ -58,7 +58,7 @@
       on:focus={() => dispatch('startEdit')}
       on:blur={handleBlur}
       on:keydown={handleKeydown}
-      class="flex-grow"
+      class="flex-grow text-lg"
       leftIcon={title === '' ? Loader2 : null} />
   </div>
 </div>

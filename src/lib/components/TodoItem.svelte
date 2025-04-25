@@ -48,18 +48,19 @@
 </script>
 
 <Card variant="secondary" padding="p-1.5" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full">
-  <div class="flex items-center overflow-hidden gap-2" class:py-0.5={isEditing}>
+  <div class="flex items-center overflow-hidden gap-1 sm:gap-2" class:py-0.5={isEditing}>
     {#if !isCompleted}
-      <div class="flex gap-0.5 mr-2">
+      <div class="flex gap-0.5 mr-1 sm:mr-2">
         <Button
           variant="icon"
           icon={true}
           on:click={() => dispatch('moveUp', todo)}
           disabled={isFirst}
           ariaLabel="Move todo up"
-          class="h-6 w-6"
+          class="h-5 w-5 sm:h-6 sm:w-6"
         >
-          <ArrowUp size={14} />
+          <ArrowUp size={12} class="sm:hidden" />
+          <ArrowUp size={14} class="hidden sm:block" />
         </Button>
         <Button
           variant="icon"
@@ -67,9 +68,10 @@
           on:click={() => dispatch('moveDown', todo)}
           disabled={isLast}
           ariaLabel="Move todo down"
-          class="h-6 w-6"
+          class="h-5 w-5 sm:h-6 sm:w-6"
         >
-          <ArrowDown size={14} />
+          <ArrowDown size={12} class="sm:hidden" />
+          <ArrowDown size={14} class="hidden sm:block" />
         </Button>
       </div>
     {/if}
@@ -99,24 +101,26 @@
       </span>
     {/if}
 
-    <div class="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
+    <div class="flex gap-1 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity flex-shrink-0">
       <Button
         variant="icon"
         icon={true}
         on:click={() => dispatch('startEdit', todo)}
         ariaLabel="Edit todo"
-        class="h-6 w-6"
+        class="h-5 w-5 sm:h-6 sm:w-6"
       >
-        <Edit2 size={16} />
+        <Edit2 size={14} class="sm:hidden" />
+        <Edit2 size={16} class="hidden sm:block" />
       </Button>
       <Button
         variant="icon"
         icon={true}
         on:click={() => dispatch('delete', todo)}
         ariaLabel="Delete todo"
-        class="hover:text-red-500 transition-colors h-6 w-6"
+        class="hover:text-red-500 transition-colors h-5 w-5 sm:h-6 sm:w-6"
       >
-        <Trash2 size={16} />
+        <Trash2 size={14} class="sm:hidden" />
+        <Trash2 size={16} class="hidden sm:block" />
       </Button>
     </div>
   </div>
