@@ -1,58 +1,43 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  import Input from './ui/Input.svelte'
-  import Button from './ui/Button.svelte'
-  import { Star, Loader2 } from 'lucide-svelte'
-  import { favoritesStore } from '../stores/favorites'
+  import { createEventDispatcher } from 'svelte';
+  import Input from './ui/Input.svelte';
+  import Button from './ui/Button.svelte';
+  import { Star, Loader2 } from 'lucide-svelte';
+  import { favoritesStore } from '../stores/favorites';
 
-  export let title = ''
-  export let listId = ''
+  export let title = '';
+  export let listId = '';
 
   const dispatch = createEventDispatcher<{
-    updateTitle: string
-    startEdit: void
-    stopEdit: void
-    toggleFavorite: void
-  }>()
+    updateTitle: string,
+    startEdit: void,
+    stopEdit: void,
+    toggleFavorite: void,
+  }>();
 
-  $: isFavorite = $favoritesStore.some((f) => f.id === listId)
+  $: isFavorite = $favoritesStore.some((f) => f.id === listId);
 
   function handleBlur() {
-    dispatch('stopEdit')
+    dispatch('stopEdit');
     if (title.trim() !== '') {
-      dispatch('updateTitle', title)
+      dispatch('updateTitle', title);
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
-      event.preventDefault()
-      ;(event.currentTarget as HTMLInputElement).blur()
+      event.preventDefault();
+      (event.currentTarget as HTMLInputElement).blur();
     }
   }
 
   function toggleFavorite() {
-    dispatch('toggleFavorite')
+    dispatch('toggleFavorite');
   }
 
-  let loadingPlaceholder = ''
-  $: loadingPlaceholder = title === '' ? 'Loading...' : ''
+  let loadingPlaceholder = '';
+  $: loadingPlaceholder = title === '' ? 'Loading...' : '';
 </script>
-
-<style>
-  :global(.loader-icon) {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-</style>
 
 <!-- En-tête de la todo list avec le titre éditable -->
 <div class="mb-6 flex gap-2 items-center">
@@ -77,3 +62,18 @@
       leftIcon={title === '' ? Loader2 : null} />
   </div>
 </div>
+
+<style>
+  :global(.loader-icon) {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
