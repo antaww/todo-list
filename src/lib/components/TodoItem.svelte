@@ -81,14 +81,13 @@
         variant="inline"
         bind:value={editingTitle}
         maxLength={150}
-        class="min-w-0"
+        class="min-w-0 my-1 mx-2"
         size="sm"
         on:blur={() => {
           dispatch('updateTitle', { todo, title: editingTitle });
           dispatch('startEdit', undefined);
         }}
         on:keydown={handleKeydown}
-        autofocus
       />
     {:else}
       <span
