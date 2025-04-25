@@ -2,7 +2,8 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-realtime--todolist.pages.dev-brightgreen)](https://realtime-todolist.pages.dev/)
 
-A modern, reactive todo list application built with Svelte, TypeScript, and Supabase. Features real-time updates, multiple lists support, and a beautiful glassmorphism design.
+A modern, reactive todo list application built with Svelte, TypeScript, and Supabase. Features real-time updates, multiple lists support, and a beautiful
+glassmorphism design.
 
 ## 🚀 Features
 
@@ -45,23 +46,27 @@ todo-list/
 ## 🚦 Getting Started
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/antaww/todo-list.git
 cd todo-list
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Create a `.env` file with your Supabase credentials:
+
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 4. Start the development server:
+
 ```bash
 pnpm run dev
 ```
@@ -69,6 +74,7 @@ pnpm run dev
 ## 📝 Database Schema
 
 ### Todos Table
+
 ```sql
 CREATE TABLE todos (
   id TEXT PRIMARY KEY,
@@ -81,6 +87,7 @@ CREATE TABLE todos (
 ```
 
 ### Lists Table
+
 ```sql
 CREATE TABLE lists (
   id TEXT PRIMARY KEY,
@@ -102,11 +109,13 @@ CREATE POLICY "Allow public access on lists"
 
 ## 🔄 Real-time Updates
 
-The application uses Supabase's real-time functionality to keep todos synchronized across all clients. As a fallback mechanism, it also implements polling to ensure updates are received even if the real-time connection is interrupted.
+The application uses Supabase's real-time functionality to keep todos synchronized across all clients. As a fallback mechanism, it also implements polling to
+ensure updates are received even if the real-time connection is interrupted.
 
 ## 🧹 Automatic Cleanup
 
-Empty lists (lists without any todos) are automatically cleaned up from the database to maintain data consistency. This is handled by a SQL trigger that removes lists when their last todo is deleted.
+Empty lists (lists without any todos) are automatically cleaned up from the database to maintain data consistency. This is handled by a SQL trigger that removes
+lists when their last todo is deleted.
 
 ## 🤝 Contributing
 
