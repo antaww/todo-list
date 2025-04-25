@@ -9,8 +9,9 @@
   import { historyStore } from './stores/history';
   import { favoritesStore } from './stores/favorites';
   import { displayStore } from './stores/display';
+  import { persistentStore } from './stores/persistent';
   import { supabase } from './supabase';
-  import { ArrowDown, ArrowUp, Loader2, Trash2 } from 'lucide-svelte';
+  import { Loader2, Trash2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
   import TodoForm from './components/TodoForm.svelte';
@@ -25,7 +26,7 @@
   export let listId: string;
 
   let subscription: RealtimeChannel[] = [];
-  let sortBy: 'name' | 'date' | 'order' = 'order';
+  let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
   let deleteDialogOpen = false;
   let searchQuery = '';
 
@@ -64,12 +65,12 @@
 
   $: activeTodos = sortTodos(
     filteredTodos.filter(t => !t.completed),
-    sortBy
+    $sortBy
   );
 
   $: completedTodos = sortTodos(
     filteredTodos.filter(t => t.completed),
-    sortBy
+    $sortBy
   );
 
   function openDeleteDialog() {
@@ -284,7 +285,7 @@
         loading={$todosStore.loading}
         hasCompletedTodos={completedTodos.length > 0}
         on:add={({ detail }) => todosStore.add(listId, detail)}
-        on:sort={({ detail }) => sortBy = detail}
+        on:sort={({ detail }) => $sortBy = detail}
         on:search={({ detail }) => searchQuery = detail}
       />
     </div>
