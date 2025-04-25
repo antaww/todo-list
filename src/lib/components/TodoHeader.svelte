@@ -59,7 +59,8 @@
       on:blur={handleBlur}
       on:keydown={handleKeydown}
       class="flex-grow text-lg"
-      leftIcon={title === '' ? Loader2 : null} />
+      leftIcon={title === '' ? Loader2 : null}
+    />
   </div>
 </div>
 

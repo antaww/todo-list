@@ -4,7 +4,7 @@
   import Button from './ui/Button.svelte';
   import Input from './ui/Input.svelte';
   import Select from './ui/Select.svelte';
-  import { ArrowUp, ArrowDown } from 'lucide-svelte';
+  import { ArrowUp, ArrowDown, Plus } from 'lucide-svelte';
 	import { persistentStore } from '../stores/persistent';
 
   export let loading = false;
@@ -42,17 +42,19 @@
     class="flex gap-1 sm:gap-2"
   >
     <Input
+      class="text-sm"
       bind:value={newTodoTitle}
       placeholder="Add a new todo..."
       disabled={loading}
       maxLength={150}
     />
     <Button
+      class="text-sm"
       type="submit"
       disabled={loading || !newTodoTitle.trim()}
       variant="primary"
     >
-      Add
+      <Plus size={16} />
     </Button>
   </form>
 
