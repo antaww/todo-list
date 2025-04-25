@@ -176,7 +176,7 @@
                 <div class="flex flex-col min-h-0 flex-shrink-0">
                   <div class="flex items-center gap-2 px-2 mb-2 flex-shrink-0">
                     <Star class="text-yellow-400" size={16} />
-                    <h2 class="text-sm font-medium text-white/80">Matching Favorites</h2>
+                    <h2 class="text-sm font-medium text-white/80">Favorites</h2>
                   </div>
                   <Card class="p-2 min-h-0" background="bg-white/5">
                     <ScrollArea class="max-h-40" scrollColorClass="bg-white/20">
@@ -201,8 +201,11 @@
                   <div class="flex items-center justify-between px-2 mb-2 flex-shrink-0">
                     <div class="flex items-center gap-2">
                       <History size={16} class="text-white/80" />
-                      <h2 class="text-sm font-medium text-white/80">Matching Recent Lists</h2>
+                      <h2 class="text-sm font-medium text-white/80">Recent Lists</h2>
                     </div>
+                    <Button variant="icon" on:click={clearHistory} title="Clear history">
+                      <X size={16} />
+                    </Button>
                   </div>
                   <Card class="p-2 min-h-0 flex-1" background="bg-white/0">
                     <ScrollArea class="h-full" scrollColorClass="bg-white/20">
