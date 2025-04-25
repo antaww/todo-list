@@ -5,6 +5,7 @@
   import Input from './ui/Input.svelte';
   import Select from './ui/Select.svelte';
   import { ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { persistentStore } from '../stores/persistent';
 
   export let loading = false;
   export let hasCompletedTodos = false;
@@ -15,7 +16,7 @@
     sort: 'name' | 'date' | 'order';
   }>();
 
-  let sortBy: 'name' | 'date' | 'order' = 'order';
+  let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
 
   const sortOptions = [
     { value: 'order', label: 'Manual Order' },
@@ -30,8 +31,8 @@
   }
 
   function handleSortChange(event: CustomEvent<string>) {
-    sortBy = event.detail as 'name' | 'date' | 'order';
-    dispatch('sort', sortBy);
+    $sortBy = event.detail as 'name' | 'date' | 'order';
+    dispatch('sort', $sortBy);
   }
 </script>
 
@@ -59,7 +60,7 @@
     <div class="flex items-center gap-2 flex-nowrap">
       <span class="text-white whitespace-nowrap dark:text-dark-gray-800">Sort by:</span>
       <Select
-        value={sortBy}
+        value={$sortBy}
         options={sortOptions}
         on:change={handleSortChange}
       />
