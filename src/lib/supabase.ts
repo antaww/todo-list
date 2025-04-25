@@ -20,7 +20,7 @@ try {
       params: {
         eventsPerSecond: 10
       },
-      reconnectAfterMs: (retries) => {
+      reconnectAfterMs: (retries: number) => {
         // Exponential backoff starting from 1s, capped at 30s
         const backoffMs = Math.min(1000 * Math.pow(2, retries), 30000);
         return backoffMs;

@@ -11,7 +11,7 @@
   let isSidebarOpen = true;
   let cleanup: (() => void) | null = null;
 
-  onMount(() => {
+  onMount(async () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       listId = urlParams.get('list') || crypto.randomUUID();
@@ -21,14 +21,17 @@
         window.history.pushState({ listId }, '', newUrl);
       }
 
-      void supabase.from('todos').select('count', { count: 'exact', head: true })
-        .then(() => {
-          console.log('Supabase connection verified in App component');
-        })
-        .catch((err: Error) => {
-          console.error('Supabase connection error in App:', err);
+      try {
+        await supabase.from('todos').select('count', { count: 'exact', head: true });
+        console.log('Supabase connection verified in App component');
+      } catch (err: unknown) {
+        console.error('Supabase connection error in App:', err);
+        if (err instanceof Error) {
+          error = `Database connection error: ${err.message}. Please refresh the page.`;
+        } else {
           error = 'Database connection error. Please refresh the page.';
-        });
+        }
+      }
 
       // Démarrer le tracking du last seen
       cleanup = startLastSeenTracking();
