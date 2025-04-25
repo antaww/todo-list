@@ -13,6 +13,7 @@
   export let isFirst = false;
   export let isLast = false;
   export let isCompleted = false;
+  export let searchQuery = '';
 
   const dispatch = createEventDispatcher<{
     toggle: Todo;
@@ -44,6 +45,36 @@
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}/${month}/${day}`;
+  }
+
+  function highlightMatches(text: string, query: string) {
+    if (!query.trim()) return text;
+    
+    const searchLower = query.toLowerCase();
+    const textLower = text.toLowerCase();
+    
+    let result = '';
+    let j = 0;
+    let positions = [];
+    
+    // First identify the matching character positions
+    for (let i = 0; i < textLower.length && j < searchLower.length; i++) {
+      if (textLower[i] === searchLower[j]) {
+        positions.push(i);
+        j++;
+      }
+    }
+    
+    // Then build the highlighted text
+    for (let i = 0; i < text.length; i++) {
+      if (positions.includes(i)) {
+        result += `<span class="bg-yellow-400/30">${text[i]}</span>`;
+      } else {
+        result += text[i];
+      }
+    }
+    
+    return result;
   }
 </script>
 
@@ -96,7 +127,13 @@
         class="flex-1 text-white dark:text-dark-foreground text-xs cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
         on:click={() => dispatch('startEdit', todo)}
       >
-        <span class="block break-words">{todo.title}</span>
+        {#if searchQuery}
+          <span class="block break-words">
+            {@html highlightMatches(todo.title, searchQuery)}
+          </span>
+        {:else}
+          <span class="block break-words">{todo.title}</span>
+        {/if}
         <span class="text-[10px] text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
       </span>
     {/if}

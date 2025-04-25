@@ -27,6 +27,7 @@
   let subscription: RealtimeChannel[] = [];
   let sortBy: 'name' | 'date' | 'order' = 'order';
   let deleteDialogOpen = false;
+  let searchQuery = '';
 
   function sortTodos(todos: any[], by: 'name' | 'date' | 'order') {
     return [...todos].sort((a, b) => {
@@ -41,13 +42,33 @@
     });
   }
 
+  function fuzzyMatch(text: string, pattern: string): boolean {
+    if (!pattern.trim()) return true;
+    
+    const searchLower = pattern.toLowerCase();
+    const textLower = text.toLowerCase();
+    
+    let j = 0;
+    for (let i = 0; i < textLower.length && j < searchLower.length; i++) {
+      if (textLower[i] === searchLower[j]) {
+        j++;
+      }
+    }
+    
+    return j === searchLower.length;
+  }
+
+  $: filteredTodos = searchQuery
+    ? $todosStore.items.filter(todo => fuzzyMatch(todo.title, searchQuery))
+    : $todosStore.items;
+
   $: activeTodos = sortTodos(
-    $todosStore.items.filter(t => !t.completed),
+    filteredTodos.filter(t => !t.completed),
     sortBy
   );
 
   $: completedTodos = sortTodos(
-    $todosStore.items.filter(t => t.completed),
+    filteredTodos.filter(t => t.completed),
     sortBy
   );
 
@@ -264,6 +285,7 @@
         hasCompletedTodos={completedTodos.length > 0}
         on:add={({ detail }) => todosStore.add(listId, detail)}
         on:sort={({ detail }) => sortBy = detail}
+        on:search={({ detail }) => searchQuery = detail}
       />
     </div>
 
@@ -285,6 +307,7 @@
                     editingTitle={todo.title}
                     isFirst={activeTodos.indexOf(todo) === 0}
                     isLast={activeTodos.indexOf(todo) === activeTodos.length - 1}
+                    {searchQuery}
                     on:toggle={() => todosStore.toggle(todo)}
                     on:delete={() => todosStore.delete(todo)}
                     on:moveUp={() => todosStore.move(todo, 'up')}
@@ -323,6 +346,7 @@
                       isEditing={$todosStore.editingId === todo.id}
                       editingTitle={todo.title}
                       isCompleted={true}
+                      {searchQuery}
                       on:toggle={() => todosStore.toggle(todo)}
                       on:delete={() => todosStore.delete(todo)}
                       on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
