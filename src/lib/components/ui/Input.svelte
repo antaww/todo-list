@@ -1,6 +1,5 @@
 <!-- Un champ de saisie réutilisable avec des styles cohérents -->
 <script lang="ts">
-  import { scale } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
   export let value: string;
   export let placeholder = "";
@@ -59,7 +58,7 @@
         {disabled}
         maxlength={maxLength}
         rows="1"
-        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden align-middle {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden align-middle {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-12' : ''} {className}"
         on:blur={(e) => {
           dispatch('blur', e);
         }}
@@ -76,7 +75,7 @@
         {placeholder}
         {disabled}
         maxlength={maxLength}
-        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-16' : ''} {className}"
+        class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-12' : ''} {className}"
         on:blur={(e) => {
           dispatch('blur', e);
         }}
@@ -88,7 +87,7 @@
     {/if}
     {#if maxLength !== undefined}
       <div
-        class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-white/50 dark:text-dark-gray-400"
+        class="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-white/50 dark:text-dark-gray-400"
       >
         {value.length}/{maxLength}
       </div>

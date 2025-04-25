@@ -48,7 +48,7 @@
 </script>
 
 <Card variant="secondary" padding="p-1.5" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full">
-  <div class="flex items-center overflow-hidden">
+  <div class="flex items-center overflow-hidden gap-2" class:py-0.5={isEditing}>
     {#if !isCompleted}
       <div class="flex gap-0.5 mr-2">
         <Button
@@ -81,7 +81,7 @@
         variant="inline"
         bind:value={editingTitle}
         maxLength={150}
-        class="min-w-0 my-1 mx-2"
+        class="min-w-0"
         size="sm"
         on:blur={() => {
           dispatch('updateTitle', { todo, title: editingTitle });
