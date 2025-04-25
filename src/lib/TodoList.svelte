@@ -272,7 +272,7 @@
               on:consider={handleDndConsiderActive}
               on:finalize={handleDndFinalizeActive}>
               {#each activeDndItems as todo (todo.id)}
-                <div class="dnd-item">
+                <div class="dnd-item" animate:flip={{duration: 250}}>
                   <TodoItem
                     {todo}
                     isEditing={$todosStore.editingId === todo.id}
@@ -313,7 +313,7 @@
                 on:consider={handleDndConsiderCompleted}
                 on:finalize={handleDndFinalizeCompleted}>
                 {#each completedDndItems as todo (todo.id)}
-                  <div class="dnd-item">
+                  <div class="dnd-item" animate:flip={{duration: 250}}>
                     <TodoItem
                       {todo}
                       isEditing={$todosStore.editingId === todo.id}
