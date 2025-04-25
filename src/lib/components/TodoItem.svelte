@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { ArrowUp, ArrowDown, Edit2, Trash2 } from 'lucide-svelte';
+  import { Edit2, Trash2, GripVertical } from 'lucide-svelte';
   import type { Todo } from '../types';
   import Button from './ui/Button.svelte';
   import Input from './ui/Input.svelte';
@@ -81,32 +81,12 @@
 <Card variant="secondary" padding="p-1.5" class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full">
   <div class="flex items-center overflow-hidden gap-1 sm:gap-2" class:py-0.5={isEditing}>
     {#if !isCompleted}
-      <div class="flex gap-0.5 mr-1 sm:mr-2">
-        <Button
-          variant="icon"
-          icon={true}
-          on:click={() => dispatch('moveUp', todo)}
-          disabled={isFirst}
-          ariaLabel="Move todo up"
-          class="h-5 w-5 sm:h-6 sm:w-6"
-        >
-          <ArrowUp size={12} class="sm:hidden" />
-          <ArrowUp size={14} class="hidden sm:block" />
-        </Button>
-        <Button
-          variant="icon"
-          icon={true}
-          on:click={() => dispatch('moveDown', todo)}
-          disabled={isLast}
-          ariaLabel="Move todo down"
-          class="h-5 w-5 sm:h-6 sm:w-6"
-        >
-          <ArrowDown size={12} class="sm:hidden" />
-          <ArrowDown size={14} class="hidden sm:block" />
-        </Button>
+      <div class="flex-shrink-0 cursor-grab opacity-30 group-hover/item:opacity-70 transition-opacity ml-1 mr-2 text-white">
+        <GripVertical size={14} class="sm:hidden" />
+        <GripVertical size={16} class="hidden sm:block" />
       </div>
     {/if}
-
+    
     <Checkbox bind:checked size="h-3 w-3" />
 
     {#if isEditing}

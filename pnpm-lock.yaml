@@ -17,6 +17,9 @@ importers:
       lucide-svelte:
         specifier: ^0.475.0
         version: 0.475.0(svelte@4.2.19)
+      svelte-dnd-action:
+        specifier: ^0.9.61
+        version: 0.9.61(svelte@4.2.19)
     devDependencies:
       '@melt-ui/pp':
         specifier: ^0.3.2
@@ -947,6 +950,11 @@ packages:
     hasBin: true
     peerDependencies:
       svelte: ^3.55.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0
+
+  svelte-dnd-action@0.9.61:
+    resolution: {integrity: sha512-xj0jZNdV44MAMbdGIAuBYEombmK7A7ticemOtdR5ErWw0f3IxcfcnrRjlYEK0rRjsahVsU+VdGUMwjPVyXrSrA==}
+    peerDependencies:
+      svelte: '>=3.23.0 || ^5.0.0-next.0'
 
   svelte-hmr@0.16.0:
     resolution: {integrity: sha512-Gyc7cOS3VJzLlfj7wKS0ZnzDVdv3Pn2IuVeJPk9m2skfhcu5bq3wtIZyQGggr7/Iim5rH5cncyQft/kRLupcnA==}
@@ -1951,6 +1959,10 @@ snapshots:
       - sass
       - stylus
       - sugarss
+
+  svelte-dnd-action@0.9.61(svelte@4.2.19):
+    dependencies:
+      svelte: 4.2.19
 
   svelte-hmr@0.16.0(svelte@4.2.19):
     dependencies:

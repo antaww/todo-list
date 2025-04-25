@@ -4,6 +4,7 @@
   import { fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import type { RealtimeChannel } from '@supabase/supabase-js';
+  import { dndzone } from 'svelte-dnd-action';
   import { todosStore } from './stores/todos';
   import { listStore } from './stores/list';
   import { historyStore } from './stores/history';
@@ -11,6 +12,7 @@
   import { displayStore } from './stores/display';
   import { persistentStore } from './stores/persistent';
   import { supabase } from './supabase';
+  import type { Todo } from './types';
   import { Loader2, Trash2 } from 'lucide-svelte';
   import Card from './components/ui/Card.svelte';
   import TodoItem from './components/TodoItem.svelte';
@@ -29,8 +31,14 @@
   let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
   let deleteDialogOpen = false;
   let searchQuery = '';
+  
+  const flipDurationMs = 300;
+  let isDragging = false;
+  
+  let activeDndItems: Todo[] = [];
+  let completedDndItems: Todo[] = [];
 
-  function sortTodos(todos: any[], by: 'name' | 'date' | 'order') {
+  function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order'): Todo[] {
     return [...todos].sort((a, b) => {
       switch (by) {
         case 'name':
@@ -38,7 +46,8 @@
         case 'date':
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         default:
-          return a.order - b.order;
+          // Ensure order is treated as a number
+          return (a.order ?? 0) - (b.order ?? 0);
       }
     });
   }
@@ -62,34 +71,75 @@
   $: filteredTodos = searchQuery
     ? $todosStore.items.filter(todo => fuzzyMatch(todo.title, searchQuery))
     : $todosStore.items;
+  $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy);
+  $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy);
 
-  $: activeTodos = sortTodos(
-    filteredTodos.filter(t => !t.completed),
-    $sortBy
-  );
+  $: if (!isDragging) {
+    activeDndItems = [...activeTodos];
+    completedDndItems = [...completedTodos];
+  }
 
-  $: completedTodos = sortTodos(
-    filteredTodos.filter(t => t.completed),
-    $sortBy
-  );
+  function handleDndConsiderActive(e: CustomEvent<{ items: Todo[] }>) {
+    isDragging = true;
+    activeDndItems = e.detail.items;
+  }
+
+  function handleDndFinalizeActive(e: CustomEvent<{ items: Todo[] }>) {
+    activeDndItems = e.detail.items;
+    updateTodoOrders(activeDndItems, false).finally(() => {
+      isDragging = false;
+    });
+  }
+  
+  function handleDndConsiderCompleted(e: CustomEvent<{ items: Todo[] }>) {
+    isDragging = true;
+    completedDndItems = e.detail.items;
+  }
+
+  function handleDndFinalizeCompleted(e: CustomEvent<{ items: Todo[] }>) {
+    completedDndItems = e.detail.items;
+    updateTodoOrders(completedDndItems, true).finally(() => {
+      isDragging = false;
+    });
+  }
+  
+  async function updateTodoOrders(items: Todo[], completed: boolean) {
+    const updatedTodos = items.map((todo, index) => ({
+      ...todo,
+      order: index,
+      completed
+    }));
+        
+    try {
+      const updates = updatedTodos.map(todo => ({
+        id: todo.id,
+        order: todo.order,
+        title: todo.title,
+        completed: todo.completed,
+        list_id: todo.list_id 
+      }));
+      
+      const { error } = await supabase.from('todos').upsert(updates);
+      
+      if (error) {
+        console.error('Failed to update todo order:', error);
+        addToast({ data: { title: 'Error', description: 'Failed to save new order.', type: 'error' }});
+      }
+    } catch (error) {
+      console.error('Error initiating todo order update:', error);
+      addToast({ data: { title: 'Error', description: 'Failed to start order update.', type: 'error' }});
+    }
+  }
 
   function openDeleteDialog() {
     deleteDialogOpen = true;
   }
 
   function handleConfirmDelete() {
-    const tasksToDelete = completedTodos.length;
-
+    const tasksToDelete = completedDndItems.length;
     todosStore.deleteAllCompleted(listId);
     deleteDialogOpen = false;
-
-    addToast({
-      data: {
-        title: "Tasks deleted",
-        description: `Successfully deleted ${tasksToDelete} completed ${tasksToDelete === 1 ? 'task' : 'tasks'}.`,
-        type: "success"
-      }
-    });
+    addToast({ data: { title: "Tasks deleted", description: `Successfully deleted ${tasksToDelete} completed ${tasksToDelete === 1 ? 'task' : 'tasks'}.`, type: "success" } });
   }
 
   function handleCancelDelete() {
@@ -111,135 +161,38 @@
 
   async function setupRealtimeSubscription() {
     try {
-      // Cleanup any existing subscriptions
-      for (const sub of subscription) {
-        await sub.unsubscribe();
-      }
+      for (const sub of subscription) { await sub.unsubscribe(); }
       subscription = [];
 
-      const todosChannel = supabase
-        .channel('todos-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'todos',
-            filter: `list_id=eq.${listId}`
-          },
-          async () => {
-            if (!$todosStore.editingId) {
-              await todosStore.load(listId);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'todos',
-            filter: `list_id=eq.${listId}`
-          },
-          async () => {
-            if (!$todosStore.editingId) {
-              await todosStore.load(listId);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'todos',
-            filter: `list_id=eq.${listId}`
-          },
-          async () => {
-            if (!$todosStore.editingId) {
-              await todosStore.load(listId);
-            }
-          }
-        );
+      const todosChannel = supabase.channel('todos-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'todos', filter: `list_id=eq.${listId}` }, async () => {
+          // Reload data on any change if not editing
+          if (!$todosStore.editingId) { await todosStore.load(listId); }
+        });
 
-      const listsChannel = supabase
-        .channel('lists-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'lists',
-            filter: `id=eq.${listId}`
-          },
-          async () => {
-            if (!$listStore.isEditing) {
-              await listStore.load(listId);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'lists',
-            filter: `id=eq.${listId}`
-          },
-          async () => {
-            if (!$listStore.isEditing) {
-              await listStore.load(listId);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'lists',
-            filter: `id=eq.${listId}`
-          },
-          async () => {
-            if (!$listStore.isEditing) {
-              await listStore.load(listId);
-            }
-          }
-        );
+      const listsChannel = supabase.channel('lists-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'lists', filter: `id=eq.${listId}` }, async () => {
+          if (!$listStore.isEditing) { await listStore.load(listId); }
+        });
 
-      // Subscribe to both channels
-      await Promise.all([
-        todosChannel.subscribe(),
-        listsChannel.subscribe()
-      ]);
-
+      await Promise.all([ todosChannel.subscribe(), listsChannel.subscribe() ]);
       subscription = [todosChannel, listsChannel];
     } catch (e: unknown) {
-      todosStore.setError('Failed to set up real-time updates. Please refresh the page.');
+      todosStore.setError('Failed to set up real-time updates.');
     }
   }
 
   onMount(async () => {
     todosStore.setLoading(true);
     listStore.setLoading(true);
-
-    await Promise.all([
-      listStore.initialize(listId),
-      todosStore.load(listId)
-    ]);
-
+    await Promise.all([ listStore.initialize(listId), todosStore.load(listId) ]);
     await setupRealtimeSubscription();
-
     todosStore.setLoading(false);
     listStore.setLoading(false);
   });
 
   onDestroy(() => {
-    for (const sub of subscription) {
-      sub.unsubscribe().catch(() => {
-        // Ignorer les erreurs de désinscription
-      });
-    }
+    for (const sub of subscription) { sub.unsubscribe().catch(() => {}); }
   });
 </script>
 
@@ -283,7 +236,7 @@
 
       <TodoForm
         loading={$todosStore.loading}
-        hasCompletedTodos={completedTodos.length > 0}
+        hasCompletedTodos={completedDndItems.length > 0}
         on:add={({ detail }) => todosStore.add(listId, detail)}
         on:sort={({ detail }) => $sortBy = detail}
         on:search={({ detail }) => searchQuery = detail}
@@ -299,20 +252,21 @@
       <div class="h-[calc(100vh-17rem)] sm:h-[calc(100vh-20rem)] max-w-full">
         <ScrollArea class="h-full" scrollColorClass="bg-white/20">
           <section class="space-y-4 p-2 sm:p-4 overflow-hidden max-w-full">
-            <div class="space-y-2" id="active-todos">
-              {#each activeTodos as todo (todo.id)}
-                <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+            <div class="space-y-2" id="active-todos" 
+              use:dndzone={{items: activeDndItems, flipDurationMs}}
+              on:consider={handleDndConsiderActive}
+              on:finalize={handleDndFinalizeActive}>
+              {#each activeDndItems as todo (todo.id)}
+                <div class="dnd-item">
                   <TodoItem
                     {todo}
                     isEditing={$todosStore.editingId === todo.id}
                     editingTitle={todo.title}
-                    isFirst={activeTodos.indexOf(todo) === 0}
-                    isLast={activeTodos.indexOf(todo) === activeTodos.length - 1}
+                    isFirst={false}
+                    isLast={false}
                     {searchQuery}
                     on:toggle={() => todosStore.toggle(todo)}
                     on:delete={() => todosStore.delete(todo)}
-                    on:moveUp={() => todosStore.move(todo, 'up')}
-                    on:moveDown={() => todosStore.move(todo, 'down')}
                     on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
                     on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                   />
@@ -320,12 +274,12 @@
               {/each}
             </div>
 
-            {#if completedTodos.length > 0}
+            {#if completedDndItems.length > 0}
               <div class="my-6 border-t border-white/30" />
 
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedTodos.length})</h3>
-                {#if completedTodos.length > 0}
+                <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
+                {#if completedDndItems.length > 0}
                   <Button
                     variant="icon"
                     icon={true}
@@ -339,9 +293,12 @@
                 {/if}
               </div>
 
-              <div class="space-y-2" id="completed-todos">
-                {#each completedTodos as todo (todo.id)}
-                  <div animate:flip={{duration: 300}} transition:fade={{duration: 300}}>
+              <div class="space-y-2" id="completed-todos"
+                use:dndzone={{items: completedDndItems, flipDurationMs}}
+                on:consider={handleDndConsiderCompleted}
+                on:finalize={handleDndFinalizeCompleted}>
+                {#each completedDndItems as todo (todo.id)}
+                  <div class="dnd-item">
                     <TodoItem
                       {todo}
                       isEditing={$todosStore.editingId === todo.id}
@@ -379,4 +336,20 @@
   :global(html) {
     @apply min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 bg-fixed overflow-x-hidden;
   }
+  
+  .dnd-item {
+    cursor: grab;
+    transition: transform 0.2s;
+  }
+  
+  .dnd-item[aria-grabbed="true"] {
+    cursor: grabbing;
+    transform: scale(1.02);
+    opacity: 0.7;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+  
+  /* Style for the placeholder/drop indicator could go here if needed,
+     but svelte-dnd-action often handles this visually by rearranging items */
 </style>
