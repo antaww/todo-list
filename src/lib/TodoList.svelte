@@ -34,6 +34,7 @@
   
   const flipDurationMs = 300;
   let isDragging = false;
+  let isUpdatingOrder = false;
   
   let activeDndItems: Todo[] = [];
   let completedDndItems: Todo[] = [];
@@ -74,7 +75,7 @@
   $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy);
   $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy);
 
-  $: if (!isDragging) {
+  $: if (!isDragging && !isUpdatingOrder) {
     activeDndItems = [...activeTodos];
     completedDndItems = [...completedTodos];
   }
@@ -85,9 +86,11 @@
   }
 
   function handleDndFinalizeActive(e: CustomEvent<{ items: Todo[] }>) {
+    const originalItems = [...activeDndItems];
     activeDndItems = e.detail.items;
-    updateTodoOrders(activeDndItems, false).finally(() => {
-      isDragging = false;
+    isUpdatingOrder = true;
+    updateTodoOrders(activeDndItems, false, originalItems).finally(() => {
+      isUpdatingOrder = false;
     });
   }
   
@@ -97,13 +100,15 @@
   }
 
   function handleDndFinalizeCompleted(e: CustomEvent<{ items: Todo[] }>) {
+    const originalItems = [...completedDndItems];
     completedDndItems = e.detail.items;
-    updateTodoOrders(completedDndItems, true).finally(() => {
-      isDragging = false;
+    isUpdatingOrder = true;
+    updateTodoOrders(completedDndItems, true, originalItems).finally(() => {
+      isUpdatingOrder = false;
     });
   }
   
-  async function updateTodoOrders(items: Todo[], completed: boolean) {
+  async function updateTodoOrders(items: Todo[], completed: boolean, originalItems: Todo[]) {
     const updatedTodos = items.map((todo, index) => ({
       ...todo,
       order: index,
@@ -123,11 +128,21 @@
       
       if (error) {
         console.error('Failed to update todo order:', error);
-        addToast({ data: { title: 'Error', description: 'Failed to save new order.', type: 'error' }});
+        addToast({ data: { title: 'Error', description: 'Failed to save new order. Reverting.', type: 'error' }});
+        if (completed) {
+          completedDndItems = originalItems;
+        } else {
+          activeDndItems = originalItems;
+        }
       }
     } catch (error) {
       console.error('Error initiating todo order update:', error);
-      addToast({ data: { title: 'Error', description: 'Failed to start order update.', type: 'error' }});
+      addToast({ data: { title: 'Error', description: 'Failed to start order update. Reverting.', type: 'error' }});
+      if (completed) {
+        completedDndItems = originalItems;
+      } else {
+        activeDndItems = originalItems;
+      }
     }
   }
 
