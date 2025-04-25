@@ -1,4 +1,3 @@
-<!-- Composant principal de la todo list -->
 <script lang="ts">
     import type {RealtimeChannel} from '@supabase/supabase-js';
     import {FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
@@ -291,12 +290,12 @@
                 on:startEdit={() => listStore.setEditing(true)}
                 on:stopEdit={() => listStore.setEditing(false)}
                 on:toggleFavorite={() => {
-          if ($favoritesStore.some(f => f.id === listId)) {
-            favoritesStore.remove(listId);
-          } else {
-            favoritesStore.add(listId, $listStore.title);
-          }
-        }}
+                    if ($favoritesStore.some(f => f.id === listId)) {
+                        favoritesStore.remove(listId);
+                    } else {
+                        favoritesStore.add(listId, $listStore.title);
+                    }
+                }}
                 on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
                 title={$listStore.title}
             />
