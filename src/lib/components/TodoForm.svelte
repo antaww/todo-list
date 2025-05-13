@@ -6,9 +6,12 @@
 	import Button from './ui/Button.svelte';
 	import Input from './ui/Input.svelte';
 	import Select from './ui/Select.svelte';
+	import { fade, fly, scale } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 
 	export let loading = false;
 	export let hasCompletedTodos = false;
+	export let searchResultsCount: number | undefined = undefined;
 	let newTodoTitle = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
 
@@ -72,7 +75,7 @@
 	}
 </script>
 
-<div class="mb-4 sm:mb-6 space-y-2">
+<div class="mb-2 space-y-2">
 	<form
 		class="flex gap-1 sm:gap-2"
 		on:submit|preventDefault={handleSubmit}
@@ -134,4 +137,10 @@
 			</Button>
 		</div>
 	</div>
+
+	{#if typeof searchResultsCount === 'number'}
+		<div class="text-xs text-white/50 px-1" transition:fade>
+			{searchResultsCount} {searchResultsCount === 1 ? 'result' : 'results'} found
+		</div>
+	{/if}
 </div>

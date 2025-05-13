@@ -309,6 +309,7 @@
             <TodoForm
                 hasCompletedTodos={completedDndItems.length > 0}
                 loading={$todosStore.loading}
+                searchResultsCount={searchQuery ? filteredTodos.length : undefined}
                 on:add={({ detail }) => todosStore.add(listId, detail)}
                 on:search={({ detail }) => searchQuery = detail}
                 on:sort={({ detail }) => $sortBy = detail}
