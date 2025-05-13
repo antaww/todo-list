@@ -4,6 +4,7 @@
 	let className = "";
 	export let scrollColorClass = "bg-cyan-100/20";
 	export let container: HTMLDivElement | undefined = undefined;
+	export let onScroll: (event: UIEvent) => void = () => {};
 	export {className as class};
 
 	const {
@@ -23,9 +24,9 @@
 	});
 </script>
 
-<div {...$$restProps} class="group relative size-full flex-1 overflow-hidden rounded-[inherit] {className}" use:melt={$root}>
-	<div bind:this={container} class="size-full" on:scroll use:melt={$viewport}>
-		<div class="size-full" use:melt={$content}>
+<div {...$$restProps} class="group relative size-full overflow-hidden rounded-[inherit] {className}" use:melt={$root}>
+	<div bind:this={container} class="size-full rounded-[inherit]" on:scroll={onScroll} use:melt={$viewport}>
+		<div use:melt={$content}>
 			<slot/>
 		</div>
 	</div>

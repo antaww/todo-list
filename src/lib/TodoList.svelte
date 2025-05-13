@@ -268,7 +268,7 @@
     });
 </script>
 
-<div class="min-h-screen p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
+<div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
     <Button
         ariaLabel="Toggle wide mode"
         class="fixed top-4 right-4 z-50 backdrop-blur-sm max-lg:hidden"
@@ -322,76 +322,72 @@
                 Loading...
             </div>
         {:else}
-            <div class="h-[calc(100vh-17rem)] sm:h-[calc(100vh-20rem)] max-w-full">
-                <ScrollArea class="h-full" scrollColorClass="bg-white/20">
-                    <section class="space-y-4 p-2 sm:p-4 overflow-hidden max-w-full">
-                        <div
-                            class="space-y-2" id="active-todos"
-                            use:dndzone={{items: activeDndItems, flipDurationMs}}
-                            on:consider={handleDndConsiderActive}
-                            on:finalize={handleDndFinalizeActive}
-                        >
-                            {#each activeDndItems as todo (todo.id)}
-                                <div class="dnd-item" animate:flip={{duration: 250}}>
-                                    <TodoItem
-                                        {todo}
-                                        isEditing={$todosStore.editingId === todo.id}
-                                        editingTitle={todo.title}
-                                        {searchQuery}
-                                        on:toggle={() => todosStore.toggle(todo)}
-                                        on:delete={() => todosStore.delete(todo)}
-                                        on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                                        on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
-                                    />
-                                </div>
-                            {/each}
+            <ScrollArea class="h-[50rem] p-3" scrollColorClass="bg-white/20">
+                <div
+                    class="space-y-2" id="active-todos"
+                    use:dndzone={{items: activeDndItems, flipDurationMs}}
+                    on:consider={handleDndConsiderActive}
+                    on:finalize={handleDndFinalizeActive}
+                >
+                    {#each activeDndItems as todo (todo.id)}
+                        <div class="dnd-item" animate:flip={{duration: 250}}>
+                            <TodoItem
+                                {todo}
+                                isEditing={$todosStore.editingId === todo.id}
+                                editingTitle={todo.title}
+                                {searchQuery}
+                                on:toggle={() => todosStore.toggle(todo)}
+                                on:delete={() => todosStore.delete(todo)}
+                                on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
+                                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                            />
                         </div>
+                    {/each}
+                </div>
 
+                {#if completedDndItems.length > 0}
+                    <div class="my-6 border-t border-white/30"/>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
                         {#if completedDndItems.length > 0}
-                            <div class="my-6 border-t border-white/30"/>
-
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
-                                {#if completedDndItems.length > 0}
-                                    <Button
-                                        variant="icon"
-                                        icon={true}
-                                        on:click={openDeleteDialog}
-                                        ariaLabel="Delete all completed tasks"
-                                        title="Delete all completed tasks"
-                                        class="hover:text-red-500 transition-colors"
-                                    >
-                                        <Trash2 size={20}/>
-                                    </Button>
-                                {/if}
-                            </div>
-
-                            <div
-                                class="space-y-2" id="completed-todos"
-                                use:dndzone={{items: completedDndItems, flipDurationMs}}
-                                on:consider={handleDndConsiderCompleted}
-                                on:finalize={handleDndFinalizeCompleted}
+                            <Button
+                                variant="icon"
+                                icon={true}
+                                on:click={openDeleteDialog}
+                                ariaLabel="Delete all completed tasks"
+                                title="Delete all completed tasks"
+                                class="hover:text-red-500 transition-colors"
                             >
-                                {#each completedDndItems as todo (todo.id)}
-                                    <div class="dnd-item" animate:flip={{duration: 250}}>
-                                        <TodoItem
-                                            {todo}
-                                            isEditing={$todosStore.editingId === todo.id}
-                                            editingTitle={todo.title}
-                                            isCompleted={true}
-                                            {searchQuery}
-                                            on:toggle={() => todosStore.toggle(todo)}
-                                            on:delete={() => todosStore.delete(todo)}
-                                            on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                                            on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
-                                        />
-                                    </div>
-                                {/each}
-                            </div>
+                                <Trash2 size={20}/>
+                            </Button>
                         {/if}
-                    </section>
-                </ScrollArea>
-            </div>
+                    </div>
+
+                    <div
+                        class="space-y-2" id="completed-todos"
+                        use:dndzone={{items: completedDndItems, flipDurationMs}}
+                        on:consider={handleDndConsiderCompleted}
+                        on:finalize={handleDndFinalizeCompleted}
+                    >
+                        {#each completedDndItems as todo (todo.id)}
+                            <div class="dnd-item" animate:flip={{duration: 250}}>
+                                <TodoItem
+                                    {todo}
+                                    isEditing={$todosStore.editingId === todo.id}
+                                    editingTitle={todo.title}
+                                    isCompleted={true}
+                                    {searchQuery}
+                                    on:toggle={() => todosStore.toggle(todo)}
+                                    on:delete={() => todosStore.delete(todo)}
+                                    on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
+                                    on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                />
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+            </ScrollArea>
         {/if}
     </Card>
 </div>
