@@ -37,6 +37,7 @@
 
 	function handleSubmit() {
 		if (!newTodoTitle.trim()) return;
+		debouncedSearch.cancel();
 		dispatch('add', newTodoTitle.trim());
 		newTodoTitle = '';
 		$searchMode = false;
