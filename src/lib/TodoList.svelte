@@ -322,9 +322,9 @@
                 Loading...
             </div>
         {:else}
-            <ScrollArea class="h-[50rem] p-3" scrollColorClass="bg-white/20">
+            <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
                 <div
-                    class="space-y-2" id="active-todos"
+                    class="space-y-2 p-3" id="active-todos"
                     use:dndzone={{items: activeDndItems, flipDurationMs}}
                     on:consider={handleDndConsiderActive}
                     on:finalize={handleDndFinalizeActive}
