@@ -63,12 +63,13 @@
 			dispatch('search', searchText.trim());
 			$searchMode = true;
 		}
-	}, 300);
+	}, 250);
 
 	$: {
 		if (newTodoTitle.trim()) {
 			debouncedSearch(newTodoTitle);
 		} else {
+			debouncedSearch.cancel();
 			dispatch('search', '');
 			$searchMode = false;
 		}
