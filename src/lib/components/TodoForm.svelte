@@ -3,11 +3,11 @@
 	import {createEventDispatcher} from 'svelte';
 	import {debounce} from '../helpers/debounce';
 	import {persistentStore} from '../stores/persistent';
+	import {sortBy, type SortByType} from '../stores/sort';
 	import Button from './ui/Button.svelte';
 	import Input from './ui/Input.svelte';
 	import Select from './ui/Select.svelte';
-	import { fade, fly, scale } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
 
 	export let loading = false;
 	export let hasCompletedTodos = false;
@@ -17,25 +17,23 @@
 
 	const dispatch = createEventDispatcher<{
 		add: string;
-		sort: 'name' | 'date' | 'order';
+		sort: SortByType;
 		search: string;
 	}>();
-
-	let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
 
 	const sortOptions = [
 		{
 			value: 'order',
-			label: 'Manual Order',
+			label: 'Manual Order'
 		},
 		{
 			value: 'name',
-			label: 'Name',
+			label: 'Name'
 		},
 		{
 			value: 'date',
-			label: 'Date',
-		},
+			label: 'Date'
+		}
 	];
 
 	function handleSubmit() {
@@ -48,7 +46,7 @@
 	}
 
 	function handleSortChange(event: CustomEvent<string>) {
-		$sortBy = event.detail as 'name' | 'date' | 'order';
+		$sortBy = event.detail as SortByType;
 		dispatch('sort', $sortBy);
 	}
 

@@ -325,12 +325,12 @@
             <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
                 <div
                     class="space-y-2 p-3" id="active-todos"
-                    use:dndzone={{items: activeDndItems, flipDurationMs}}
+                    use:dndzone={{items: activeDndItems, flipDurationMs, dragDisabled: $sortBy !== 'order'}}
                     on:consider={handleDndConsiderActive}
                     on:finalize={handleDndFinalizeActive}
                 >
                     {#each activeDndItems as todo (todo.id)}
-                        <div class="dnd-item" animate:flip={{duration: 250}}>
+                        <div class:dnd-item={$sortBy === 'order'} animate:flip={{duration: 250}}>
                             <TodoItem
                                 {todo}
                                 isEditing={$todosStore.editingId === todo.id}
@@ -366,12 +366,12 @@
 
                     <div
                         class="space-y-2" id="completed-todos"
-                        use:dndzone={{items: completedDndItems, flipDurationMs}}
+                        use:dndzone={{items: completedDndItems, flipDurationMs, dragDisabled: $sortBy !== 'order'}}
                         on:consider={handleDndConsiderCompleted}
                         on:finalize={handleDndFinalizeCompleted}
                     >
                         {#each completedDndItems as todo (todo.id)}
-                            <div class="dnd-item" animate:flip={{duration: 250}}>
+                            <div class:dnd-item={$sortBy === 'order'} animate:flip={{duration: 250}}>
                                 <TodoItem
                                     {todo}
                                     isEditing={$todosStore.editingId === todo.id}

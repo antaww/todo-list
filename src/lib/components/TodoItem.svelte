@@ -6,25 +6,13 @@
 	import Button from './ui/Button.svelte';
 	import Card from './ui/Card.svelte';
 	import Input from './ui/Input.svelte';
+	import { sortBy } from '../stores/sort';
 
 	export let todo: Todo;
 	export let isEditing = false;
 	export let editingTitle = '';
 	export let isCompleted = false;
 	export let searchQuery = '';
-
-	const dispatch = createEventDispatcher<{
-		toggle: Todo;
-		delete: Todo;
-		edit: Todo;
-		moveUp: Todo;
-		moveDown: Todo;
-		updateTitle: {
-			todo: Todo;
-			title: string
-		};
-		startEdit: Todo | undefined;
-	}>();
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
@@ -83,15 +71,28 @@
 
 		return result;
 	}
+
+	const dispatch = createEventDispatcher<{
+		toggle: Todo;
+		delete: Todo;
+		edit: Todo;
+		moveUp: Todo;
+		moveDown: Todo;
+		updateTitle: {
+			todo: Todo;
+			title: string
+		};
+		startEdit: Todo | undefined;
+	}>();
 </script>
 
 <Card
-	class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full"
+	class="transition-[outline] duration-200 outline outline-1 outline-white/10 dark:outline-dark-border hover:outline-[2px] hover:outline-white/50 dark:hover:outline-dark-gray-300 group/item max-w-full {$sortBy === 'order' ? 'cursor-grab' : 'pl-4'}"
 	padding="p-1.5"
 	variant="secondary"
 >
 	<div class="flex items-center overflow-hidden gap-1 sm:gap-2" class:py-0.5={isEditing}>
-		{#if !isCompleted}
+		{#if !isCompleted && $sortBy === 'order'}
 			<div class="flex-shrink-0 cursor-grab opacity-30 group-hover/item:opacity-70 transition-opacity ml-1 mr-2 text-white">
 				<GripVertical size={14} class="sm:hidden"/>
 				<GripVertical size={16} class="hidden sm:block"/>
