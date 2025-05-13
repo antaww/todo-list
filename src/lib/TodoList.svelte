@@ -2,7 +2,7 @@
     import type {RealtimeChannel} from '@supabase/supabase-js';
     import {FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
     import {onDestroy, onMount} from 'svelte';
-    import {dndzone} from 'svelte-dnd-action';
+    import {dragHandleZone} from 'svelte-dnd-action';
     import {flip} from 'svelte/animate';
     import {fade} from 'svelte/transition';
     import TodoForm from './components/TodoForm.svelte';
@@ -29,6 +29,14 @@
     let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
     let deleteDialogOpen = false;
     let searchQuery = '';
+    let isTouchDevice = false;
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    let allowDragViaLongPress = false;
+    let successfullyLongPressedTodoId: string | null = null;
+    let currentTargetTodoIdForLongPress: string | null = null; // To know which todo the timer is for
+    const LONG_PRESS_DURATION = 500; // ms
+    let touchStartCoords: { x: number, y: number } | null = null;
+    const TOUCH_MOVE_THRESHOLD = 10; // pixels
 
     const flipDurationMs = 300;
     let isDragging = false;
@@ -73,6 +81,8 @@
     $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy);
     $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy);
 
+    $: dndDragDisabled = $sortBy !== 'order';
+
     $: if (!isDragging && !isUpdatingOrder) {
         activeDndItems = [...activeTodos];
         completedDndItems = [...completedTodos];
@@ -83,6 +93,7 @@
     }>) {
         isDragging = true;
         activeDndItems = e.detail.items;
+        successfullyLongPressedTodoId = null; // Drag has started, remove primed state
     }
 
     function handleDndFinalizeActive(e: CustomEvent<{
@@ -93,6 +104,10 @@
         isUpdatingOrder = true;
         updateTodoOrders(activeDndItems, false, originalItems).finally(() => {
             isUpdatingOrder = false;
+            if (isTouchDevice) {
+                allowDragViaLongPress = false;
+            }
+            successfullyLongPressedTodoId = null; // Ensure reset after drag, even if consider didn't fire for some reason
         });
     }
 
@@ -101,6 +116,7 @@
     }>) {
         isDragging = true;
         completedDndItems = e.detail.items;
+        successfullyLongPressedTodoId = null; // Drag has started, remove primed state
     }
 
     function handleDndFinalizeCompleted(e: CustomEvent<{
@@ -111,6 +127,10 @@
         isUpdatingOrder = true;
         updateTodoOrders(completedDndItems, true, originalItems).finally(() => {
             isUpdatingOrder = false;
+            if (isTouchDevice) {
+                allowDragViaLongPress = false;
+            }
+            successfullyLongPressedTodoId = null; // Ensure reset after drag
         });
     }
 
@@ -162,6 +182,7 @@
                 activeDndItems = originalItems;
             }
         }
+        deleteDialogOpen = false;
     }
 
     function openDeleteDialog() {
@@ -183,6 +204,55 @@
 
     function handleCancelDelete() {
         deleteDialogOpen = false;
+    }
+
+    function handleTouchStart(event: TouchEvent, todo: Todo) {
+        if (!isTouchDevice || $sortBy !== 'order') return;
+
+        currentTargetTodoIdForLongPress = todo.id;
+        touchStartCoords = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+        }
+
+        longPressTimer = setTimeout(() => {
+            if (currentTargetTodoIdForLongPress === todo.id) {
+                allowDragViaLongPress = true;
+                successfullyLongPressedTodoId = todo.id;
+            }
+            longPressTimer = null;
+        }, LONG_PRESS_DURATION);
+    }
+
+    function handleTouchMove(event: TouchEvent) {
+        if (!isTouchDevice || !touchStartCoords || !currentTargetTodoIdForLongPress) return;
+
+        if (!longPressTimer) return;
+
+        const touchCurrentCoords = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        const deltaX = Math.abs(touchCurrentCoords.x - touchStartCoords.x);
+        const deltaY = Math.abs(touchCurrentCoords.y - touchStartCoords.y);
+
+        if (deltaX > TOUCH_MOVE_THRESHOLD || deltaY > TOUCH_MOVE_THRESHOLD) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            allowDragViaLongPress = false;
+            successfullyLongPressedTodoId = null;
+            touchStartCoords = null;
+            currentTargetTodoIdForLongPress = null;
+        }
+    }
+
+    function handleTouchEnd() {
+        if (!isTouchDevice) return;
+
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        touchStartCoords = null;
+        currentTargetTodoIdForLongPress = null;
     }
 
     $: if ($listStore.title) {
@@ -258,6 +328,7 @@
         await setupRealtimeSubscription();
         todosStore.setLoading(false);
         listStore.setLoading(false);
+        isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     });
 
     onDestroy(() => {
@@ -324,18 +395,29 @@
         {:else}
             <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
                 <div
-                    class="space-y-2 p-3" id="active-todos"
-                    use:dndzone={{items: activeDndItems, flipDurationMs, dragDisabled: $sortBy !== 'order'}}
+                    class="space-y-2 p-3"
+                    style="overflow-y: auto;"
+                    id="active-todos"
+                    use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
                     on:consider={handleDndConsiderActive}
                     on:finalize={handleDndFinalizeActive}
                 >
                     {#each activeDndItems as todo (todo.id)}
-                        <div class:dnd-item={$sortBy === 'order'} animate:flip={{duration: 250}}>
+                        {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                        <div
+                            class:dnd-item={$sortBy === 'order'}
+                            class:primed-for-drag={isPrimed}
+                            animate:flip={{duration: 250}}
+                            on:touchstart|passive={e => handleTouchStart(e, todo)}
+                            on:touchmove|passive={handleTouchMove}
+                            on:touchend={handleTouchEnd}
+                        >
                             <TodoItem
                                 {todo}
                                 isEditing={$todosStore.editingId === todo.id}
                                 editingTitle={todo.title}
                                 {searchQuery}
+                                isPrimedForDrag={isPrimed}
                                 on:toggle={() => todosStore.toggle(todo)}
                                 on:delete={() => todosStore.delete(todo)}
                                 on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
@@ -365,19 +447,30 @@
                     </div>
 
                     <div
-                        class="space-y-2" id="completed-todos"
-                        use:dndzone={{items: completedDndItems, flipDurationMs, dragDisabled: $sortBy !== 'order'}}
+                        class="space-y-2"
+                        style="overflow-y: auto;"
+                        id="completed-todos"
+                        use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
                         on:consider={handleDndConsiderCompleted}
                         on:finalize={handleDndFinalizeCompleted}
                     >
                         {#each completedDndItems as todo (todo.id)}
-                            <div class:dnd-item={$sortBy === 'order'} animate:flip={{duration: 250}}>
+                            {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                            <div
+                                class:dnd-item={$sortBy === 'order'}
+                                class:primed-for-drag={isPrimed}
+                                animate:flip={{duration: 250}}
+                                on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                on:touchmove|passive={handleTouchMove}
+                                on:touchend={handleTouchEnd}
+                            >
                                 <TodoItem
                                     {todo}
                                     isEditing={$todosStore.editingId === todo.id}
                                     editingTitle={todo.title}
                                     isCompleted={true}
                                     {searchQuery}
+                                    isPrimedForDrag={isPrimed}
                                     on:toggle={() => todosStore.toggle(todo)}
                                     on:delete={() => todosStore.delete(todo)}
                                     on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
@@ -411,6 +504,11 @@
     .dnd-item {
         cursor: grab;
         transition: transform 0.2s;
+    }
+
+    .primed-for-drag > :global(div:first-child) { /* Target the Card component inside */
+        outline: 2px solid #fbbf24; /* A yellow-ish color, similar to Tailwind's amber-400. Adjust as needed. */
+        outline-offset: -1px; /* To make the outline appear slightly inside or on the border */
     }
 
     .dnd-item[aria-grabbed="true"] {

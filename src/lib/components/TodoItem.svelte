@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {Edit2, GripVertical, Trash2} from 'lucide-svelte';
 	import {createEventDispatcher} from 'svelte';
+	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '../Checkbox.svelte';
 	import type {Todo} from '../types';
 	import Button from './ui/Button.svelte';
@@ -13,6 +14,7 @@
 	export let editingTitle = '';
 	export let isCompleted = false;
 	export let searchQuery = '';
+	export let isPrimedForDrag = false;
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
@@ -93,7 +95,13 @@
 >
 	<div class="flex items-center overflow-hidden gap-1 sm:gap-2" class:py-0.5={isEditing}>
 		{#if !isCompleted && $sortBy === 'order'}
-			<div class="flex-shrink-0 cursor-grab opacity-30 group-hover/item:opacity-70 transition-opacity ml-1 mr-2 text-white">
+			<div
+				use:dragHandle
+				class="flex-shrink-0 cursor-grab transition-opacity ml-1 mr-2 text-white {isPrimedForDrag ? 'opacity-100' : 'opacity-30 group-hover/item:opacity-70 sm:opacity-0'}"
+				aria-label="Drag todo item"
+				title="Drag to reorder (long press to activate handle)"
+				style="touch-action: none;"
+			>
 				<GripVertical size={14} class="sm:hidden"/>
 				<GripVertical size={16} class="hidden sm:block"/>
 			</div>
@@ -117,7 +125,11 @@
 		{:else}
 			<span
 				class="flex-1 text-white dark:text-dark-foreground text-xs cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
-				on:click={() => dispatch('startEdit', todo)}
+				on:click={() => {
+					if (!isPrimedForDrag) {
+						dispatch('startEdit', todo);
+					}
+				}}
 			>
 				{#if searchQuery}
 					<span class="block break-words">
@@ -135,7 +147,11 @@
 				ariaLabel="Edit todo"
 				class="h-5 w-5 sm:h-6 sm:w-6"
 				icon={true}
-				on:click={() => dispatch('startEdit', todo)}
+				on:click={() => {
+					if (!isPrimedForDrag) {
+						dispatch('startEdit', todo);
+					}
+				}}
 				variant="icon"
 			>
 				<Edit2 class="sm:hidden" size={14}/>
