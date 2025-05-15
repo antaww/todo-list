@@ -1,34 +1,62 @@
 <script lang="ts">
 	import {Edit2, GripVertical, Trash2, Eye} from 'lucide-svelte';
-	import {createEventDispatcher} from 'svelte';
+	import {createEventDispatcher, tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '../Checkbox.svelte';
 	import type {Todo} from '../types';
 	import Button from './ui/Button.svelte';
 	import Card from './ui/Card.svelte';
-	import Input from './ui/Input.svelte';
+	import type Input from './ui/Input.svelte';
+	import InputComponent from './ui/Input.svelte';
 	import { sortBy } from '../stores/sort';
 	import DifficultyStars from './DifficultyStars.svelte';
 
-	export let editingTitle = '';
+	export let todo: Todo;
 	export let isCompleted = false;
-	export let isEditing = false;
 	export let isPrimedForDrag = false;
 	export let searchQuery = '';
-	export let todo: Todo;
+
+	let isEditing = false;
+	let editingTitle = todo.title;
+	let inputComponentInstance: Input;
+
+	$: if (!isEditing && todo) {
+		editingTitle = todo.title;
+	}
+
+	$: if (isEditing && todo) {
+		editingTitle = todo.title;
+		tick().then(() => {
+			inputComponentInstance?.focus();
+		});
+	}
+
+	function handleInputFocus() {
+		if (!isEditing) {
+			isEditing = true;
+		}
+	}
+
+	function handleInputBlur() {
+		if (isEditing) {
+			if (editingTitle !== todo.title) {
+				dispatch('updateTitle', { todo, title: editingTitle });
+			}
+			isEditing = false;
+		}
+	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
-			dispatch(
-				'updateTitle',
-				{
-					todo,
-					title: editingTitle,
-				},
-			);
+			if (editingTitle !== todo.title) {
+				dispatch('updateTitle', { todo, title: editingTitle });
+			}
+			isEditing = false;
 		} else if (event.key === 'Escape') {
-			dispatch('startEdit', todo);
+			event.preventDefault();
+			editingTitle = todo.title;
+			isEditing = false;
 		}
 	}
 
@@ -55,7 +83,6 @@
 		let j = 0;
 		let positions = [];
 
-		// First identify the matching character positions
 		for (let i = 0; i < textLower.length && j < searchLower.length; i++) {
 			if (textLower[i] === searchLower[j]) {
 				positions.push(i);
@@ -63,7 +90,6 @@
 			}
 		}
 
-		// Then build the highlighted text
 		for (let i = 0; i < text.length; i++) {
 			if (positions.includes(i)) {
 				result += `<span class="bg-yellow-400/30">${text[i]}</span>`;
@@ -71,7 +97,6 @@
 				result += text[i];
 			}
 		}
-
 		return result;
 	}
 
@@ -81,11 +106,9 @@
 
 	const dispatch = createEventDispatcher<{
 		delete: Todo;
-		edit: Todo;
 		moveDown: Todo;
 		moveUp: Todo;
 		openDetails: Todo;
-		startEdit: Todo | undefined;
 		toggle: Todo;
 		updateDifficulty: { todo: Todo; difficulty: number };
 		updateTitle: {
@@ -117,16 +140,15 @@
 		<Checkbox bind:checked size="h-3 w-3"/>
 
 		{#if isEditing}
-			<Input
+			<InputComponent
+				bind:this={inputComponentInstance}
 				variant="inline"
 				bind:value={editingTitle}
 				maxLength={150}
 				class="min-w-0"
 				size="sm"
-				on:blur={() => {
-					dispatch('updateTitle', { todo, title: editingTitle });
-					dispatch('startEdit', undefined);
-				}}
+				on:focus={handleInputFocus}
+				on:blur={handleInputBlur}
 				on:keydown={handleKeydown}
 			/>
 		{:else}
@@ -134,7 +156,7 @@
 				class="flex-1 text-white dark:text-dark-foreground text-xs cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
 				on:click={() => {
 					if (!isPrimedForDrag) {
-						dispatch('startEdit', todo);
+						isEditing = true;
 					}
 				}}
 			>
@@ -182,7 +204,7 @@
 				icon={true}
 				on:click={() => {
 					if (!isPrimedForDrag) {
-						dispatch('startEdit', todo);
+						isEditing = true;
 					}
 				}}
 				variant="icon"

@@ -12,7 +12,16 @@
 	export {className as class};
 
 	let textareaElement: HTMLTextAreaElement;
+	let inputElement: HTMLInputElement;
 	const dispatch = createEventDispatcher();
+
+	export function focus() {
+		if (variant === 'inline' && textareaElement) {
+			textareaElement.focus();
+		} else if (variant !== 'inline' && inputElement) {
+			inputElement.focus();
+		}
+	}
 
 	const variants = {
 		default: "px-4 py-2 bg-black/10 dark:bg-black border border-white/30 dark:border-dark-border",
@@ -68,6 +77,7 @@
 			<input
 				type="text"
 				bind:value
+				bind:this={inputElement}
 				{placeholder}
 				{disabled}
 				maxlength={maxLength}
