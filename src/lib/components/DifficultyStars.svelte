@@ -70,7 +70,7 @@
 				<!-- Base Star (empty look) -->
 				<Star
 					{size}
-					class="text-gray-400 dark:text-dark-gray-500"
+					class="text-yellow-400 dark:text-yellow-500"
 					fill="none"
 					stroke="currentColor"
 				/>
