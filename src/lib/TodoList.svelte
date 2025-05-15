@@ -18,15 +18,14 @@
     import {favoritesStore} from './stores/favorites';
     import {historyStore} from './stores/history';
     import {listStore} from './stores/list';
-    import {persistentStore} from './stores/persistent';
     import {todosStore} from './stores/todos';
     import {supabase} from './supabase';
     import type {Todo} from './types';
+    import { sortBy } from './stores/sort';
 
     export let listId: string;
 
     let subscription: RealtimeChannel[] = [];
-    let sortBy = persistentStore<'name' | 'date' | 'order'>('sortBy', 'order');
     let deleteDialogOpen = false;
     let searchQuery = '';
     let isTouchDevice = false;

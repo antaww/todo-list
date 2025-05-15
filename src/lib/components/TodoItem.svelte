@@ -145,6 +145,7 @@
 		<div class="flex gap-1 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity flex-shrink-0">
 			<Button
 				ariaLabel="Edit todo"
+				title="Edit todo"
 				class="h-5 w-5 sm:h-6 sm:w-6"
 				icon={true}
 				on:click={() => {
@@ -159,6 +160,7 @@
 			</Button>
 			<Button
 				ariaLabel="Delete todo"
+				title="Delete todo"
 				class="hover:text-red-500 transition-colors h-5 w-5 sm:h-6 sm:w-6"
 				icon={true}
 				on:click={() => dispatch('delete', todo)}
