@@ -62,10 +62,11 @@
 	showCloseButton={true}
 	confirmLabel=""
 	cancelLabel=""
+	size="large"
 >
 	<div slot="title">
 		{#if todo}
-			<h2 class="text-2xl font-semibold text-white dark:text-dark-foreground">{todo.title}</h2>
+			<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all">{todo.title}</h2>
 		{/if}
 	</div>
 

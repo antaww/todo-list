@@ -12,6 +12,7 @@
 	export let cancelLabel: string = 'Cancel';
 	export let variant: 'danger' | 'primary' = 'primary';
 	export let showCloseButton: boolean = true;
+	export let size: 'small' | 'medium' | 'large' = 'medium';
 
 	export let onConfirm: (() => void) | undefined = undefined;
 	export let onCancel: (() => void) | undefined = undefined;
@@ -61,7 +62,7 @@
 		on:click={handleBackdropClick}
 	>
 		<Card
-			class="w-full max-w-md shadow-xl"
+			class="w-full {size === 'small' ? 'max-w-sm' : size === 'large' ? 'max-w-[70vw] h-[70vh]' : 'max-w-xl'} shadow-xl flex flex-col"
 			padding="p-0"
 		>
 			<div class="flex justify-between items-center border-b border-white/10 dark:border-dark-gray-100 p-4">
@@ -81,7 +82,7 @@
 					</Button>
 				{/if}
 			</div>
-			<div class="p-4">
+			<div class="p-4 overflow-y-auto flex-grow">
 				{#if description}
 					<p class="text-white/90 dark:text-dark-gray-500 mb-6">{description}</p>
 				{/if}
