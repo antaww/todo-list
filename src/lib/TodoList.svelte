@@ -360,18 +360,15 @@
 
     function handleUpdateTodoDifficulty(event: CustomEvent<{ todo: Todo; difficulty: number }>) {
 		const { todo, difficulty } = event.detail;
-        console.log('TodoList: handleUpdateTodoDifficulty called for todo:', todo.id, 'new difficulty:', difficulty);
-		todosStore.updateDifficulty(todo, difficulty); // <-- TEMPORAIREMENT COMMENTÉ
+        todosStore.updateDifficulty(todo, difficulty); // <-- TEMPORAIREMENT COMMENTÉ
 	}
 
     function handleOpenDetails(event: CustomEvent<Todo>) {
         selectedTodoIdForModal = event.detail.id;
         isModalOpen = true;
-        console.log('TodoList: handleOpenDetails - isModalOpen set to true');
     }
 
     function handleCloseModal() {
-        console.log('TodoList: handleCloseModal called - setting isModalOpen to false');
         isModalOpen = false;
         selectedTodoIdForModal = null;
     }
