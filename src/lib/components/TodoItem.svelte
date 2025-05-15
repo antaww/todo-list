@@ -155,11 +155,11 @@
 				}}
 			>
 				{#if searchQuery}
-					<span class="block break-words">
+					<span class="block break-all">
 						{@html highlightMatches(todo.title, searchQuery)}
 					</span>
 				{:else}
-					<span class="block break-words">{todo.title}</span>
+					<span class="block break-all">{todo.title}</span>
 				{/if}
 				<div class="flex items-center gap-1">
 					<span class="text-xs text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
