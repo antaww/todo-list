@@ -8,13 +8,14 @@
 	import Card from './ui/Card.svelte';
 	import Input from './ui/Input.svelte';
 	import { sortBy } from '../stores/sort';
+	import DifficultyStars from './DifficultyStars.svelte';
 
-	export let todo: Todo;
-	export let isEditing = false;
 	export let editingTitle = '';
 	export let isCompleted = false;
-	export let searchQuery = '';
+	export let isEditing = false;
 	export let isPrimedForDrag = false;
+	export let searchQuery = '';
+	export let todo: Todo;
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
@@ -74,18 +75,23 @@
 		return result;
 	}
 
+	function handleUpdateDifficulty(newDifficulty: number) {
+		dispatch('updateDifficulty', { todo, difficulty: newDifficulty });
+	}
+
 	const dispatch = createEventDispatcher<{
-		toggle: Todo;
 		delete: Todo;
 		edit: Todo;
-		moveUp: Todo;
 		moveDown: Todo;
+		moveUp: Todo;
+		openDetails: Todo;
+		startEdit: Todo | undefined;
+		toggle: Todo;
+		updateDifficulty: { todo: Todo; difficulty: number };
 		updateTitle: {
 			todo: Todo;
-			title: string
+			title: string;
 		};
-		startEdit: Todo | undefined;
-		openDetails: Todo;
 	}>();
 </script>
 
@@ -139,7 +145,17 @@
 				{:else}
 					<span class="block break-words">{todo.title}</span>
 				{/if}
-				<span class="text-[10px] text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
+				<div class="flex items-center gap-1">
+					<span class="text-[10px] text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
+					{#if todo.difficulty !== undefined}
+						<div class="sm:hidden">
+							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={10} />
+						</div>
+						<div class="hidden sm:block">
+							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={12} />
+						</div>
+					{/if}
+				</div>
 			</span>
 		{/if}
 

@@ -107,64 +107,66 @@ function createTodosStore() {
 			}
 		},
 
-		add: async (listId: string, title: string) => {
+		add: async (listId: string, { title, difficulty }: { title: string; difficulty: number }) => {
 			const state = get(store);
 			const order = state.items.filter((t: Todo) => !t.completed).length;
-			const tempId = "temp_" + Date.now();
+			const tempId = 'temp_' + Date.now();
 
 			const newTodo: Todo = {
-				id: tempId,
-				title: title.trim(),
 				completed: false,
-				order,
-				list_id: listId,
 				created_at: new Date().toISOString(),
+				difficulty,
+				id: tempId,
+				list_id: listId,
+				order,
+				title: title.trim()
 			};
 
-			update(state => ({
+			update((state) => ({
 				...state,
 				items: [
 					...state.items,
-					newTodo,
-				],
+					newTodo
+				]
 			}));
 
 			try {
 				const {
 					data,
-					error: supabaseError,
+					error: supabaseError
 				} = await supabase
-					.from("todos")
+					.from('todos')
 					.insert([
 						{
-							title: newTodo.title,
 							completed: newTodo.completed,
-							order: newTodo.order,
+							difficulty: newTodo.difficulty,
 							list_id: newTodo.list_id,
-						},
+							order: newTodo.order,
+							title: newTodo.title
+						}
 					])
 					.select();
 
 				if (supabaseError) throw supabaseError;
 
 				if (data && data[0]) {
-					update(state => ({
+					update((state) => ({
 						...state,
 						items: state.items.map((t: Todo) =>
 							t.id === tempId ?
 								{
 									...t,
-									id: data[0].id,
+									id: data[0].id
 								} :
-							t,
-						),
+								t
+						)
 					}));
 				}
 			} catch (e) {
-				update(state => ({
+				update((state) => ({
 					...state,
-					error: "Failed to add todo",
-					items: state.items.filter((t: Todo) => t.id !== tempId),
+					error: 'Failed to add todo',
+					items: state.items.filter((t: Todo) => t.id !== tempId)
 				}));
 			}
 		},
@@ -277,6 +279,52 @@ function createTodosStore() {
 					update(state => ({
 						...state,
 						error: "Failed to update todo title",
+					}));
+				}
+			}
+		},
+
+		updateDifficulty: async (todo: Todo, newDifficulty: number) => {
+			if (newDifficulty < 0 || newDifficulty > 10 || newDifficulty === todo.difficulty) {
+				return;
+			}
+
+			const updateStartTime = Date.now();
+			lastUpdateTime = updateStartTime;
+
+			// Optimistic update
+			update(state => ({
+				...state,
+				items: state.items.map((t: Todo) =>
+					t.id === todo.id ?
+						{
+							...t,
+							difficulty: newDifficulty,
+						} :
+					t,
+				),
+			}));
+
+			try {
+				const { error: supabaseError } = await supabase
+					.from('todos')
+					.update({ difficulty: newDifficulty })
+					.eq('id', todo.id);
+
+				if (supabaseError) throw supabaseError;
+			} catch (e) {
+				if (lastUpdateTime === updateStartTime) { // Revert only if this is the last update attempt
+					update(state => ({
+						...state,
+						items: state.items.map((t: Todo) =>
+							t.id === todo.id ?
+								{
+									...t,
+									difficulty: todo.difficulty, // Revert to original difficulty
+								} :
+								t,
+						),
+						error: 'Failed to update todo difficulty',
 					}));
 				}
 			}

@@ -1,8 +1,9 @@
 export interface Todo {
-	id: string;
-	title: string;
 	completed: boolean;
-	order: number;
-	list_id: string;
 	created_at: string;
+	difficulty: number; // 0-10, representing 0-5 stars with half-star increments
+	id: string;
+	list_id: string;
+	order: number;
+	title: string;
 }

@@ -45,10 +45,9 @@
     let activeDndItems: Todo[] = [];
     let completedDndItems: Todo[] = [];
 
-    let editingTodo: Todo | undefined = undefined;
-    let editingTitle = '';
-    let selectedTodoForModal: Todo | null = null;
     let isModalOpen = false;
+    let selectedTodoIdForModal: string | null = null;
+    $: selectedTodoForModal = selectedTodoIdForModal ? $todosStore.items.find(t => t.id === selectedTodoIdForModal) || null : null;
 
     function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order'): Todo[] {
         return [...todos].sort((a, b) => {
@@ -344,18 +343,25 @@
     });
 
     function handleStartEdit(todo: Todo | undefined) {
-        editingTodo = todo;
-        editingTitle = todo?.title || '';
+        todosStore.setEditingId(todo?.id || null);
     }
 
+    function handleUpdateTodoDifficulty(event: CustomEvent<{ todo: Todo; difficulty: number }>) {
+		const { todo, difficulty } = event.detail;
+        console.log('TodoList: handleUpdateTodoDifficulty called for todo:', todo.id, 'new difficulty:', difficulty);
+		todosStore.updateDifficulty(todo, difficulty); // <-- TEMPORAIREMENT COMMENTÉ
+	}
+
     function handleOpenDetails(event: CustomEvent<Todo>) {
-        selectedTodoForModal = event.detail;
+        selectedTodoIdForModal = event.detail.id;
         isModalOpen = true;
+        console.log('TodoList: handleOpenDetails - isModalOpen set to true');
     }
 
     function handleCloseModal() {
+        console.log('TodoList: handleCloseModal called - setting isModalOpen to false');
         isModalOpen = false;
-        selectedTodoForModal = null;
+        selectedTodoIdForModal = null;
     }
 </script>
 
@@ -433,16 +439,17 @@
                             on:touchend={handleTouchEnd}
                         >
                             <TodoItem
-                                {todo}
+                                editingTitle={todo.title} 
                                 isEditing={$todosStore.editingId === todo.id}
-                                editingTitle={todo.title}
-                                {searchQuery}
                                 isPrimedForDrag={isPrimed}
-                                on:toggle={() => todosStore.toggle(todo)}
                                 on:delete={() => todosStore.delete(todo)}
-                                on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                                 on:openDetails={handleOpenDetails}
+                                on:startEdit={() => handleStartEdit(todo)}
+                                on:toggle={() => todosStore.toggle(todo)}
+                                on:updateDifficulty={handleUpdateTodoDifficulty}
+                                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                searchQuery={searchQuery}
+                                {todo}
                             />
                         </div>
                     {/each}
@@ -486,17 +493,18 @@
                                 on:touchend={handleTouchEnd}
                             >
                                 <TodoItem
-                                    {todo}
-                                    isEditing={$todosStore.editingId === todo.id}
                                     editingTitle={todo.title}
+                                    isEditing={$todosStore.editingId === todo.id}
                                     isCompleted={true}
-                                    {searchQuery}
                                     isPrimedForDrag={isPrimed}
-                                    on:toggle={() => todosStore.toggle(todo)}
                                     on:delete={() => todosStore.delete(todo)}
-                                    on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
-                                    on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                                     on:openDetails={handleOpenDetails}
+                                    on:startEdit={() => handleStartEdit(todo)}
+                                    on:toggle={() => todosStore.toggle(todo)}
+                                    on:updateDifficulty={handleUpdateTodoDifficulty}
+                                    on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                    searchQuery={searchQuery}
+                                    {todo}
                                 />
                             </div>
                         {/each}
@@ -518,7 +526,12 @@
     variant="danger"
 />
 
-<TodoDetailModal todo={selectedTodoForModal} isOpen={isModalOpen} on:close={handleCloseModal} />
+<TodoDetailModal
+    bind:isOpen={isModalOpen}
+    on:close={handleCloseModal}
+    on:updateDifficulty={handleUpdateTodoDifficulty}
+    todo={selectedTodoForModal}
+/>
 
 <style>
     :global(html) {
