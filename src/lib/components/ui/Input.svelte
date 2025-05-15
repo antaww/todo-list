@@ -31,7 +31,7 @@
 
 	const sizes = {
 		default: "px-4 py-2",
-		sm: "text-xs px-1.5 py-0.5",
+		sm: "text-sm px-2 py-1",
 	};
 
 	$: paddingLeft = leftIcon && variant === 'title' ? 'pl-12' : 'pl-2';
