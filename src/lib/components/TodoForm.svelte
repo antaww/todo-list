@@ -3,7 +3,7 @@
 	import {createEventDispatcher} from 'svelte';
 	import {debounce} from '../helpers/debounce';
 	import {persistentStore} from '../stores/persistent';
-	import {sortBy, type SortByType} from '../stores/sort';
+	import {sortBy, sortDirection, type SortByType} from '../stores/sort';
 	import Button from './ui/Button.svelte';
 	import DifficultyStars from './DifficultyStars.svelte';
 	import Input from './ui/Input.svelte';
@@ -19,7 +19,7 @@
 
 	const dispatch = createEventDispatcher<{
 		add: { title: string; difficulty: number };
-		sort: SortByType;
+		sort: { by: SortByType, direction: 'asc' | 'desc' };
 		search: string;
 	}>();
 
@@ -35,6 +35,10 @@
 		{
 			value: 'date',
 			label: 'Date'
+		},
+		{
+			value: 'difficulty',
+			label: 'Difficulty'
 		}
 	];
 
@@ -50,7 +54,12 @@
 
 	function handleSortChange(event: CustomEvent<string>) {
 		$sortBy = event.detail as SortByType;
-		dispatch('sort', $sortBy);
+		dispatch('sort', { by: $sortBy, direction: $sortDirection });
+	}
+
+	function toggleSortDirection() {
+		$sortDirection = $sortDirection === 'asc' ? 'desc' : 'asc';
+		dispatch('sort', { by: $sortBy, direction: $sortDirection });
 	}
 
 	const debouncedSearch = debounce((searchText: string) => {
@@ -126,6 +135,18 @@
 					options={sortOptions}
 					value={$sortBy}
 				/>
+				<Button
+					class="!p-1 sm:!p-2"
+					on:click={toggleSortDirection}
+					title={`Sort ${$sortDirection === 'asc' ? 'descending' : 'ascending'}`}
+					variant="primary"
+				>
+					{#if $sortDirection === 'asc'}
+						<ArrowDown size={16} />
+					{:else}
+						<ArrowUp size={16} />
+					{/if}
+				</Button>
 			</div>
 			<div class="flex gap-1 sm:gap-2">
 				<Button

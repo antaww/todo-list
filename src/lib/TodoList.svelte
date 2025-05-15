@@ -21,7 +21,7 @@
     import {todosStore} from './stores/todos';
     import {supabase} from './supabase';
     import type {Todo} from './types';
-    import { sortBy } from './stores/sort';
+    import { sortBy, sortDirection } from './stores/sort';
     import TodoDetailModal from './components/TodoDetailModal.svelte';
 
     export let listId: string;
@@ -49,18 +49,30 @@
     let selectedTodoIdForModal: string | null = null;
     $: selectedTodoForModal = selectedTodoIdForModal ? $todosStore.items.find(t => t.id === selectedTodoIdForModal) || null : null;
 
-    function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order'): Todo[] {
-        return [...todos].sort((a, b) => {
+    function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty', direction: 'asc' | 'desc'): Todo[] {
+        const sorted = [...todos].sort((a, b) => {
+            let comparison = 0;
             switch (by) {
                 case 'name':
-                    return a.title.localeCompare(b.title);
+                    comparison = a.title.localeCompare(b.title);
+                    break;
                 case 'date':
-                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-                default:
-                    // Ensure order is treated as a number
-                    return (a.order ?? 0) - (b.order ?? 0);
+                    comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                    break;
+                case 'difficulty':
+                    comparison = (a.difficulty ?? 0) - (b.difficulty ?? 0);
+                    break;
+                default: // 'order'
+                    comparison = (a.order ?? 0) - (b.order ?? 0);
+                    break;
             }
+            return comparison;
         });
+
+        if (direction === 'desc') {
+            return sorted.reverse();
+        }
+        return sorted;
     }
 
     function fuzzyMatch(text: string, pattern: string): boolean {
@@ -82,8 +94,8 @@
     $: filteredTodos = searchQuery
                        ? $todosStore.items.filter(todo => fuzzyMatch(todo.title, searchQuery))
                        : $todosStore.items;
-    $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy);
-    $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy);
+    $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy, $sortDirection);
+    $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy, $sortDirection);
 
     $: dndDragDisabled = $sortBy !== 'order';
 
@@ -409,7 +421,6 @@
                 searchResultsCount={searchQuery ? filteredTodos.length : undefined}
                 on:add={({ detail }) => todosStore.add(listId, detail)}
                 on:search={({ detail }) => searchQuery = detail}
-                on:sort={({ detail }) => $sortBy = detail}
             />
         </div>
 
