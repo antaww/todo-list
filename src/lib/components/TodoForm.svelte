@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {ArrowDown, ArrowUp, Plus, Search} from 'lucide-svelte';
-	import {createEventDispatcher} from 'svelte';
+	// import {createEventDispatcher} from 'svelte';
 	import {debounce} from '../helpers/debounce';
 	import {persistentStore} from '../stores/persistent';
 	import {sortBy, sortDirection, type SortByType} from '../stores/sort';
@@ -13,15 +13,19 @@
 	export let hasCompletedTodos = false;
 	export let loading = false;
 	export let searchResultsCount: number | undefined = undefined;
+	export let onAdd: (detail: { title: string; difficulty: number }) => void = () => {};
+	export let onSort: (detail: { by: SortByType, direction: 'asc' | 'desc' }) => void = () => {};
+	export let onSearch: (searchText: string) => void = () => {};
+
 	let newTodoDifficulty = 0;
 	let newTodoTitle = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
 
-	const dispatch = createEventDispatcher<{
-		add: { title: string; difficulty: number };
-		sort: { by: SortByType, direction: 'asc' | 'desc' };
-		search: string;
-	}>();
+	// const dispatch = createEventDispatcher<{
+	// 	add: { title: string; difficulty: number };
+	// 	sort: { by: SortByType, direction: 'asc' | 'desc' };
+	// 	search: string;
+	// }>();
 
 	const sortOptions = [
 		{
@@ -45,32 +49,34 @@
 	function handleSubmit() {
 		if (!newTodoTitle.trim()) return;
 		debouncedSearch.cancel();
-		dispatch('add', { title: newTodoTitle.trim(), difficulty: newTodoDifficulty });
+		onAdd({ title: newTodoTitle.trim(), difficulty: newTodoDifficulty });
 		newTodoTitle = '';
 		newTodoDifficulty = 0;
 		$searchMode = false;
-		dispatch('search', '');
+		onSearch('');
 	}
 
-	function handleSortChange(event: CustomEvent<string>) {
-		$sortBy = event.detail as SortByType;
-		dispatch('sort', { by: $sortBy, direction: $sortDirection });
+	function handleSortChange(newSortValue: string | undefined) {
+		if (newSortValue) {
+			$sortBy = newSortValue as SortByType;
+			onSort({ by: $sortBy, direction: $sortDirection });
+		}
 	}
 
 	function toggleSortDirection() {
 		$sortDirection = $sortDirection === 'asc' ? 'desc' : 'asc';
-		dispatch('sort', { by: $sortBy, direction: $sortDirection });
+		onSort({ by: $sortBy, direction: $sortDirection });
 	}
 
 	const debouncedSearch = debounce((searchText: string) => {
 		if (!searchText) {
-			dispatch('search', '');
+			onSearch('');
 			$searchMode = false;
 			return;
 		}
 
 		if (searchText.trim()) {
-			dispatch('search', searchText.trim());
+			onSearch(searchText.trim());
 			$searchMode = true;
 		}
 	}, 250);
@@ -80,7 +86,7 @@
 			debouncedSearch(newTodoTitle);
 		} else {
 			debouncedSearch.cancel();
-			dispatch('search', '');
+			onSearch('');
 			$searchMode = false;
 		}
 	}
@@ -131,13 +137,13 @@
 			<div class="flex items-center gap-1 sm:gap-2 flex-nowrap">
 				<span class="text-sm sm:text-base text-white whitespace-nowrap dark:text-dark-gray-800">Sort by:</span>
 				<Select
-					on:change={handleSortChange}
+					onChange={handleSortChange}
 					options={sortOptions}
 					value={$sortBy}
 				/>
 				<Button
 					class="!p-1 sm:!p-2"
-					on:click={toggleSortDirection}
+					onClick={toggleSortDirection}
 					title={`Sort ${$sortDirection === 'asc' ? 'descending' : 'ascending'}`}
 					variant="primary"
 				>
@@ -151,14 +157,14 @@
 			<div class="flex gap-1 sm:gap-2">
 				<Button
 					class="!p-1 sm:!p-2"
-					on:click={() => document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' })}
+					onClick={() => document.getElementById('active-todos')?.scrollIntoView({ behavior: 'smooth' })}
 					variant="primary"
 				>
 					<ArrowUp size={16}/>
 				</Button>
 				<Button
 					class="!p-1 sm:!p-2"
-					on:click={() => {
+					onClick={() => {
 						if (hasCompletedTodos) {
 							document.getElementById('completed-todos')?.scrollIntoView({ behavior: 'smooth' });
 						} else {

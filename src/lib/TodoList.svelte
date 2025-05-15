@@ -109,17 +109,13 @@
         completedDndItems = [...completedTodos];
     }
 
-    function handleDndConsiderActive(e: CustomEvent<{
-        items: Todo[]
-    }>) {
+    function handleDndConsiderActive(e: CustomEvent<{items: Todo[]}>): void {
         isDragging = true;
         activeDndItems = e.detail.items;
         successfullyLongPressedTodoId = null; // Drag has started, remove primed state
     }
 
-    function handleDndFinalizeActive(e: CustomEvent<{
-        items: Todo[]
-    }>) {
+    function handleDndFinalizeActive(e: CustomEvent<{items: Todo[]}>): void {
         const originalItems = [...activeDndItems];
         activeDndItems = e.detail.items;
         isUpdatingOrder = true;
@@ -132,17 +128,13 @@
         });
     }
 
-    function handleDndConsiderCompleted(e: CustomEvent<{
-        items: Todo[]
-    }>) {
+    function handleDndConsiderCompleted(e: CustomEvent<{items: Todo[]}>): void {
         isDragging = true;
         completedDndItems = e.detail.items;
         successfullyLongPressedTodoId = null; // Drag has started, remove primed state
     }
 
-    function handleDndFinalizeCompleted(e: CustomEvent<{
-        items: Todo[]
-    }>) {
+    function handleDndFinalizeCompleted(e: CustomEvent<{items: Todo[]}>): void {
         const originalItems = [...completedDndItems];
         completedDndItems = e.detail.items;
         isUpdatingOrder = true;
@@ -155,7 +147,7 @@
         });
     }
 
-    async function updateTodoOrders(items: Todo[], completed: boolean, originalItems: Todo[]) {
+    async function updateTodoOrders(items: Todo[], completed: boolean, originalItems: Todo[]): Promise<void> {
         const updatedTodos = items.map((todo, index) => ({
             ...todo,
             order: index,
@@ -204,30 +196,37 @@
             }
         }
         deleteDialogOpen = false;
+        addToast({
+            data: {
+                title: 'Tasks deleted',
+                description: `Successfully deleted ${completedDndItems.length} completed ${completedDndItems.length === 1 ? 'task' : 'tasks'}.`,
+                type: 'success',
+            },
+        });
     }
 
-    function openDeleteDialog() {
+    function openDeleteDialog(): void {
         deleteDialogOpen = true;
     }
 
-    function handleConfirmDelete() {
+    function handleConfirmDelete(): void {
         const tasksToDelete = completedDndItems.length;
         todosStore.deleteAllCompleted(listId);
         deleteDialogOpen = false;
         addToast({
             data: {
-                title: "Tasks deleted",
+                title: 'Tasks deleted',
                 description: `Successfully deleted ${tasksToDelete} completed ${tasksToDelete === 1 ? 'task' : 'tasks'}.`,
-                type: "success",
+                type: 'success',
             },
         });
     }
 
-    function handleCancelDelete() {
+    function handleCancelDelete(): void {
         deleteDialogOpen = false;
     }
 
-    function handleTouchStart(event: TouchEvent, todo: Todo) {
+    function handleTouchStart(event: TouchEvent, todo: Todo): void {
         if (!isTouchDevice || $sortBy !== 'order') return;
 
         currentTargetTodoIdForLongPress = todo.id;
@@ -246,7 +245,7 @@
         }, LONG_PRESS_DURATION);
     }
 
-    function handleTouchMove(event: TouchEvent) {
+    function handleTouchMove(event: TouchEvent): void {
         if (!isTouchDevice || !touchStartCoords || !currentTargetTodoIdForLongPress) return;
 
         if (!longPressTimer) return;
@@ -256,7 +255,7 @@
         const deltaY = Math.abs(touchCurrentCoords.y - touchStartCoords.y);
 
         if (deltaX > TOUCH_MOVE_THRESHOLD || deltaY > TOUCH_MOVE_THRESHOLD) {
-            clearTimeout(longPressTimer);
+            clearTimeout(longPressTimer!);
             longPressTimer = null;
             allowDragViaLongPress = false;
             successfullyLongPressedTodoId = null;
@@ -265,7 +264,7 @@
         }
     }
 
-    function handleTouchEnd() {
+    function handleTouchEnd(): void {
         if (!isTouchDevice) return;
 
         if (longPressTimer) {
@@ -289,7 +288,7 @@
         }
     }
 
-    function handleExportCsv() {
+    function handleExportCsv(): void {
         if ($todosStore.items.length === 0) {
             addToast({
                 data: {
@@ -333,9 +332,6 @@
                         return;
                     }
 
-                    // Validate and transform imported data
-                    // Assuming the CSV has headers: title, completed, difficulty
-                    // created_at, id, list_id, order will be auto-generated or set
                     let importedCount = 0;
                     for (const item of importedData) {
                         const title = typeof item.title === 'string' ? item.title.trim() : null;
@@ -347,7 +343,6 @@
                         const completed = String(item.completed).toLowerCase() === 'true' || item.completed === '1';
                         const difficulty = parseInt(String(item.difficulty), 10);
 
-                        // todosStore.add handles id, created_at, order, and list_id
                         await todosStore.add(listId, {
                             title,
                             difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(5, difficulty)), // ensure 0-5
@@ -362,8 +357,6 @@
                             type: 'success',
                         },
                     });
-                    // Optionally, reload or update the view if todosStore.add doesn't trigger it sufficiently
-                    // await todosStore.load(listId);
                 } catch (error: any) {
                     console.error('Error importing CSV:', error);
                     addToast({
@@ -395,8 +388,7 @@
                         filter: `list_id=eq.${listId}`,
                     },
                     async () => {
-                    	// Reload data on any change if not editing
-                        if (!$todosStore.editingId) { await todosStore.load(listId); }
+                    	if (!$todosStore.editingId) { await todosStore.load(listId); }
                     },
                 );
 
@@ -478,7 +470,6 @@
     function handleModalUpdateTodoDifficulty(detail: { todo: Todo; difficulty: number }) {
         if (detail.todo && typeof detail.difficulty === 'number') {
             todosStore.updateDifficulty(detail.todo, detail.difficulty);
-            // Optionally, add a toast notification here if desired for modal updates
             addToast({
                 data: {
                     title: 'Difficulty Updated',
@@ -494,11 +485,7 @@
         isModalOpen = true;
     }
 
-    function _handleOpenDetailsEvent(event: CustomEvent<Todo>) {
-        openTodoDetailModal(event.detail);
-    }
-
-    function handleCloseModal() {
+    function handleCloseModal(): void {
         isModalOpen = false;
         selectedTodoIdForModal = null;
 
@@ -509,7 +496,6 @@
 
     async function actualDeleteList() {
         try {
-            // First, delete all todos associated with the list
             const { error: todosError } = await supabase
                 .from('todos')
                 .delete()
@@ -527,7 +513,6 @@
                 return;
             }
 
-            // Then, delete the list itself
             const { error: listError } = await supabase
                 .from('lists')
                 .delete()
@@ -545,8 +530,7 @@
                 return;
             }
 
-            const deletedListTitle = $listStore.title; // Store title before it might get cleared by store updates
-            // Remove from favorites and history
+            const deletedListTitle = $listStore.title; 
             favoritesStore.remove(listId);
             historyStore.remove(listId);
 
@@ -558,8 +542,7 @@
                 },
             });
 
-            // Redirect to home or another appropriate page
-            window.location.href = '/'; // Assuming '/' is the home page
+            window.location.href = '/';
 
         } catch (error) {
             console.error('Failed to delete list:', error);
@@ -613,7 +596,7 @@
         ariaLabel="Toggle wide mode"
         class="fixed top-4 right-4 z-50 backdrop-blur-sm max-lg:hidden"
         icon={true}
-        on:click={() => displayStore.toggle()}
+        onClick={() => displayStore.toggle()}
         variant="icon"
     >
         {#if $displayStore}
@@ -627,19 +610,19 @@
         <div class="flex flex-col sm:gap-4 bg-white/05 border border-white/20 shadow-lg backdrop-blur-sm z-10 p-2 sm:p-4 rounded-lg">
             <TodoHeader
                 {listId}
-                on:startEdit={() => listStore.setEditing(true)}
-                on:stopEdit={() => listStore.setEditing(false)}
-                on:toggleFavorite={() => {
+                onStartEdit={() => listStore.setEditing(true)}
+                onStopEdit={() => listStore.setEditing(false)}
+                onToggleFavorite={() => {
                     if ($favoritesStore.some(f => f.id === listId)) {
                         favoritesStore.remove(listId);
                     } else {
                         favoritesStore.add(listId, $listStore.title);
                     }
                 }}
-                on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
-                on:exportCsv={handleExportCsv}
-                on:importCsv={handleImportCsv}
-                on:requestDeleteList={openDeleteListDialog}
+                onUpdateTitle={(newTitle) => listStore.updateTitle(newTitle)}
+                onExportCsv={handleExportCsv}
+                onImportCsv={handleImportCsv}
+                onRequestDeleteList={openDeleteListDialog}
                 title={$listStore.title}
             />
 
@@ -653,8 +636,8 @@
                 hasCompletedTodos={completedDndItems.length > 0}
                 loading={$todosStore.loading}
                 searchResultsCount={searchQuery ? filteredTodos.length : undefined}
-                on:add={({ detail }) => todosStore.add(listId, detail)}
-                on:search={({ detail }) => searchQuery = detail}
+                onAdd={(detail) => todosStore.add(listId, detail)}
+                onSearch={(newSearchQuery) => searchQuery = newSearchQuery}
             />
         </div>
 
@@ -686,12 +669,11 @@
                         >
                             <TodoItem
                                 isPrimedForDrag={isPrimed}
-                                on:delete={() => todosStore.delete(todo)}
-                                on:openDetails={_handleOpenDetailsEvent}
-                                on:startEdit={() => handleStartEdit(todo)}
-                                on:toggle={() => todosStore.toggle(todo)}
-                                on:updateDifficulty={handleUpdateTodoDifficultyEvent}
-                                on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                onDelete={() => todosStore.delete(todo)}
+                                onOpenDetails={(item) => openTodoDetailModal(item)}
+                                onToggle={() => todosStore.toggle(todo)}
+                                onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
                                 searchQuery={searchQuery}
                                 {todo}
                             />
@@ -708,7 +690,7 @@
                             <Button
                                 variant="icon"
                                 icon={true}
-                                on:click={openDeleteDialog}
+                                onClick={openDeleteDialog}
                                 ariaLabel="Delete all completed tasks"
                                 title="Delete all completed tasks"
                                 class="hover:text-red-500 transition-colors"
@@ -740,12 +722,11 @@
                                 <TodoItem
                                     isCompleted={true}
                                     isPrimedForDrag={isPrimed}
-                                    on:delete={() => todosStore.delete(todo)}
-                                    on:openDetails={_handleOpenDetailsEvent}
-                                    on:startEdit={() => handleStartEdit(todo)}
-                                    on:toggle={() => todosStore.toggle(todo)}
-                                    on:updateDifficulty={handleUpdateTodoDifficultyEvent}
-                                    on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                    onDelete={() => todosStore.delete(todo)}
+                                    onOpenDetails={(item) => openTodoDetailModal(item)}
+                                    onToggle={() => todosStore.toggle(todo)}
+                                    onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                    onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
                                     searchQuery={searchQuery}
                                     {todo}
                                 />
@@ -781,7 +762,7 @@
     <div class="space-y-2">
         <p class="text-sm text-white/70 dark:text-dark-gray-400">
             List name: <strong class="text-white dark:text-dark-foreground">{$listStore.title}</strong>
-            <Button on:click={copyListNameForDialog} variant="icon" title="Copy list name" icon={true} class="ml-2">
+            <Button onClick={copyListNameForDialog} variant="icon" title="Copy list name" icon={true} class="ml-2">
                 <Copy size={14} />
             </Button>
         </p>

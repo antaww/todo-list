@@ -205,7 +205,7 @@
 											<History size={16} class="text-white/80"/>
 											<h2 class="text-sm font-medium text-white/80">Recent Lists</h2>
 										</div>
-										<Button variant="icon" on:click={clearHistory} title="Clear history">
+										<Button variant="icon" onClick={clearHistory} title="Clear history">
 											<X size={16}/>
 										</Button>
 									</div>
@@ -242,10 +242,10 @@
 	{:else}
 		<div class="absolute" transition:fly={{ x: -100, duration: 300 }}>
 			<div class="p-4 flex gap-2">
-				<Button variant="icon" on:click={toggleSidebar} title="Show sidebar">
+				<Button variant="icon" onClick={toggleSidebar} title="Show sidebar">
 					<PanelLeft size={20}/>
 				</Button>
-				<Button variant="icon" on:click={createNewList} title="Create new list">
+				<Button variant="icon" onClick={createNewList} title="Create new list">
 					<Plus size={20}/>
 				</Button>
 			</div>

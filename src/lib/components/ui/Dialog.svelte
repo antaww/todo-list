@@ -74,7 +74,7 @@
 					<Button
 						variant="icon"
 						icon={true}
-						on:click={doCancel}
+						onClick={doCancel}
 						ariaLabel="Close dialog"
 					>
 						<X size={20}/>
@@ -94,14 +94,14 @@
 					{#if confirmLabel || cancelLabel}
 						<div class="flex justify-end gap-2 mt-6">
 							{#if cancelLabel}
-								<Button on:click={doCancel}>
+								<Button onClick={doCancel}>
 									{cancelLabel}
 								</Button>
 							{/if}
 							{#if confirmLabel}
 								<Button
 									variant={variant}
-									on:click={doConfirm}
+									onClick={doConfirm}
 								>
 									{confirmLabel}
 								</Button>

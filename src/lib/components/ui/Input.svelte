@@ -1,6 +1,4 @@
 <script lang="ts">
-	import {createEventDispatcher} from 'svelte';
-
 	export let value: string;
 	export let placeholder = "";
 	export let disabled = false;
@@ -8,12 +6,14 @@
 	export let leftIcon: any = null;
 	export let maxLength: number | undefined = undefined;
 	export let size: "default" | "sm" = "default";
+	export let onBlur: (e: FocusEvent) => void = () => {};
+	export let onFocus: (e: FocusEvent) => void = () => {};
+	export let onKeydown: (e: KeyboardEvent) => void = () => {};
 	let className = '';
 	export {className as class};
 
 	let textareaElement: HTMLTextAreaElement;
 	let inputElement: HTMLInputElement;
-	const dispatch = createEventDispatcher();
 
 	export function focus() {
 		if (variant === 'inline' && textareaElement) {
@@ -68,9 +68,9 @@
 				maxlength={maxLength}
 				rows="1"
 				class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 resize-none overflow-hidden align-middle {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-12' : ''} {className}"
-				on:blur={e => dispatch('blur', e)}
-				on:focus={e => dispatch('focus', e)}
-				on:keydown
+				on:blur={onBlur}
+				on:focus={onFocus}
+				on:keydown={onKeydown}
 				on:input={adjustTextareaHeight}
 			/>
 		{:else}
@@ -82,9 +82,9 @@
 				{disabled}
 				maxlength={maxLength}
 				class="relative rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 dark:focus:ring-dark-gray-300 text-white dark:text-dark-foreground placeholder-white/80 dark:placeholder-dark-gray-600 transition-all duration-150 {variants[variant]} {sizeClass} {paddingLeft} {maxLength !== undefined ? 'pr-12' : ''} {className}"
-				on:blur={e => dispatch('blur', e)}
-				on:focus={e => dispatch('focus', e)}
-				on:keydown
+				on:blur={onBlur}
+				on:focus={onFocus}
+				on:keydown={onKeydown}
 			/>
 		{/if}
 		{#if maxLength !== undefined}

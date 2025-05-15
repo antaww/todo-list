@@ -84,28 +84,17 @@
 	{/if}
 
 	<div slot="footer">
-		{#if todo}
-			<div class="flex justify-end items-center w-full">
-				<div class="relative">
-					{#if showCopyTooltip}
-						<span
-							transition:fade={{ duration: 200 }}
-							class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 z-10 whitespace-nowrap rounded bg-gray-700 dark:bg-dark-gray-100 px-2 py-1 text-xs text-white dark:text-dark-foreground shadow-md"
-						>
-							{tooltipMessage}
-						</span>
-					{/if}
-					<Button
-						on:click={handleShare}
-						ariaLabel="Share task"
-						title="Copy link"
-						class="flex items-center gap-2"
-					>
-						<Share2 size={18} />
-						<span>Share</span>
-					</Button>
-				</div>
+		<div class="flex justify-between items-center w-full">
+			<div class="flex items-center gap-2 relative">
+				<Button variant="icon" onClick={handleShare} title="Copy link to this task">
+					<Share2 size={18} />
+				</Button>
+				{#if showCopyTooltip}
+					<div transition:fade={{duration: 150}} class="absolute left-full ml-2 px-2 py-1 bg-gray-700 text-white text-xs rounded shadow-lg">
+						{tooltipMessage}
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 </Dialog> 

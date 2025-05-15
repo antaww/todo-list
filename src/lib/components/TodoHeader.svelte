@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {Loader2, Star, Download, Upload, Trash2, MoreVertical} from 'lucide-svelte';
-	import {createEventDispatcher, onMount, onDestroy} from 'svelte';
+	import {onMount, onDestroy} from 'svelte';
 	import {favoritesStore} from '../stores/favorites';
 	import Button from './ui/Button.svelte';
 	import Input from './ui/Input.svelte';
@@ -8,15 +8,14 @@
 	export let title = '';
 	export let listId = '';
 
-	const dispatch = createEventDispatcher<{
-		updateTitle: string,
-		startEdit: void,
-		stopEdit: void,
-		toggleFavorite: void,
-		exportCsv: void,
-		importCsv: void,
-		requestDeleteList: void,
-	}>();
+	// Event props
+	export let onUpdateTitle: (newTitle: string) => void = () => {};
+	export let onStartEdit: () => void = () => {};
+	export let onStopEdit: () => void = () => {};
+	export let onToggleFavorite: () => void = () => {};
+	export let onExportCsv: () => void = () => {};
+	export let onImportCsv: () => void = () => {};
+	export let onRequestDeleteList: () => void = () => {};
 
 	$: isFavorite = $favoritesStore.some(f => f.id === listId);
 	let isMobileMenuOpen = false;
@@ -24,9 +23,9 @@
 	let mobileMenuElement: HTMLDivElement;
 
 	function handleBlur() {
-		dispatch('stopEdit');
+		onStopEdit();
 		if (title.trim() !== '') {
-			dispatch('updateTitle', title);
+			onUpdateTitle(title);
 		}
 	}
 
@@ -39,22 +38,22 @@
 
 	function toggleFavorite() {
 		isMobileMenuOpen = false;
-		dispatch('toggleFavorite');
+		onToggleFavorite();
 	}
 
 	function exportCsv() {
 		isMobileMenuOpen = false;
-		dispatch('exportCsv');
+		onExportCsv();
 	}
 
 	function importCsv() {
 		isMobileMenuOpen = false;
-		dispatch('importCsv');
+		onImportCsv();
 	}
 
 	function requestDeleteList() {
 		isMobileMenuOpen = false;
-		dispatch('requestDeleteList');
+		onRequestDeleteList();
 	}
 
 	function toggleMobileMenu() {
@@ -84,7 +83,7 @@
 	<Button
 		class="!text-yellow-400"
 		icon={true}
-		on:click={toggleFavorite}
+		onClick={toggleFavorite}
 		title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
 		variant="icon"
 	>
@@ -96,9 +95,9 @@
 			bind:value={title}
 			class="flex-grow text-lg"
 			leftIcon={title === '' ? Loader2 : null}
-			on:blur={handleBlur}
-			on:focus={() => dispatch('startEdit')}
-			on:keydown={handleKeydown}
+			onBlur={handleBlur}
+			onFocus={onStartEdit}
+			onKeydown={handleKeydown}
 			placeholder={loadingPlaceholder}
 			variant="title"
 		/>
@@ -108,7 +107,7 @@
 	<div class="hidden sm:flex items-center gap-1 sm:gap-2">
 		<Button
 			class="flex items-center gap-2"
-			on:click={importCsv}
+			onClick={importCsv}
 			title="Import from CSV"
 			variant="icon"
 		>
@@ -118,7 +117,7 @@
 
 		<Button
 			class="flex items-center gap-2"
-			on:click={exportCsv}
+			onClick={exportCsv}
 			title="Export as CSV"
 			variant="icon"
 		>
@@ -128,7 +127,7 @@
 
 		<Button
 			class="!text-red-500 flex items-center gap-2"
-			on:click={requestDeleteList}
+			onClick={requestDeleteList}
 			title="Delete list"
 			variant="icon"
 		>
@@ -141,7 +140,7 @@
 	<div class="sm:hidden relative">
 		<div bind:this={mobileMenuToggleElement}>
 			<Button
-				on:click={toggleMobileMenu}
+				onClick={toggleMobileMenu}
 				variant="icon"
 				title="More options"
 				icon={true}

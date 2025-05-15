@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {createSelect, melt} from '@melt-ui/svelte';
 	import {ChevronDown} from 'lucide-svelte';
-	import {createEventDispatcher} from 'svelte';
 	import {fade} from 'svelte/transition';
 
 	export let value: string;
@@ -9,6 +8,7 @@
 		value: string;
 		label: string
 	}[];
+	export let onChange: (value: string | undefined) => void = () => {};
 
 	const {
 		elements: {
@@ -28,16 +28,12 @@
 			                   next,
 		                   }) => {
 			if (next) {
-				dispatch('change', next.value);
+				onChange(next.value);
 			}
 
 			return next;
 		},
 	});
-
-	const dispatch = createEventDispatcher<{
-		change: string;
-	}>();
 </script>
 
 <div class="inline-block">

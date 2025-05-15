@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {Edit2, GripVertical, Trash2, Eye} from 'lucide-svelte';
-	import {createEventDispatcher, tick} from 'svelte';
+	import {tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '../Checkbox.svelte';
 	import type {Todo} from '../types';
@@ -15,6 +15,13 @@
 	export let isCompleted = false;
 	export let isPrimedForDrag = false;
 	export let searchQuery = '';
+
+	// Event props
+	export let onDelete: (item: Todo) => void = () => {};
+	export let onOpenDetails: (item: Todo) => void = () => {};
+	export let onToggle: (item: Todo) => void = () => {};
+	export let onUpdateDifficulty: (detail: { todo: Todo; difficulty: number }) => void = () => {};
+	export let onUpdateTitle: (detail: { todo: Todo; title: string }) => void = () => {};
 
 	let isEditing = false;
 	let editingTitle = todo.title;
@@ -40,7 +47,7 @@
 	function handleInputBlur() {
 		if (isEditing) {
 			if (editingTitle !== todo.title) {
-				dispatch('updateTitle', { todo, title: editingTitle });
+				onUpdateTitle({ todo, title: editingTitle });
 			}
 			isEditing = false;
 		}
@@ -50,7 +57,7 @@
 		if (event.key === 'Enter') {
 			event.preventDefault();
 			if (editingTitle !== todo.title) {
-				dispatch('updateTitle', { todo, title: editingTitle });
+				onUpdateTitle({ todo, title: editingTitle });
 			}
 			isEditing = false;
 		} else if (event.key === 'Escape') {
@@ -62,7 +69,7 @@
 
 	let checked = todo.completed;
 	$: if (checked !== todo.completed) {
-		dispatch('toggle', todo);
+		onToggle(todo);
 	}
 
 	function formatDate(dateString: string) {
@@ -101,21 +108,8 @@
 	}
 
 	function handleUpdateDifficulty(newDifficulty: number) {
-		dispatch('updateDifficulty', { todo, difficulty: newDifficulty });
+		onUpdateDifficulty({ todo, difficulty: newDifficulty });
 	}
-
-	const dispatch = createEventDispatcher<{
-		delete: Todo;
-		moveDown: Todo;
-		moveUp: Todo;
-		openDetails: Todo;
-		toggle: Todo;
-		updateDifficulty: { todo: Todo; difficulty: number };
-		updateTitle: {
-			todo: Todo;
-			title: string;
-		};
-	}>();
 </script>
 
 <Card
@@ -147,9 +141,9 @@
 				maxLength={150}
 				class="min-w-0"
 				size="sm"
-				on:focus={handleInputFocus}
-				on:blur={handleInputBlur}
-				on:keydown={handleKeydown}
+				onFocus={handleInputFocus}
+				onBlur={handleInputBlur}
+				onKeydown={handleKeydown}
 			/>
 		{:else}
 			<span
@@ -187,12 +181,12 @@
 				title="View todo"
 				class="h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
-				on:click={() => {
+				onClick={() => {
 					if (!isPrimedForDrag) {
 						const url = new URL(window.location.href);
 						url.searchParams.set('task', todo.id);
 						window.history.pushState({}, '', url.toString());
-						dispatch('openDetails', todo);
+						onOpenDetails(todo);
 					}
 				}}
 				variant="icon"
@@ -205,7 +199,7 @@
 				title="Edit todo"
 				class="h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
-				on:click={() => {
+				onClick={() => {
 					if (!isPrimedForDrag) {
 						isEditing = true;
 					}
@@ -220,7 +214,7 @@
 				title="Delete todo"
 				class="hover:text-red-500 transition-colors h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
-				on:click={() => dispatch('delete', todo)}
+				onClick={() => onDelete(todo)}
 				variant="icon"
 			>
 				<Trash2 class="sm:hidden" size={16}/>
