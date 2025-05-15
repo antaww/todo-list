@@ -32,16 +32,9 @@
 	}
 
 	$: if (isEditing && todo) {
-		editingTitle = todo.title;
 		tick().then(() => {
 			inputComponentInstance?.focus();
 		});
-	}
-
-	function handleInputFocus() {
-		if (!isEditing) {
-			isEditing = true;
-		}
 	}
 
 	function handleInputBlur() {
@@ -141,7 +134,6 @@
 				maxLength={150}
 				class="min-w-0"
 				size="sm"
-				onFocus={handleInputFocus}
 				onBlur={handleInputBlur}
 				onKeydown={handleKeydown}
 			/>
