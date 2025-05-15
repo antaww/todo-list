@@ -1,28 +1,29 @@
 <script lang="ts">
 	import {X} from 'lucide-svelte';
-	import {createEventDispatcher, onMount} from 'svelte';
+	import {onMount} from 'svelte';
 	import {fade} from 'svelte/transition';
 	import Button from './Button.svelte';
 	import Card from './Card.svelte';
 
 	export let open = false;
-	export let title: string;
-	export let description: string;
-	export let confirmLabel = 'Confirm';
-	export let cancelLabel = 'Cancel';
+	export let title: string = '';
+	export let description: string = '';
+	export let confirmLabel: string = 'Confirm';
+	export let cancelLabel: string = 'Cancel';
 	export let variant: 'danger' | 'primary' = 'primary';
+	export let showCloseButton: boolean = true;
 
-	const dispatch = createEventDispatcher<{
-		confirm: void;
-		cancel: void;
-	}>();
+	export let onConfirm: (() => void) | undefined = undefined;
+	export let onCancel: (() => void) | undefined = undefined;
 
 	let dialogElement: HTMLDivElement;
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape' && open) {
 			e.preventDefault();
-			dispatch('cancel');
+			if (onCancel) {
+				onCancel();
+			}
 		}
 	}
 
@@ -33,7 +34,21 @@
 
 	function handleBackdropClick(e: MouseEvent) {
 		if (e.target === dialogElement) {
-			dispatch('cancel');
+			if (onCancel) {
+				onCancel();
+			}
+		}
+	}
+
+	function doCancel() {
+		if (onCancel) {
+			onCancel();
+		}
+	}
+
+	function doConfirm() {
+		if (onConfirm) {
+			onConfirm();
 		}
 	}
 </script>
@@ -42,7 +57,7 @@
 	<div
 		bind:this={dialogElement}
 		class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-		transition:fade={{ duration: 150 }}
+		transition:fade={{duration: 150}}
 		on:click={handleBackdropClick}
 	>
 		<Card
@@ -50,32 +65,50 @@
 			padding="p-0"
 		>
 			<div class="flex justify-between items-center border-b border-white/10 dark:border-dark-gray-100 p-4">
-				<h2 class="text-lg font-semibold text-white dark:text-dark-foreground">{title}</h2>
-				<Button
-					variant="icon"
-					icon={true}
-					on:click={() => dispatch('cancel')}
-					ariaLabel="Close dialog"
-				>
-					<X size={20}/>
-				</Button>
+				{#if $$slots.title}
+					<slot name="title"></slot>
+				{:else if title}
+					<h2 class="text-lg font-semibold text-white dark:text-dark-foreground">{title}</h2>
+				{/if}
+				{#if showCloseButton}
+					<Button
+						variant="icon"
+						icon={true}
+						on:click={doCancel}
+						ariaLabel="Close dialog"
+					>
+						<X size={20}/>
+					</Button>
+				{/if}
 			</div>
 			<div class="p-4">
-				<p class="text-white/90 dark:text-dark-gray-500 mb-6">{description}</p>
+				{#if description}
+					<p class="text-white/90 dark:text-dark-gray-500 mb-6">{description}</p>
+				{/if}
 				<slot />
-				<div class="flex justify-end gap-2 mt-6">
-					<Button
-						on:click={() => dispatch('cancel')}
-					>
-						{cancelLabel}
-					</Button>
-					<Button
-						variant={variant}
-						on:click={() => dispatch('confirm')}
-					>
-						{confirmLabel}
-					</Button>
-				</div>
+				{#if $$slots.footer}
+					<div class="flex justify-end gap-2 mt-6">
+						<slot name="footer"></slot>
+					</div>
+				{:else}
+					{#if confirmLabel || cancelLabel}
+						<div class="flex justify-end gap-2 mt-6">
+							{#if cancelLabel}
+								<Button on:click={doCancel}>
+									{cancelLabel}
+								</Button>
+							{/if}
+							{#if confirmLabel}
+								<Button
+									variant={variant}
+									on:click={doConfirm}
+								>
+									{confirmLabel}
+								</Button>
+							{/if}
+						</div>
+					{/if}
+				{/if}
 			</div>
 		</Card>
 	</div>

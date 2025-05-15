@@ -464,14 +464,30 @@
         }
     });
 
-    function handleStartEdit(todo: Todo | undefined) {
-        todosStore.setEditingId(todo?.id || null);
+    function handleStartEdit(todo: Todo) {
+		console.log('handleStartEdit', todo);
+		// todosStore.setEditing(todo.id, true);
+	}
+
+    function handleUpdateTodoDifficultyEvent(event: CustomEvent<{ todo: Todo; difficulty: number }>) {
+        if (event.detail.todo && typeof event.detail.difficulty === 'number') {
+            todosStore.updateDifficulty(event.detail.todo, event.detail.difficulty);
+        }
     }
 
-    function handleUpdateTodoDifficulty(event: CustomEvent<{ todo: Todo; difficulty: number }>) {
-		const { todo, difficulty } = event.detail;
-        todosStore.updateDifficulty(todo, difficulty); // <-- TEMPORAIREMENT COMMENTÉ
-	}
+    function handleModalUpdateTodoDifficulty(detail: { todo: Todo; difficulty: number }) {
+        if (detail.todo && typeof detail.difficulty === 'number') {
+            todosStore.updateDifficulty(detail.todo, detail.difficulty);
+            // Optionally, add a toast notification here if desired for modal updates
+            addToast({
+                data: {
+                    title: 'Difficulty Updated',
+                    description: `Task "${detail.todo.title}" difficulty set to ${detail.difficulty}.`,
+                    type: 'success'
+                }
+            });
+        }
+    }
 
     function openTodoDetailModal(todo: Todo) {
         selectedTodoIdForModal = todo.id;
@@ -674,7 +690,7 @@
                                 on:openDetails={_handleOpenDetailsEvent}
                                 on:startEdit={() => handleStartEdit(todo)}
                                 on:toggle={() => todosStore.toggle(todo)}
-                                on:updateDifficulty={handleUpdateTodoDifficulty}
+                                on:updateDifficulty={handleUpdateTodoDifficultyEvent}
                                 on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                                 searchQuery={searchQuery}
                                 {todo}
@@ -728,7 +744,7 @@
                                     on:openDetails={_handleOpenDetailsEvent}
                                     on:startEdit={() => handleStartEdit(todo)}
                                     on:toggle={() => todosStore.toggle(todo)}
-                                    on:updateDifficulty={handleUpdateTodoDifficulty}
+                                    on:updateDifficulty={handleUpdateTodoDifficultyEvent}
                                     on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
                                     searchQuery={searchQuery}
                                     {todo}
@@ -746,8 +762,8 @@
     cancelLabel="Cancel"
     confirmLabel="Delete all"
     description="Are you sure you want to permanently delete all completed tasks? This action cannot be undone."
-    on:cancel={handleCancelDelete}
-    on:confirm={handleConfirmDelete}
+    onCancel={handleCancelDelete}
+    onConfirm={handleConfirmDelete}
     open={deleteDialogOpen}
     title="Delete completed tasks"
     variant="danger"
@@ -759,8 +775,8 @@
     description="To confirm deletion, please type the name of the list below. This action cannot be undone."
     confirmLabel="Delete This List Permanently"
     variant="danger"
-    on:confirm={confirmDeleteListDeletion}
-    on:cancel={cancelDeleteListDeletion}
+    onConfirm={confirmDeleteListDeletion}
+    onCancel={cancelDeleteListDeletion}
 >
     <div class="space-y-2">
         <p class="text-sm text-white/70 dark:text-dark-gray-400">
@@ -780,9 +796,9 @@
 </Dialog>
 
 <TodoDetailModal
-    bind:isOpen={isModalOpen}
-    on:close={handleCloseModal}
-    on:updateDifficulty={handleUpdateTodoDifficulty}
+    isOpen={isModalOpen}
+    onClose={handleCloseModal}
+    onUpdateDifficulty={handleModalUpdateTodoDifficulty}
     todo={selectedTodoForModal}
 />
 
