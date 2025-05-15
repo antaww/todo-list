@@ -439,8 +439,6 @@
                             on:touchend={handleTouchEnd}
                         >
                             <TodoItem
-                                editingTitle={todo.title} 
-                                isEditing={$todosStore.editingId === todo.id}
                                 isPrimedForDrag={isPrimed}
                                 on:delete={() => todosStore.delete(todo)}
                                 on:openDetails={handleOpenDetails}
@@ -493,8 +491,6 @@
                                 on:touchend={handleTouchEnd}
                             >
                                 <TodoItem
-                                    editingTitle={todo.title}
-                                    isEditing={$todosStore.editingId === todo.id}
                                     isCompleted={true}
                                     isPrimedForDrag={isPrimed}
                                     on:delete={() => todosStore.delete(todo)}
