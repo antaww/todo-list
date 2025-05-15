@@ -132,12 +132,12 @@
 				title="Drag to reorder (long press to activate handle)"
 				style="touch-action: none;"
 			>
-				<GripVertical size={14} class="sm:hidden"/>
-				<GripVertical size={16} class="hidden sm:block"/>
+				<GripVertical size={16} class="sm:hidden"/>
+				<GripVertical size={18} class="hidden sm:block"/>
 			</div>
 		{/if}
 
-		<Checkbox bind:checked size="h-3 w-3"/>
+		<Checkbox bind:checked size="h-4 w-4"/>
 
 		{#if isEditing}
 			<InputComponent
@@ -153,7 +153,7 @@
 			/>
 		{:else}
 			<span
-				class="flex-1 text-white dark:text-dark-foreground text-xs cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
+				class="flex-1 text-white dark:text-dark-foreground text-sm cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
 				on:click={() => {
 					if (!isPrimedForDrag) {
 						isEditing = true;
@@ -168,13 +168,13 @@
 					<span class="block break-words">{todo.title}</span>
 				{/if}
 				<div class="flex items-center gap-1">
-					<span class="text-[10px] text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
+					<span class="text-xs text-white/50 dark:text-dark-gray-300">{formatDate(todo.created_at)}</span>
 					{#if todo.difficulty !== undefined}
 						<div class="sm:hidden">
-							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={10} />
+							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={12} />
 						</div>
 						<div class="hidden sm:block">
-							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={12} />
+							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={14} />
 						</div>
 					{/if}
 				</div>
@@ -185,7 +185,7 @@
 			<Button
 				ariaLabel="View todo"
 				title="View todo"
-				class="h-5 w-5 sm:h-6 sm:w-6"
+				class="h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
 				on:click={() => {
 					if (!isPrimedForDrag) {
@@ -194,13 +194,13 @@
 				}}
 				variant="icon"
 			>
-				<Eye class="sm:hidden" size={14}/>
-				<Eye class="hidden sm:block" size={16}/>
+				<Eye class="sm:hidden" size={16}/>
+				<Eye class="hidden sm:block" size={18}/>
 			</Button>
 			<Button
 				ariaLabel="Edit todo"
 				title="Edit todo"
-				class="h-5 w-5 sm:h-6 sm:w-6"
+				class="h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
 				on:click={() => {
 					if (!isPrimedForDrag) {
@@ -209,19 +209,19 @@
 				}}
 				variant="icon"
 			>
-				<Edit2 class="sm:hidden" size={14}/>
-				<Edit2 class="hidden sm:block" size={16}/>
+				<Edit2 class="sm:hidden" size={16}/>
+				<Edit2 class="hidden sm:block" size={18}/>
 			</Button>
 			<Button
 				ariaLabel="Delete todo"
 				title="Delete todo"
-				class="hover:text-red-500 transition-colors h-5 w-5 sm:h-6 sm:w-6"
+				class="hover:text-red-500 transition-colors h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
 				on:click={() => dispatch('delete', todo)}
 				variant="icon"
 			>
-				<Trash2 class="sm:hidden" size={14}/>
-				<Trash2 class="hidden sm:block" size={16}/>
+				<Trash2 class="sm:hidden" size={16}/>
+				<Trash2 class="hidden sm:block" size={18}/>
 			</Button>
 		</div>
 	</div>
