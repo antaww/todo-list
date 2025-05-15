@@ -109,7 +109,7 @@
 				<Plus size={16}/>
 			</Button>
 		</div>
-		{#if newTodoTitle.trim() && !$searchMode}
+		{#if newTodoTitle.trim()}
 			<div class="pl-1" transition:fade={{ duration: 150 }}>
 				<DifficultyStars
 					difficulty={newTodoDifficulty}
