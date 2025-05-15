@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {RealtimeChannel} from '@supabase/supabase-js';
     import {FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
-    import {onDestroy, onMount} from 'svelte';
+    import {onDestroy, onMount, tick} from 'svelte';
     import {dragHandleZone} from 'svelte-dnd-action';
     import {flip} from 'svelte/animate';
     import {fade} from 'svelte/transition';
@@ -345,6 +345,21 @@
         todosStore.setLoading(false);
         listStore.setLoading(false);
         isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+		const urlParams = new URLSearchParams(window.location.search);
+		const taskIdFromUrl = urlParams.get('task');
+
+		if (taskIdFromUrl) {
+			const todoToOpen = $todosStore.items.find(t => t.id === taskIdFromUrl);
+			if (todoToOpen) {
+				openTodoDetailModal(todoToOpen);
+				await tick(); // Wait for modal and list to render
+				const element = document.getElementById(`todo-item-${taskIdFromUrl}`);
+				if (element) {
+					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+			}
+		}
     });
 
     onDestroy(() => {
@@ -363,14 +378,22 @@
         todosStore.updateDifficulty(todo, difficulty); // <-- TEMPORAIREMENT COMMENTÉ
 	}
 
-    function handleOpenDetails(event: CustomEvent<Todo>) {
-        selectedTodoIdForModal = event.detail.id;
+    function openTodoDetailModal(todo: Todo) {
+        selectedTodoIdForModal = todo.id;
         isModalOpen = true;
+    }
+
+    function _handleOpenDetailsEvent(event: CustomEvent<Todo>) {
+        openTodoDetailModal(event.detail);
     }
 
     function handleCloseModal() {
         isModalOpen = false;
         selectedTodoIdForModal = null;
+
+		const url = new URL(window.location.href);
+        url.searchParams.delete('task');
+        window.history.pushState({}, '', url.toString());
     }
 </script>
 
@@ -439,6 +462,7 @@
                     {#each activeDndItems as todo (todo.id)}
                         {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
                         <div
+							id={`todo-item-${todo.id}`}
                             class:dnd-item={$sortBy === 'order'}
                             class:primed-for-drag={isPrimed}
                             animate:flip={{duration: 250}}
@@ -449,7 +473,7 @@
                             <TodoItem
                                 isPrimedForDrag={isPrimed}
                                 on:delete={() => todosStore.delete(todo)}
-                                on:openDetails={handleOpenDetails}
+                                on:openDetails={_handleOpenDetailsEvent}
                                 on:startEdit={() => handleStartEdit(todo)}
                                 on:toggle={() => todosStore.toggle(todo)}
                                 on:updateDifficulty={handleUpdateTodoDifficulty}
@@ -491,6 +515,7 @@
                         {#each completedDndItems as todo (todo.id)}
                             {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
                             <div
+								id={`todo-item-${todo.id}`}
                                 class:dnd-item={$sortBy === 'order'}
                                 class:primed-for-drag={isPrimed}
                                 animate:flip={{duration: 250}}
@@ -502,7 +527,7 @@
                                     isCompleted={true}
                                     isPrimedForDrag={isPrimed}
                                     on:delete={() => todosStore.delete(todo)}
-                                    on:openDetails={handleOpenDetails}
+                                    on:openDetails={_handleOpenDetailsEvent}
                                     on:startEdit={() => handleStartEdit(todo)}
                                     on:toggle={() => todosStore.toggle(todo)}
                                     on:updateDifficulty={handleUpdateTodoDifficulty}

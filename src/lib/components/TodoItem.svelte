@@ -189,6 +189,9 @@
 				icon={true}
 				on:click={() => {
 					if (!isPrimedForDrag) {
+						const url = new URL(window.location.href);
+						url.searchParams.set('task', todo.id);
+						window.history.pushState({}, '', url.toString());
 						dispatch('openDetails', todo);
 					}
 				}}
