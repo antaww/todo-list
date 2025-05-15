@@ -17,7 +17,7 @@
 
 <button
 	aria-label={ariaLabel}
-	class="{className} rounded-lg focus:outline-none focus:ring-white/50 dark:focus:ring-dark-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300 {variants[variant]} {icon ? 'p-0' : 'py-1 sm:py-2 px-2 sm:px-4 focus:ring-2'}"
+	class="rounded-lg focus:outline-none focus:ring-white/50 dark:focus:ring-dark-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300 {variants[variant]} {icon ? 'p-0' : 'py-1 sm:py-2 px-2 sm:px-4 focus:ring-2'} {className}"
 	{disabled}
 	on:click
 	{title}

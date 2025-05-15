@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {RealtimeChannel} from '@supabase/supabase-js';
-    import {FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
+    import {Copy, FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
     import {onDestroy, onMount, tick} from 'svelte';
     import {dragHandleZone} from 'svelte-dnd-action';
     import {flip} from 'svelte/animate';
@@ -12,6 +12,7 @@
     import Button from './components/ui/Button.svelte';
     import Card from './components/ui/Card.svelte';
     import Dialog from './components/ui/Dialog.svelte';
+    import Input from './components/ui/Input.svelte';
     import ScrollArea from './components/ui/ScrollArea.svelte';
     import {addToast} from './components/ui/Toaster.svelte';
     import {displayStore} from './stores/display';
@@ -49,6 +50,9 @@
     let isModalOpen = false;
     let selectedTodoIdForModal: string | null = null;
     $: selectedTodoForModal = selectedTodoIdForModal ? $todosStore.items.find(t => t.id === selectedTodoIdForModal) || null : null;
+
+    let showDeleteListDialog = false;
+    let deleteConfirmListName = '';
 
     function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty', direction: 'asc' | 'desc'): Todo[] {
         const sorted = [...todos].sort((a, b) => {
@@ -486,6 +490,106 @@
         url.searchParams.delete('task');
         window.history.pushState({}, '', url.toString());
     }
+
+    async function actualDeleteList() {
+        try {
+            // First, delete all todos associated with the list
+            const { error: todosError } = await supabase
+                .from('todos')
+                .delete()
+                .match({ list_id: listId });
+
+            if (todosError) {
+                console.error('Error deleting todos for list:', todosError);
+                addToast({
+                    data: {
+                        title: 'Error',
+                        description: 'Failed to delete tasks in the list. List not deleted.',
+                        type: 'error',
+                    },
+                });
+                return;
+            }
+
+            // Then, delete the list itself
+            const { error: listError } = await supabase
+                .from('lists')
+                .delete()
+                .match({ id: listId });
+
+            if (listError) {
+                console.error('Error deleting list:', listError);
+                addToast({
+                    data: {
+                        title: 'Error',
+                        description: 'Failed to delete the list.',
+                        type: 'error',
+                    },
+                });
+                return;
+            }
+
+            const deletedListTitle = $listStore.title; // Store title before it might get cleared by store updates
+            // Remove from favorites and history
+            favoritesStore.remove(listId);
+            historyStore.remove(listId);
+
+            addToast({
+                data: {
+                    title: 'List Deleted',
+                    description: `List "${deletedListTitle}" and all its tasks have been deleted.`,
+                    type: 'success',
+                },
+            });
+
+            // Redirect to home or another appropriate page
+            window.location.href = '/'; // Assuming '/' is the home page
+
+        } catch (error) {
+            console.error('Failed to delete list:', error);
+            addToast({
+                data: {
+                    title: 'Error',
+                    description: 'An unexpected error occurred while deleting the list.',
+                    type: 'error',
+                },
+            });
+        }
+    }
+
+    function openDeleteListDialog() {
+        deleteConfirmListName = '';
+        showDeleteListDialog = true;
+    }
+
+    function confirmDeleteListDeletion() {
+        if (deleteConfirmListName === $listStore.title) {
+            actualDeleteList();
+            showDeleteListDialog = false;
+        } else {
+            addToast({
+                data: {
+                    title: 'Incorrect Name',
+                    description: 'The entered name does not match the list name. Deletion cancelled.',
+                    type: 'warning',
+                },
+            });
+        }
+    }
+
+    function cancelDeleteListDeletion() {
+        showDeleteListDialog = false;
+    }
+
+    async function copyListNameForDialog() {
+        try {
+            await navigator.clipboard.writeText($listStore.title);
+            addToast({ data: { title: 'Copied!', description: 'List name copied to clipboard.', type: 'info' } });
+        } catch (err) {
+            console.error('Failed to copy list name: ', err);
+            addToast({ data: { title: 'Copy Failed', description: 'Could not copy list name.', type: 'error' } });
+        }
+    }
 </script>
 
 <div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
@@ -519,6 +623,7 @@
                 on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
                 on:exportCsv={handleExportCsv}
                 on:importCsv={handleImportCsv}
+                on:requestDeleteList={openDeleteListDialog}
                 title={$listStore.title}
             />
 
@@ -647,6 +752,32 @@
     title="Delete completed tasks"
     variant="danger"
 />
+
+<Dialog
+    bind:open={showDeleteListDialog}
+    title="Delete List"
+    description="To confirm deletion, please type the name of the list below. This action cannot be undone."
+    confirmLabel="Delete This List Permanently"
+    variant="danger"
+    on:confirm={confirmDeleteListDeletion}
+    on:cancel={cancelDeleteListDeletion}
+>
+    <div class="space-y-2">
+        <p class="text-sm text-white/70 dark:text-dark-gray-400">
+            List name: <strong class="text-white dark:text-dark-foreground">{$listStore.title}</strong>
+            <Button on:click={copyListNameForDialog} variant="icon" title="Copy list name" icon={true} class="ml-2">
+                <Copy size={14} />
+            </Button>
+        </p>
+        <div class="flex gap-2 items-center">
+            <Input
+                bind:value={deleteConfirmListName}
+                placeholder="Type list name to confirm"
+                class="flex-grow"
+            />
+        </div>
+    </div>
+</Dialog>
 
 <TodoDetailModal
     bind:isOpen={isModalOpen}

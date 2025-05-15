@@ -8,8 +8,8 @@
 	export let open = false;
 	export let title: string;
 	export let description: string;
-	export let confirmLabel = 'Confirmer';
-	export let cancelLabel = 'Annuler';
+	export let confirmLabel = 'Confirm';
+	export let cancelLabel = 'Cancel';
 	export let variant: 'danger' | 'primary' = 'primary';
 
 	const dispatch = createEventDispatcher<{
@@ -62,7 +62,8 @@
 			</div>
 			<div class="p-4">
 				<p class="text-white/90 dark:text-dark-gray-500 mb-6">{description}</p>
-				<div class="flex justify-end gap-2">
+				<slot />
+				<div class="flex justify-end gap-2 mt-6">
 					<Button
 						on:click={() => dispatch('cancel')}
 					>
