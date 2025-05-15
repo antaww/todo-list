@@ -22,6 +22,7 @@
     import {supabase} from './supabase';
     import type {Todo} from './types';
     import { sortBy } from './stores/sort';
+    import TodoDetailModal from './components/TodoDetailModal.svelte';
 
     export let listId: string;
 
@@ -43,6 +44,11 @@
 
     let activeDndItems: Todo[] = [];
     let completedDndItems: Todo[] = [];
+
+    let editingTodo: Todo | undefined = undefined;
+    let editingTitle = '';
+    let selectedTodoForModal: Todo | null = null;
+    let isModalOpen = false;
 
     function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order'): Todo[] {
         return [...todos].sort((a, b) => {
@@ -336,6 +342,21 @@
             });
         }
     });
+
+    function handleStartEdit(todo: Todo | undefined) {
+        editingTodo = todo;
+        editingTitle = todo?.title || '';
+    }
+
+    function handleOpenDetails(event: CustomEvent<Todo>) {
+        selectedTodoForModal = event.detail;
+        isModalOpen = true;
+    }
+
+    function handleCloseModal() {
+        isModalOpen = false;
+        selectedTodoForModal = null;
+    }
 </script>
 
 <div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
@@ -421,6 +442,7 @@
                                 on:delete={() => todosStore.delete(todo)}
                                 on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
                                 on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                on:openDetails={handleOpenDetails}
                             />
                         </div>
                     {/each}
@@ -474,6 +496,7 @@
                                     on:delete={() => todosStore.delete(todo)}
                                     on:startEdit={({ detail }) => todosStore.setEditingId(detail?.id ?? null)}
                                     on:updateTitle={({ detail: { title } }) => todosStore.updateTitle(todo, title)}
+                                    on:openDetails={handleOpenDetails}
                                 />
                             </div>
                         {/each}
@@ -494,6 +517,8 @@
     title="Delete completed tasks"
     variant="danger"
 />
+
+<TodoDetailModal todo={selectedTodoForModal} isOpen={isModalOpen} on:close={handleCloseModal} />
 
 <style>
     :global(html) {

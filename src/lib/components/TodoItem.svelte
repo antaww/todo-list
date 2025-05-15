@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Edit2, GripVertical, Trash2} from 'lucide-svelte';
+	import {Edit2, GripVertical, Trash2, Eye} from 'lucide-svelte';
 	import {createEventDispatcher} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '../Checkbox.svelte';
@@ -85,6 +85,7 @@
 			title: string
 		};
 		startEdit: Todo | undefined;
+		openDetails: Todo;
 	}>();
 </script>
 
@@ -143,6 +144,21 @@
 		{/if}
 
 		<div class="flex gap-1 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity flex-shrink-0">
+			<Button
+				ariaLabel="View todo"
+				title="View todo"
+				class="h-5 w-5 sm:h-6 sm:w-6"
+				icon={true}
+				on:click={() => {
+					if (!isPrimedForDrag) {
+						dispatch('openDetails', todo);
+					}
+				}}
+				variant="icon"
+			>
+				<Eye class="sm:hidden" size={14}/>
+				<Eye class="hidden sm:block" size={16}/>
+			</Button>
 			<Button
 				ariaLabel="Edit todo"
 				title="Edit todo"
