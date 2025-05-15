@@ -1,8 +1,7 @@
 # IDE
 .idea/
 .vscode/
-*.sublime-project
-*.sublime-workspace
+.cursor/mcp.json
 
 # Dependencies
 node_modules/
