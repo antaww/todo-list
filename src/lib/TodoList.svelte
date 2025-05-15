@@ -23,6 +23,7 @@
     import type {Todo} from './types';
     import { sortBy, sortDirection } from './stores/sort';
     import TodoDetailModal from './components/TodoDetailModal.svelte';
+    import { exportToCsv, importFromCsv } from './helpers/data';
 
     export let listId: string;
 
@@ -284,6 +285,96 @@
         }
     }
 
+    function handleExportCsv() {
+        if ($todosStore.items.length === 0) {
+            addToast({
+                data: {
+                    title: 'Cannot Export',
+                    description: 'There are no todos in the list to export.',
+                    type: 'warning',
+                },
+            });
+            return;
+        }
+        const fileName = $listStore.title ? `${$listStore.title.replace(/[^a-z0-9]/gi, '_')}.csv` : 'todos.csv';
+        exportToCsv($todosStore.items, fileName);
+        addToast({
+            data: {
+                title: 'Export Successful',
+                description: `Todos exported to ${fileName}`,
+                type: 'success',
+            },
+        });
+    }
+
+    async function handleImportCsv() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+
+        input.onchange = async (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            if (target.files && target.files.length > 0) {
+                const file = target.files[0];
+                try {
+                    const importedData = await importFromCsv(file);
+                    if (!Array.isArray(importedData) || importedData.length === 0) {
+                        addToast({
+                            data: {
+                                title: 'Import Failed',
+                                description: 'CSV file is empty or not in the expected format.',
+                                type: 'error',
+                            },
+                        });
+                        return;
+                    }
+
+                    // Validate and transform imported data
+                    // Assuming the CSV has headers: title, completed, difficulty
+                    // created_at, id, list_id, order will be auto-generated or set
+                    let importedCount = 0;
+                    for (const item of importedData) {
+                        const title = typeof item.title === 'string' ? item.title.trim() : null;
+                        if (!title) {
+                            console.warn('Skipping row due to missing title:', item);
+                            continue; // Skip if no title
+                        }
+
+                        const completed = String(item.completed).toLowerCase() === 'true' || item.completed === '1';
+                        const difficulty = parseInt(String(item.difficulty), 10);
+
+                        // todosStore.add handles id, created_at, order, and list_id
+                        await todosStore.add(listId, {
+                            title,
+                            difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(5, difficulty)), // ensure 0-5
+                        });
+                        importedCount++;
+                    }
+
+                    addToast({
+                        data: {
+                            title: 'Import Successful',
+                            description: `${importedCount} todo(s) imported from ${file.name}`,
+                            type: 'success',
+                        },
+                    });
+                    // Optionally, reload or update the view if todosStore.add doesn't trigger it sufficiently
+                    // await todosStore.load(listId);
+                } catch (error: any) {
+                    console.error('Error importing CSV:', error);
+                    addToast({
+                        data: {
+                            title: 'Import Failed',
+                            description: error.message || 'Could not process the CSV file.',
+                            type: 'error',
+                        },
+                    });
+                }
+            }
+        };
+        input.click();
+    }
+
     async function setupRealtimeSubscription() {
         try {
             for (const sub of subscription) { await sub.unsubscribe(); }
@@ -426,6 +517,8 @@
                     }
                 }}
                 on:updateTitle={({ detail }) => listStore.updateTitle(detail)}
+                on:exportCsv={handleExportCsv}
+                on:importCsv={handleImportCsv}
                 title={$listStore.title}
             />
 

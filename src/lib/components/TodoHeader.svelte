@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Loader2, Star} from 'lucide-svelte';
+	import {Loader2, Star, Download, Upload} from 'lucide-svelte';
 	import {createEventDispatcher} from 'svelte';
 	import {favoritesStore} from '../stores/favorites';
 	import Button from './ui/Button.svelte';
@@ -13,6 +13,8 @@
 		startEdit: void,
 		stopEdit: void,
 		toggleFavorite: void,
+		exportCsv: void,
+		importCsv: void,
 	}>();
 
 	$: isFavorite = $favoritesStore.some(f => f.id === listId);
@@ -33,6 +35,14 @@
 
 	function toggleFavorite() {
 		dispatch('toggleFavorite');
+	}
+
+	function exportCsv() {
+		dispatch('exportCsv');
+	}
+
+	function importCsv() {
+		dispatch('importCsv');
 	}
 
 	let loadingPlaceholder = '';
@@ -63,6 +73,26 @@
 			variant="title"
 		/>
 	</div>
+
+	<Button
+		class="flex items-center gap-2"
+		on:click={importCsv}
+		title="Import from CSV"
+		variant="icon"
+	>
+		<Upload size={20}/>
+		Import
+	</Button>
+
+	<Button
+		class="flex items-center gap-2"
+		on:click={exportCsv}
+		title="Export as CSV"
+		variant="icon"
+	>
+		<Download size={20}/>
+		Export
+	</Button>
 </div>
 
 <style>
