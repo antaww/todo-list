@@ -1,5 +1,5 @@
 import {get, writable} from "svelte/store";
-import {supabase} from "../supabase";
+import {supabase} from "$lib/supabase";
 
 export interface ListState {
 	id: string;

@@ -1,4 +1,4 @@
-import {persistentStore} from "../stores/persistent";
+import {persistentStore} from "$stores/persistent";
 
 
 const STORAGE_KEY = 'todo-list-lastSeen';

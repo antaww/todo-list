@@ -2,14 +2,14 @@
 	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen} from 'lucide-svelte';
 	import {tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
-	import Checkbox from '../Checkbox.svelte';
-	import type {Todo} from '../types';
-	import Button from './ui/Button.svelte';
-	import Card from './ui/Card.svelte';
-	import type Input from './ui/Input.svelte';
-	import InputComponent from './ui/Input.svelte';
-	import { sortBy } from '../stores/sort';
-	import DifficultyStars from './DifficultyStars.svelte';
+	import Checkbox from '@components/ui/Checkbox.svelte';
+	import type {Todo} from '$lib/types';
+	import Button from '@components/ui/Button.svelte';
+	import Card from '@components/ui/Card.svelte';
+	import type Input from '@components/ui/Input.svelte';
+	import InputComponent from '@components/ui/Input.svelte';
+	import { sortBy } from '$stores/sort';
+	import DifficultyStars from '@components/DifficultyStars.svelte';
 
 	export let todo: Todo;
 	export let isCompleted = false;

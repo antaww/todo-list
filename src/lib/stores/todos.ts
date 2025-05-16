@@ -1,9 +1,9 @@
 import {get, writable} from "svelte/store";
-import {addToast} from "../components/ui/Toaster.svelte";
-import {lastSeenStore} from "../helpers/lastSeen";
-import {supabase} from "../supabase";
-import type {Todo} from "../types";
-import {historyStore} from "./history";
+import {addToast} from "@components/ui/Toaster.svelte";
+import {lastSeenStore} from "$helpers/lastSeen";
+import {supabase} from "$lib/supabase";
+import type {Todo} from "$lib/types";
+import {historyStore} from "$stores/history";
 
 export interface TodosState {
 	items: Todo[];

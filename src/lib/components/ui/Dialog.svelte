@@ -2,8 +2,8 @@
 	import {X} from 'lucide-svelte';
 	import {onMount} from 'svelte';
 	import {fade} from 'svelte/transition';
-	import Button from './Button.svelte';
-	import Card from './Card.svelte';
+	import Button from '@components/ui/Button.svelte';
+	import Card from '@components/ui/Card.svelte';
 
 	export let open = false;
 	export let title: string = '';

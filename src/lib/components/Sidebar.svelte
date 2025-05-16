@@ -2,15 +2,15 @@
 	import {BookmarkPlus, History, Loader2, PanelLeft, PanelLeftClose, Plus, Star, X} from 'lucide-svelte';
 	import {onMount} from 'svelte';
 	import {fade, fly} from 'svelte/transition';
-	import {debounce} from '../helpers/debounce';
-	import {favoritesStore} from '../stores/favorites';
-	import {historyStore} from '../stores/history';
-	import {supabase} from '../supabase';
-	import Button from './ui/Button.svelte';
-	import Card from './ui/Card.svelte';
-	import DarkModeSwitch from './ui/DarkModeSwitch.svelte';
-	import Input from './ui/Input.svelte';
-	import ScrollArea from './ui/ScrollArea.svelte';
+	import {debounce} from '$helpers/debounce';
+	import {favoritesStore} from '$stores/favorites';
+	import {historyStore} from '$stores/history';
+	import {supabase} from '$lib/supabase';
+	import Button from '@components/ui/Button.svelte';
+	import Card from '@components/ui/Card.svelte';
+	import DarkModeSwitch from '@components/ui/DarkModeSwitch.svelte';
+	import Input from '@components/ui/Input.svelte';
+	import ScrollArea from '@components/ui/ScrollArea.svelte';
 
 	export let isOpen = false;
 	let searchValue = '';

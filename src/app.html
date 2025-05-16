@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<script>
+			(function() {
+				const THEME_STORAGE_KEY = 'todo-list-theme';
+				try {
+					const storedThemeValue = localStorage.getItem(THEME_STORAGE_KEY);
+					let theme = null;
+
+					if (storedThemeValue) {
+						// Try to parse as JSON (new format)
+						try {
+							const parsed = JSON.parse(storedThemeValue);
+							if (parsed === 'dark' || parsed === 'light') {
+								theme = parsed;
+							}
+						} catch (e) {
+							// If parsing fails, it might be an old raw string value
+							if (storedThemeValue === 'dark' || storedThemeValue === 'light') {
+								theme = storedThemeValue;
+								// For hygiene, re-save in correct JSON format for next time
+								localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme));
+							}
+						}
+					}
+
+					// If no valid theme found in localStorage, use system preference
+					if (!theme) {
+						theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+						// We don't save the system preference to localStorage here,
+						// let the DarkModeSwitch component do that if the user explicitly interacts with it.
+					}
+
+					if (theme === 'dark') {
+						document.documentElement.classList.add('dark');
+					} else {
+						document.documentElement.classList.remove('dark');
+					}
+				} catch (e) {
+					// Fallback in case of any error (e.g. localStorage disabled)
+					// console.error('Error applying initial theme:', e);
+					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+						document.documentElement.classList.add('dark');
+					}
+				}
+			})();
+		</script>
+		%sveltekit.head%
+		<meta content="antaww, ayfri" name="author"/>
+		<meta
+			content="Boost your productivity with a seamless, real-time collaborative todo list. Organize tasks effortlessly across multiple lists with a sleek, modern design."
+			name="description"
+		/>
+		<meta content="todo, list, realtime, collaborative, productivity, organization, task management" name="keywords"/>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+		<meta content="website" property="og:type"/>
+		<meta content="https://realtime-todolist.pages.dev/" property="og:url"/>
+		<meta content="Real-time Todo List" property="og:title"/>
+		<meta
+			content="Boost your productivity with a seamless, real-time collaborative todo list. Organize tasks effortlessly across multiple lists with a sleek, modern design."
+			property="og:description"
+		/>
+		<meta content="https://realtime-todolist.pages.dev/realtime-todolist.png" property="og:image"/>
+
+		<meta content="summary" property="twitter:card"/>
+		<meta content="https://realtime-todolist.pages.dev/" property="twitter:url"/>
+		<meta content="Real-time Todo List" property="twitter:title"/>
+		<meta
+			content="Boost your productivity with a seamless, real-time collaborative todo list. Organize tasks effortlessly across multiple lists with a sleek, modern design."
+			property="twitter:description"
+		/>
+		<meta content="https://realtime-todolist.pages.dev/realtime-todolist.png" property="twitter:image"/>
+
+		<link href="%sveltekit.assets%/realtime-todolist-small.png" rel="icon" type="image/png"/>
+		<title>Real-time Todo List</title>
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

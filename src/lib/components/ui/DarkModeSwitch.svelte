@@ -1,44 +1,62 @@
 <script lang="ts">
-	import {createSwitch, melt} from '@melt-ui/svelte';
-	import {Moon, Sun} from 'lucide-svelte';
-	import {onMount} from 'svelte';
+	import { browser } from '$app/environment';
+	import { persistentStore } from '$stores/persistent'; // Adjust path if necessary
+	import { createSwitch, melt } from '@melt-ui/svelte';
+	import { Moon, Sun } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+
+	const THEME_STORAGE_KEY = 'todo-list-theme';
+
+	// Create a persistent store for the theme
+	// Initial value is null, will be determined onMount
+	const themeStore = persistentStore<'dark' | 'light' | null>(THEME_STORAGE_KEY, null);
 
 	const {
 		elements: {
 			root,
 			input,
 		},
-		states: {checked},
+		states: { checked },
 	} = createSwitch();
-
-	const STORAGE_KEY = 'todo-list-theme';
-	const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-	const localStorageTheme = localStorage.getItem(STORAGE_KEY);
-	const isDark = localStorageTheme ? localStorageTheme === 'dark' : prefersDark;
 
 	let inputElement: HTMLInputElement | undefined = undefined;
 
 	onMount(() => {
-		if (isDark) {
-			$checked = true;
+		let currentTheme = $themeStore;
+
+		if (!currentTheme) { // No theme stored, check system preference
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			currentTheme = prefersDark ? 'dark' : 'light';
+			themeStore.set(currentTheme); // Save the determined theme
 		}
 
-		// Handle dark mode toggle
-		checked.subscribe(checked => {
-			if (checked === undefined) return;
-			if (checked) {
+		$checked = currentTheme === 'dark';
+
+		// Apply initial theme to document
+		if ($checked) {
+			document.documentElement.classList.add('dark');
+		} else {
+			document.documentElement.classList.remove('dark');
+		}
+
+		// Handle dark mode toggle when switch state changes
+		const unsubscribe = checked.subscribe(isChecked => {
+			if (isChecked === undefined) return; // Initial undefined state from createSwitch
+
+			if (isChecked) {
 				document.documentElement.classList.add('dark');
-				localStorage.setItem(STORAGE_KEY, 'dark');
+				themeStore.set('dark');
 			} else {
 				document.documentElement.classList.remove('dark');
-				localStorage.setItem(STORAGE_KEY, 'light');
+				themeStore.set('light');
 			}
 		});
 
-		inputElement?.addEventListener('change', () => {
-			$checked = !inputElement!.checked;
-		});
+		return () => {
+			unsubscribe(); // Clean up the subscription
+		};
 	});
+
 </script>
 
 <div class="flex items-center gap-2 px-2">
@@ -49,7 +67,7 @@
 	>
 		<input
 			bind:this={inputElement}
-			checked={$checked}
+			bind:checked={$checked}
 			class="peer sr-only"
 			type="checkbox"
 			use:melt={$input}

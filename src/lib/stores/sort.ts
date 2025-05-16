@@ -1,4 +1,4 @@
-import { persistentStore } from './persistent';
+import { persistentStore } from '$stores/persistent';
 
 export type SortByType = 'name' | 'date' | 'order' | 'difficulty';
 

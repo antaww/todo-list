@@ -1,12 +1,12 @@
 <script lang="ts">
 	import {ArrowDown, ArrowUp, Plus, Search} from 'lucide-svelte';
-	import {debounce} from '../helpers/debounce';
-	import {persistentStore} from '../stores/persistent';
-	import {sortBy, sortDirection, type SortByType} from '../stores/sort';
-	import Button from './ui/Button.svelte';
-	import DifficultyStars from './DifficultyStars.svelte';
-	import Input from './ui/Input.svelte';
-	import Select from './ui/Select.svelte';
+	import {debounce} from '$helpers/debounce';
+	import {persistentStore} from '$stores/persistent';
+	import {sortBy, sortDirection, type SortByType} from '$stores/sort';
+	import Button from '@components/ui/Button.svelte';
+	import DifficultyStars from '@components/DifficultyStars.svelte';
+	import Input from '@components/ui/Input.svelte';
+	import Select from '@components/ui/Select.svelte';
 	import { fade } from 'svelte/transition';
 
 	export let hasCompletedTodos = false;

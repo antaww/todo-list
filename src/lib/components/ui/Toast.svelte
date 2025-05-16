@@ -2,7 +2,7 @@
 	import {melt, type ToastsElements} from '@melt-ui/svelte';
 	import {AlertCircle, CheckCircle2, Info, X, XCircle} from 'lucide-svelte';
 	import {fly} from 'svelte/transition';
-	import type {ToastData} from './Toaster.svelte';
+	import type {ToastData} from '@components/ui/Toaster.svelte';
 
 	export let id: string;
 	export let data: ToastData;

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import type { Todo } from '../types';
-	import Button from './ui/Button.svelte';
-	import DifficultyStars from './DifficultyStars.svelte';
+	import type { Todo } from '$lib/types';
+	import Button from '@components/ui/Button.svelte';
+	import DifficultyStars from '@components/DifficultyStars.svelte';
 	import { Edit2, Save, Share2, X } from 'lucide-svelte';
-	import Dialog from './ui/Dialog.svelte';
-	import Input from './ui/Input.svelte';
-	import Textarea from './ui/Textarea.svelte';
-	import Markdown from './ui/Markdown.svelte';
+	import Dialog from '@components/ui/Dialog.svelte';
+	import Input from '@components/ui/Input.svelte';
+	import Textarea from '@components/ui/Textarea.svelte';
+	import Markdown from '@components/ui/Markdown.svelte';
 	import { tick, onMount, onDestroy } from 'svelte';
 	import type { SvelteComponent } from 'svelte';
 

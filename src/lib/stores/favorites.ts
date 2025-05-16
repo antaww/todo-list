@@ -1,4 +1,5 @@
-import {get, writable} from "svelte/store";
+import { browser } from '$app/environment';
+import { get, writable } from "svelte/store";
 
 export interface FavoriteList {
 	id: string;
@@ -8,14 +9,19 @@ export interface FavoriteList {
 const STORAGE_KEY = "todo-list-favorites";
 
 function createFavoritesStore() {
-	const initialFavorites = JSON.parse(
-		localStorage.getItem(STORAGE_KEY) || "[]",
-	);
+	const initialFavorites = browser ? JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") : [];
 	const store = writable<FavoriteList[]>(initialFavorites);
 	const {
 		subscribe,
 		update,
 	} = store;
+
+	// Sync store with localStorage on the client side
+	if (browser) {
+		store.subscribe(currentFavorites => {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(currentFavorites));
+		});
+	}
 
 	return {
 		subscribe,
@@ -28,13 +34,13 @@ function createFavoritesStore() {
 						title,
 					},
 				];
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(newFavorites));
+				// localStorage update is handled by the subscribe effect above on client
 				return newFavorites;
 			}),
 		remove: (id: string) =>
 			update(favorites => {
 				const newFavorites = favorites.filter(f => f.id !== id);
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(newFavorites));
+				// localStorage update is handled by the subscribe effect above on client
 				return newFavorites;
 			}),
 		isFavorite: (id: string) => {
@@ -51,7 +57,7 @@ function createFavoritesStore() {
 						} :
 					f,
 				);
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(newFavorites));
+				// localStorage update is handled by the subscribe effect above on client
 				return newFavorites;
 			}),
 	};

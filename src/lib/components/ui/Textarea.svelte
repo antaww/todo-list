@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
+	
 	export let value = '';
 	export let placeholder = '';
 	export let rows = 3;

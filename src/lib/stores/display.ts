@@ -1,18 +1,16 @@
-import {writable} from "svelte/store";
+import { persistentStore } from '$stores/persistent'; // Assuming persistent.ts is in $stores
 
-function createDisplayStore() {
-	// Récupérer la valeur depuis le localStorage si elle existe
-	const storedWideMode = localStorage.getItem("wideMode") === "true";
+const WIDE_MODE_KEY = 'wideMode';
+// Default to false if not found in localStorage or for SSR
+const initialWideMode = false;
 
-	const store = writable<boolean>(storedWideMode);
+// Create the persistent store for wideMode
+const wideModeStore = persistentStore<boolean>(WIDE_MODE_KEY, initialWideMode);
 
-	// Sauvegarder dans le localStorage quand la valeur change
-	store.subscribe(value => localStorage.setItem("wideMode", value.toString()));
-
-	return {
-		subscribe: store.subscribe,
-		toggle: () => store.update(value => !value),
-	};
-}
-
-export const displayStore = createDisplayStore();
+// Export the store and a toggle function
+export const displayStore = {
+	subscribe: wideModeStore.subscribe,
+	toggle: () => wideModeStore.update(value => !value),
+	// If you need to set it directly, you can expose set as well
+	// set: wideModeStore.set
+};

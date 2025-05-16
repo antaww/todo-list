@@ -1,9 +1,9 @@
 <script lang="ts">
 	import {Loader2, Star, Download, Upload, Trash2, MoreVertical} from 'lucide-svelte';
 	import {onMount, onDestroy} from 'svelte';
-	import {favoritesStore} from '../stores/favorites';
-	import Button from './ui/Button.svelte';
-	import Input from './ui/Input.svelte';
+	import {favoritesStore} from '$stores/favorites';
+	import Button from '@components/ui/Button.svelte';
+	import Input from '@components/ui/Input.svelte';
 
 	export let title = '';
 	export let listId = '';
