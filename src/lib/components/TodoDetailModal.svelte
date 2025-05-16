@@ -5,6 +5,9 @@
 	import DifficultyStars from './DifficultyStars.svelte';
 	import { Share2 } from 'lucide-svelte';
 	import Dialog from './ui/Dialog.svelte';
+	import Input from './ui/Input.svelte';
+	import { tick } from 'svelte';
+	import type { SvelteComponent } from 'svelte';
 
 	export let isOpen = false;
 	export let todo: Todo | null = null;
@@ -12,15 +15,30 @@
 	// Event callback props
 	export let onClose: (() => void) | undefined = undefined;
 	export let onUpdateDifficulty: ((detail: { todo: Todo; difficulty: number }) => void) | undefined = undefined;
+	export let onUpdateTitle: ((detail: { todo: Todo; title: string }) => void) | undefined = undefined;
 
 	let showCopyTooltip = false;
 	let tooltipMessage = '';
 	let tooltipTimeout: ReturnType<typeof setTimeout> | null = null;
+	let isEditingTitle = false;
+	let editableTitle = '';
+	let titleInputInstance: SvelteComponent & { focus: () => void; } | null = null;
+
+	$: if (todo && !isEditingTitle) {
+		editableTitle = todo.title;
+	}
+
+	$: if (isEditingTitle && todo) {
+		tick().then(() => {
+			titleInputInstance?.focus();
+		});
+	}
 
 	function requestClose() {
 		if (onClose) {
 			onClose();
 		}
+		isEditingTitle = false; // Reset edit mode on close
 	}
 
 	function formatDate(dateString: string) {
@@ -34,6 +52,36 @@
 	function handleUpdateDifficulty(newDifficulty: number) {
 		if (todo && onUpdateDifficulty) {
 			onUpdateDifficulty({ todo, difficulty: newDifficulty });
+		}
+	}
+
+	function handleEditTitle() {
+		if (!todo) return;
+		editableTitle = todo.title;
+		isEditingTitle = true;
+	}
+
+	function handleCancelEditTitle() {
+		isEditingTitle = false;
+		if (todo) {
+			editableTitle = todo.title; // Reset to original title
+		}
+	}
+
+	function handleSaveTitle() {
+		if (todo && onUpdateTitle && editableTitle.trim() && editableTitle.trim() !== todo.title) {
+			onUpdateTitle({ todo, title: editableTitle.trim() });
+		}
+		isEditingTitle = false;
+	}
+
+	function handleTitleInputKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			handleSaveTitle();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			handleCancelEditTitle();
 		}
 	}
 
@@ -64,9 +112,24 @@
 	cancelLabel=""
 	size="large"
 >
-	<div slot="title">
+	<div slot="title" class="w-full mr-3">
 		{#if todo}
-			<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all">{todo.title}</h2>
+			{#if isEditingTitle}
+				<div class="flex items-center gap-2 flex-1 w-full">
+					<Input
+						bind:this={titleInputInstance}
+						bind:value={editableTitle}
+						placeholder="Todo title"
+						class="w-full"
+						onBlur={handleSaveTitle}
+						onKeydown={handleTitleInputKeydown}
+					/>
+				</div>
+			{:else}
+				<div class="flex items-center gap-2 cursor-pointer" on:click={handleEditTitle} title="Edit title">
+					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all">{todo.title}</h2>
+				</div>
+			{/if}
 		{/if}
 	</div>
 
