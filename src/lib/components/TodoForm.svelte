@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {ArrowDown, ArrowUp, Plus, Search} from 'lucide-svelte';
-	// import {createEventDispatcher} from 'svelte';
 	import {debounce} from '../helpers/debounce';
 	import {persistentStore} from '../stores/persistent';
 	import {sortBy, sortDirection, type SortByType} from '../stores/sort';
@@ -21,12 +20,6 @@
 	let newTodoDifficulty = 0;
 	let newTodoTitle = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
-
-	// const dispatch = createEventDispatcher<{
-	// 	add: { title: string; difficulty: number };
-	// 	sort: { by: SortByType, direction: 'asc' | 'desc' };
-	// 	search: string;
-	// }>();
 
 	const sortOptions = [
 		{
@@ -117,15 +110,8 @@
 				<Plus size={16}/>
 			</Button>
 		</div>
-		{#if newTodoTitle.trim() && !$searchMode}
-			<textarea
-				bind:value={newTodoDescription}
-				class="mt-1 w-full rounded-md border border-gray-600 bg-gray-700 p-2 text-sm text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
-				disabled={loading}
-				placeholder="Add a description (optional, markdown supported)"
-				rows={3}
-			/>
-			<div class="pl-1" transition:fade={{ duration: 150 }}>
+		{#if newTodoTitle.trim()}
+			<div class="pl-1 pt-1" transition:fade={{ duration: 150 }}>
 				<DifficultyStars
 					difficulty={newTodoDifficulty}
 					interactive={true}
