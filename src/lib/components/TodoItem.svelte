@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Edit2, GripVertical, Trash2, Eye} from 'lucide-svelte';
+	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen} from 'lucide-svelte';
 	import {tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '../Checkbox.svelte';
@@ -162,6 +162,25 @@
 						<div class="hidden sm:block">
 							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={14} />
 						</div>
+					{/if}
+					{#if todo.description}
+						<button 
+							class="text-white/60 dark:text-dark-gray-600 ml-0.5 cursor-pointer hover:text-white/80 dark:hover:text-dark-gray-500 transition-colors"
+							title="Has description"
+							on:click|stopPropagation={() => {
+								if (!isPrimedForDrag) {
+									const url = new URL(window.location.href);
+									url.searchParams.set('task', todo.id);
+									window.history.pushState({}, '', url.toString());
+									onOpenDetails(todo);
+								}
+							}}
+							aria-label="Has description"
+							tabindex="0"
+						>
+							<NotebookPen size={14} class="sm:hidden" />
+							<NotebookPen size={16} class="hidden sm:block" />
+						</button>
 					{/if}
 				</div>
 			</span>
