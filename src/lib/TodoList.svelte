@@ -387,8 +387,14 @@
                         table: 'todos',
                         filter: `list_id=eq.${listId}`,
                     },
-                    async () => {
-                    	if (!$todosStore.editingId) { await todosStore.load(listId); }
+                    async (payload) => {
+                        console.log('Real-time event received for todos table:', payload);
+                        if (!$todosStore.editingId) {
+                            console.log('Reloading todos due to real-time event.');
+                            await todosStore.load(listId);
+                        } else {
+                            console.log('Skipping todo reload due to editingId being set.');
+                        }
                     },
                 );
 
@@ -474,6 +480,19 @@
                 data: {
                     title: 'Difficulty Updated',
                     description: `Task "${detail.todo.title}" difficulty set to ${detail.difficulty}.`,
+                    type: 'success'
+                }
+            });
+        }
+    }
+
+    function handleModalUpdateTodoDescription(detail: { todo: Todo; description: string }) {
+        if (detail.todo) {
+            todosStore.updateDescription(detail.todo, detail.description);
+            addToast({
+                data: {
+                    title: 'Description Updated',
+                    description: `Task "${detail.todo.title}" description updated.`,
                     type: 'success'
                 }
             });
@@ -776,12 +795,16 @@
     </div>
 </Dialog>
 
-<TodoDetailModal
-    isOpen={isModalOpen}
-    onClose={handleCloseModal}
-    onUpdateDifficulty={handleModalUpdateTodoDifficulty}
-    todo={selectedTodoForModal}
-/>
+{#if selectedTodoForModal}
+    <TodoDetailModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onUpdateDescription={handleModalUpdateTodoDescription}
+        onUpdateDifficulty={handleModalUpdateTodoDifficulty}
+        onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+        todo={selectedTodoForModal}
+    />
+{/if}
 
 <style>
     :global(html) {

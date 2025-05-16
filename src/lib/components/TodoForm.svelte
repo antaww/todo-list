@@ -13,10 +13,11 @@
 	export let hasCompletedTodos = false;
 	export let loading = false;
 	export let searchResultsCount: number | undefined = undefined;
-	export let onAdd: (detail: { title: string; difficulty: number }) => void = () => {};
+	export let onAdd: (detail: { title: string; difficulty: number; description?: string }) => void = () => {};
 	export let onSort: (detail: { by: SortByType, direction: 'asc' | 'desc' }) => void = () => {};
 	export let onSearch: (searchText: string) => void = () => {};
 
+	let newTodoDescription = '';
 	let newTodoDifficulty = 0;
 	let newTodoTitle = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
@@ -49,8 +50,9 @@
 	function handleSubmit() {
 		if (!newTodoTitle.trim()) return;
 		debouncedSearch.cancel();
-		onAdd({ title: newTodoTitle.trim(), difficulty: newTodoDifficulty });
+		onAdd({ title: newTodoTitle.trim(), difficulty: newTodoDifficulty, description: newTodoDescription.trim() });
 		newTodoTitle = '';
+		newTodoDescription = '';
 		newTodoDifficulty = 0;
 		$searchMode = false;
 		onSearch('');
@@ -115,7 +117,14 @@
 				<Plus size={16}/>
 			</Button>
 		</div>
-		{#if newTodoTitle.trim()}
+		{#if newTodoTitle.trim() && !$searchMode}
+			<textarea
+				bind:value={newTodoDescription}
+				class="mt-1 w-full rounded-md border border-gray-600 bg-gray-700 p-2 text-sm text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+				disabled={loading}
+				placeholder="Add a description (optional, markdown supported)"
+				rows={3}
+			/>
 			<div class="pl-1" transition:fade={{ duration: 150 }}>
 				<DifficultyStars
 					difficulty={newTodoDifficulty}

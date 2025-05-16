@@ -107,7 +107,7 @@ function createTodosStore() {
 			}
 		},
 
-		add: async (listId: string, { title, difficulty }: { title: string; difficulty: number }) => {
+		add: async (listId: string, { title, difficulty, description }: { title: string; difficulty: number; description?: string }) => {
 			const state = get(store);
 			const order = state.items.filter((t: Todo) => !t.completed).length;
 			const tempId = 'temp_' + Date.now();
@@ -115,6 +115,7 @@ function createTodosStore() {
 			const newTodo: Todo = {
 				completed: false,
 				created_at: new Date().toISOString(),
+				description,
 				difficulty,
 				id: tempId,
 				list_id: listId,
@@ -139,6 +140,7 @@ function createTodosStore() {
 					.insert([
 						{
 							completed: newTodo.completed,
+							description: newTodo.description,
 							difficulty: newTodo.difficulty,
 							list_id: newTodo.list_id,
 							order: newTodo.order,
@@ -279,6 +281,56 @@ function createTodosStore() {
 					update(state => ({
 						...state,
 						error: "Failed to update todo title",
+					}));
+				}
+			}
+		},
+
+		updateDescription: async (todo: Todo, newDescription: string) => {
+			const updateStartTime = Date.now();
+			lastUpdateTime = updateStartTime;
+			const oldDescription = todo.description;
+
+			// Optimistic update
+			update(state => ({
+				...state,
+				items: state.items.map((t: Todo) =>
+					t.id === todo.id ?
+						{
+							...t,
+							description: newDescription.trim(),
+						} :
+					t,
+				),
+			}));
+
+			try {
+				console.log('Attempting to update description for todo:', todo.id, 'to:', newDescription.trim());
+				const { data: updateData, error: supabaseError } = await supabase
+					.from('todos')
+					.update({ description: newDescription.trim() })
+					.eq('id', todo.id)
+					.select(); // Adding .select() for more info
+
+				if (supabaseError) {
+					console.error('Supabase error updating description:', supabaseError);
+					throw supabaseError;
+				}
+				console.log('Supabase description update successful:', updateData);
+			} catch (e) {
+				console.error('Caught error in updateDescription:', e);
+				if (lastUpdateTime === updateStartTime) { // Revert only if this is the last update attempt
+					update(state => ({
+						...state,
+						items: state.items.map((t: Todo) =>
+							t.id === todo.id ?
+								{
+									...t,
+									description: oldDescription, // Revert to original description
+								} :
+								t,
+						),
+						error: 'Failed to update todo description',
 					}));
 				}
 			}

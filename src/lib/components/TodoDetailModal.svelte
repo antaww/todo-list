@@ -3,10 +3,12 @@
 	import type { Todo } from '../types';
 	import Button from './ui/Button.svelte';
 	import DifficultyStars from './DifficultyStars.svelte';
-	import { Share2 } from 'lucide-svelte';
+	import { Edit2, Save, Share2, X } from 'lucide-svelte';
 	import Dialog from './ui/Dialog.svelte';
 	import Input from './ui/Input.svelte';
-	import { tick } from 'svelte';
+	import Textarea from './ui/Textarea.svelte';
+	import Markdown from './ui/Markdown.svelte';
+	import { tick, onMount, onDestroy } from 'svelte';
 	import type { SvelteComponent } from 'svelte';
 
 	export let isOpen = false;
@@ -14,15 +16,44 @@
 
 	// Event callback props
 	export let onClose: (() => void) | undefined = undefined;
+	export let onUpdateDescription: ((detail: { todo: Todo; description: string }) => void) | undefined = undefined;
 	export let onUpdateDifficulty: ((detail: { todo: Todo; difficulty: number }) => void) | undefined = undefined;
 	export let onUpdateTitle: ((detail: { todo: Todo; title: string }) => void) | undefined = undefined;
 
 	let showCopyTooltip = false;
 	let tooltipMessage = '';
 	let tooltipTimeout: ReturnType<typeof setTimeout> | null = null;
+
 	let isEditingTitle = false;
 	let editableTitle = '';
 	let titleInputInstance: SvelteComponent & { focus: () => void; } | null = null;
+
+	let isEditingDescription = false;
+	let editableDescription = '';
+	let descriptionTextareaInstance: SvelteComponent & { focus: () => void; } | null = null;
+
+	let descriptionEditorWrapper: HTMLDivElement;
+
+	function handleClickOutsideDescription(event: MouseEvent) {
+		if (isEditingDescription && descriptionEditorWrapper && !descriptionEditorWrapper.contains(event.target as Node)) {
+			handleSaveDescription();
+		}
+	}
+
+	$: {
+		if (isEditingDescription) {
+			tick().then(() => {
+				document.addEventListener('click', handleClickOutsideDescription, true);
+			});
+			descriptionTextareaInstance?.focus();
+		} else {
+			document.removeEventListener('click', handleClickOutsideDescription, true);
+		}
+	}
+
+	onDestroy(() => {
+		document.removeEventListener('click', handleClickOutsideDescription, true);
+	});
 
 	$: if (todo && !isEditingTitle) {
 		editableTitle = todo.title;
@@ -34,11 +65,22 @@
 		});
 	}
 
+	$: if (todo && !isEditingDescription) {
+		editableDescription = todo.description || '';
+	}
+
+	$: if (isEditingDescription && todo) {
+		tick().then(() => {
+			descriptionTextareaInstance?.focus();
+		});
+	}
+
 	function requestClose() {
 		if (onClose) {
 			onClose();
 		}
-		isEditingTitle = false; // Reset edit mode on close
+		isEditingTitle = false;
+		isEditingDescription = false;
 	}
 
 	function formatDate(dateString: string) {
@@ -82,6 +124,38 @@
 		} else if (event.key === 'Escape') {
 			event.preventDefault();
 			handleCancelEditTitle();
+		}
+	}
+
+	function handleEditDescription() {
+		if (!todo) return;
+		editableDescription = todo.description || '';
+		isEditingDescription = true;
+	}
+
+	function handleCancelEditDescription() {
+		isEditingDescription = false;
+		if (todo) {
+			editableDescription = todo.description || '';
+		}
+	}
+
+	function handleSaveDescription() {
+		if (todo && onUpdateDescription) {
+			if (editableDescription.trim() !== (todo.description || '').trim()) {
+				onUpdateDescription({ todo, description: editableDescription.trim() });
+			}
+		}
+		isEditingDescription = false;
+	}
+
+	function handleDescriptionTextareaKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && event.ctrlKey) {
+			event.preventDefault();
+			handleSaveDescription();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			handleCancelEditDescription();
 		}
 	}
 
@@ -145,6 +219,49 @@
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
 			Status: {todo.completed ? 'Completed' : 'Pending'}
 		</p>
+		{#if isEditingDescription}
+			<div class="mb-4" bind:this={descriptionEditorWrapper}>
+				<h3 class="text-md font-semibold text-white dark:text-dark-foreground mb-2 flex items-center justify-between">
+					Description
+				</h3>
+				<Textarea
+					bind:this={descriptionTextareaInstance}
+					bind:value={editableDescription}
+					class="w-full min-h-[100px] text-sm"
+					placeholder="Enter task description (Markdown supported)"
+					rows={5}
+					on:keydown={handleDescriptionTextareaKeydown}
+				/>
+				<div class="mt-3 flex justify-end gap-2">
+					<Button variant="icon" onClick={handleCancelEditDescription} title="Cancel" class="border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100">
+						<X size={16} class="mr-1 sm:mr-2"/> Cancel
+					</Button>
+					<Button variant="primary" onClick={handleSaveDescription} title="Save description" class="bg-green-500/80 hover:bg-green-600/90 border-green-500/30">
+						<Save size={16} class="mr-3 sm:mr-2"/> Save
+						<span class="ml-2 text-xs text-white/70 dark:text-dark-gray-300 hidden lg:block">(CTRL+Enter)</span>
+					</Button>
+				</div>
+			</div>
+		{:else if todo.description}
+			<div class="mb-4" in:fade={{duration: 150}}>
+				<h3 class="text-md font-semibold text-white dark:text-dark-foreground mb-1 flex items-center justify-between">
+					Description
+					<Button variant="icon" onClick={handleEditDescription} title="Edit description" class="p-1">
+						<Edit2 size={16} />
+					</Button>
+				</h3>
+				<div class="cursor-pointer hover:bg-black/10 dark:hover:bg-dark-gray-800/30 transition-all duration-150 p-0.5 rounded-lg min-h-[40px]"
+				     on:click={handleEditDescription} title="Edit description">
+					<Markdown content={todo.description} />
+				</div>
+			</div>
+		{:else}
+			<div class="mb-4" in:fade={{duration: 150}}>
+				<Button variant="primary" onClick={handleEditDescription} class="w-full border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100 py-2.5">
+					<Edit2 size={16} class="mr-2"/> Add Description
+				</Button>
+			</div>
+		{/if}
 	{/if}
 
 	<div slot="footer">
