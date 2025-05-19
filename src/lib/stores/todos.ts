@@ -84,10 +84,10 @@ function createTodosStore() {
 					if (newTodos.length > 0 && currentListId === listId) {
 						addToast({
 							data: {
-								title: "Nouvelles tâches",
-								description: `${newTodos.length} nouvelle${newTodos.length > 1 ? "s" : ""} tâche${
+								title: "New task",
+								description: `${newTodos.length} new task${
 									newTodos.length > 1 ? "s" : ""
-								} ajoutée${newTodos.length > 1 ? "s" : ""} depuis votre dernière visite.`,
+								} added since your last visit.`,
 								type: "info",
 							},
 						});
