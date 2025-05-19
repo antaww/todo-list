@@ -6,6 +6,9 @@
 	import {supabase} from '$lib/supabase';
 	import TodoList from '@components/TodoList.svelte';
 
+	export let data;
+	const task = data?.task;
+
 	let listId: string;
 	let error: string | null = null;
 	let isSidebarOpen = true;
@@ -54,6 +57,18 @@
 		}
 	});
 </script>
+
+<svelte:head>
+	{#if task}
+		<meta property="og:title" content={`Tâche : ${task.title}`} />
+		<meta property="og:description" content={`Difficulté : ${task.difficulty}/5 | Statut : ${task.completed ? 'Terminée' : 'En cours'}`} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content={`Tâche : ${task.title}`} />
+		<meta name="twitter:description" content={`Difficulté : ${task.difficulty}/5 | Statut : ${task.completed ? 'Terminée' : 'En cours'}`} />
+	{/if}
+</svelte:head>
 
 <Toaster/>
 
