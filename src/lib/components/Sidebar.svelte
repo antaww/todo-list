@@ -212,7 +212,7 @@
 											<History size={16} class="text-white/80"/>
 											<h2 class="text-sm font-medium text-white/80">Recent Lists</h2>
 										</div>
-										<Button variant="icon" class="rounded-full hover:bg-white/10 focus:bg-white/10 transition-colors" onClick={clearHistory} title="Clear history">
+										<Button variant="icon" on:click={clearHistory} title="Clear history">
 											<X size={16}/>
 										</Button>
 									</div>
@@ -231,7 +231,7 @@
 														<Button
 															variant="icon"
 															class="ml-2 rounded-full hover:bg-white/10 focus:bg-white/10 transition-colors flex items-center justify-center"
-															onClick={(e) => handleRemoveHistoryItem(e, item.id)}
+															on:click={(e) => handleRemoveHistoryItem(e, item.id)}
 														>
 															<X size={16}/>
 														</Button>
@@ -258,10 +258,10 @@
 	{:else}
 		<div class="absolute" transition:fly={{ x: -100, duration: 300 }}>
 			<div class="p-4 flex gap-2">
-				<Button variant="icon" onClick={toggleSidebar} title="Show sidebar">
+				<Button variant="icon" on:click={toggleSidebar} title="Show sidebar">
 					<PanelLeft size={20}/>
 				</Button>
-				<Button variant="icon" onClick={createNewList} title="Create new list">
+				<Button variant="icon" on:click={createNewList} title="Create new list">
 					<Plus size={20}/>
 				</Button>
 			</div>

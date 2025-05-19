@@ -33,9 +33,7 @@
 						head: true,
 					},
 				);
-				console.log('Supabase connection verified in App component');
 			} catch (err: unknown) {
-				console.error('Supabase connection error in App:', err);
 				if (err instanceof Error) {
 					error = `Database connection error: ${err.message}. Please refresh the page.`;
 				} else {
