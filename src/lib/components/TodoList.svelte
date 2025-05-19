@@ -25,6 +25,7 @@
     import { sortBy, sortDirection } from '$stores/sort';
     import TodoDetailModal from '@components/TodoDetailModal.svelte';
     import { exportToCsv, importFromCsv } from '$helpers/data';
+    import { browser } from '$app/environment';
 
     export let listId: string;
 
@@ -53,6 +54,10 @@
 
     let showDeleteListDialog = false;
     let deleteConfirmListName = '';
+
+    if (browser) {
+        $: void $historyStore;
+    }
 
     function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty', direction: 'asc' | 'desc'): Todo[] {
         const sorted = [...todos].sort((a, b) => {
@@ -275,10 +280,13 @@
         currentTargetTodoIdForLongPress = null;
     }
 
+    $: if (listId && $listStore.title && $listStore.title !== 'Untitled List') {
+        historyStore.add(listId, $listStore.title);
+    }
+
     $: if ($listStore.title) {
         if ($listStore.title !== 'Untitled List') {
             document.title = `${$listStore.title} - Todolist Realtime`;
-            historyStore.add(listId, $listStore.title);
             if ($favoritesStore.some(f => f.id === listId)) {
                 favoritesStore.updateTitle(listId, $listStore.title);
             }

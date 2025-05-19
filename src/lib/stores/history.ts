@@ -24,9 +24,6 @@ function createHistoryStore() {
 	return {
 		subscribe,
 		add: (id: string, title: string) => {
-			const favorites = get(favoritesStore);
-			if (favorites.some(f => f.id === id)) return;
-
 			update(history => {
 				const newHistory = [
 					{
@@ -35,7 +32,6 @@ function createHistoryStore() {
 					},
 					...history.filter(h => h.id !== id),
 				].slice(0, MAX_HISTORY);
-				// localStorage update is handled by the subscribe effect above on client
 				return newHistory;
 			});
 		},
