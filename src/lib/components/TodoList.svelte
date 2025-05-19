@@ -280,8 +280,9 @@
         currentTargetTodoIdForLongPress = null;
     }
 
-    $: if (listId && $listStore.title && $listStore.title !== 'Untitled List') {
-        historyStore.add(listId, $listStore.title);
+    $: if (listId && $todosStore.items.length > 0) {
+        const title = $listStore.title && $listStore.title.trim() ? $listStore.title : 'Untitled List';
+        historyStore.add(listId, title);
     }
 
     $: if ($listStore.title) {
