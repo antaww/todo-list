@@ -20,39 +20,37 @@
 	function handleClick(starIndex: number, event: MouseEvent) {
 		if (!interactive || !onUpdate) return;
 
-		const targetElement = event.currentTarget as HTMLElement;
-		const rect = targetElement.getBoundingClientRect();
-		const clickX = event.clientX - rect.left;
-		const isLeftHalf = clickX < rect.width / 2;
+		// Pour chaque étoile, on a 3 états : 0 (vide), 0.5 (moitié), 1 (pleine)
+		// difficulty va de 0 à 10 (par pas de 1)
+		// Pour l'étoile i (0 à 4) :
+		//   - 0   : difficulty < i*2 + 1
+		//   - 0.5 : difficulty == i*2 + 1
+		//   - 1   : difficulty == i*2 + 2
 
-		// Calculate the difficulty value if this star is half or full
-		// For starIndex 0: half is 1, full is 2
-		// For starIndex 1: half is 3, full is 4
-		// etc.
-		const targetDifficultyForHalf = starIndex * 2 + 1;
-		const targetDifficultyForFull = starIndex * 2 + 2;
-
+		const halfValue = starIndex * 2 + 1;
+		const fullValue = starIndex * 2 + 2;
 		let newDifficulty: number;
 
-		if (isLeftHalf) {
-			// Clicked left half
-			if (difficulty === targetDifficultyForHalf) {
-				// Already half, so make it empty (difficulty of previous star full, or 0 if first star)
-				newDifficulty = starIndex * 2;
+		if (difficulty < halfValue) {
+			// Actuellement vide, passe à moitié
+			newDifficulty = halfValue;
+		} else if (difficulty === halfValue) {
+			// Actuellement moitié, passe à pleine
+			newDifficulty = fullValue;
+		} else if (difficulty === fullValue) {
+			// Actuellement pleine, passe à vide (ou à la dernière étoile pleine précédente)
+			// Si c'est la première étoile, on met à 0
+			if (starIndex === 0) {
+				newDifficulty = 0;
 			} else {
-				// Set to half
-				newDifficulty = targetDifficultyForHalf;
+				// On met la difficulté à la dernière étoile pleine précédente
+				newDifficulty = starIndex * 2;
 			}
 		} else {
-			// Clicked right half
-			if (difficulty === targetDifficultyForFull) {
-				// Already full, so make it empty (difficulty of previous star full, or 0 if first star)
-				newDifficulty = starIndex * 2;
-			} else {
-				// Set to full
-				newDifficulty = targetDifficultyForFull;
-			}
+			// Si la difficulté est entre deux états (ex: 3), on la ramène à moitié
+			newDifficulty = halfValue;
 		}
+
 		onUpdate(newDifficulty);
 	}
 </script>
