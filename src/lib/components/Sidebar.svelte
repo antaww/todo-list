@@ -132,6 +132,7 @@
 			<Card class="w-80 h-screen !rounded-none border-y-0 border-l-0 relative" padding="p-4">
 				<div class="flex flex-col h-full gap-4">
 					<div class="flex gap-2">
+						<img src="/realtime-todolist-small.png" alt="Logo" class="h-8 mr-2" />
 						<div class="flex-grow">
 							<Input bind:value={searchValue} placeholder="Search or enter list ID..." variant="default"/>
 						</div>
