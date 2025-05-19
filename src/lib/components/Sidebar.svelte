@@ -120,6 +120,12 @@
 	function clearHistory() {
 		historyStore.clear();
 	}
+
+	function handleRemoveHistoryItem(event: Event, id: string) {
+		const mouseEvent = event as MouseEvent;
+		mouseEvent.stopPropagation();
+		historyStore.remove(id);
+	}
 </script>
 
 <div class="fixed top-0 left-0 h-screen z-50">
@@ -206,7 +212,7 @@
 											<History size={16} class="text-white/80"/>
 											<h2 class="text-sm font-medium text-white/80">Recent Lists</h2>
 										</div>
-										<Button variant="icon" onClick={clearHistory} title="Clear history">
+										<Button variant="icon" class="rounded-full hover:bg-white/10 focus:bg-white/10 transition-colors" onClick={clearHistory} title="Clear history">
 											<X size={16}/>
 										</Button>
 									</div>
@@ -214,13 +220,22 @@
 										<ScrollArea class="h-full" scrollColorClass="bg-white/20">
 											<div class="flex flex-col gap-1">
 												{#each filteredHistory as item}
-													<button
-														transition:fade={{ duration: 150 }}
-														class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left {currentListId === item.id ? 'bg-white/10' : ''}"
-														on:click={() => openList(item.id)}
-													>
-														<span class="truncate text-white">{item.title}</span>
-													</button>
+													<div class="flex items-center group">
+														<button
+															transition:fade={{ duration: 150 }}
+															class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left {currentListId === item.id ? 'bg-white/10' : ''} flex-1"
+															on:click={() => openList(item.id)}
+														>
+															<span class="truncate text-white">{item.title}</span>
+														</button>
+														<Button
+															variant="icon"
+															class="ml-2 rounded-full hover:bg-white/10 focus:bg-white/10 transition-colors flex items-center justify-center"
+															onClick={(e) => handleRemoveHistoryItem(e, item.id)}
+														>
+															<X size={16}/>
+														</Button>
+													</div>
 												{/each}
 											</div>
 										</ScrollArea>
