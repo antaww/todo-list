@@ -60,13 +60,13 @@
 
 <svelte:head>
 	{#if task}
-		<meta property="og:title" content={`Tâche : ${task.title}`} />
-		<meta property="og:description" content={`Difficulté : ${task.difficulty}/5 | Statut : ${task.completed ? 'Terminée' : 'En cours'}`} />
+		<meta property="og:title" content={`Task: ${task.title}`} />
+		<meta property="og:description" content={`Difficulty: ${(Math.round((task.difficulty / 2) * 10) / 10)}/5 | Status: ${task.completed ? 'Completed' : 'Pending'}`} />
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
 		<meta name="twitter:card" content="summary" />
-		<meta name="twitter:title" content={`Tâche : ${task.title}`} />
-		<meta name="twitter:description" content={`Difficulté : ${task.difficulty}/5 | Statut : ${task.completed ? 'Terminée' : 'En cours'}`} />
+		<meta name="twitter:title" content={`Task: ${task.title}`} />
+		<meta name="twitter:description" content={`Difficulty: ${(Math.round((task.difficulty / 2) * 10) / 10)}/5 | Status: ${task.completed ? 'Completed' : 'Pending'}`} />
 	{/if}
 </svelte:head>
 
