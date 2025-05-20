@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	export let type: "button" | "submit" = "button";
 	export let icon: boolean = false;
 	export let variant: "primary" | "icon" | "danger" = "primary";
@@ -16,19 +14,13 @@
 		icon: "text-white hover:opacity-80 dark:text-dark-gray-600 dark:hover:text-dark-foreground",
 		danger: "bg-red-500/70 hover:bg-red-600/80 text-white font-medium border border-red-500/30 dark:bg-red-500 dark:hover:bg-red-600 dark:text-white dark:border-transparent",
 	};
-
-	const dispatch = createEventDispatcher();
-
-	function handleClick(event: MouseEvent) {
-		dispatch('click', event);
-	}
 </script>
 
 <button
 	aria-label={ariaLabel}
 	class="rounded-lg focus:outline-none focus:ring-white/50 dark:focus:ring-dark-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300 flex items-center justify-center {variants[variant]} {icon ? 'p-0' : 'py-1 sm:py-2 px-2 sm:px-4 focus:ring-2'} {className}"
 	{disabled}
-	on:click={handleClick}
+	on:click={onClick}
 	{title}
 	{type}
 >

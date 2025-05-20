@@ -164,13 +164,13 @@
 						</div>
 					{/if}
 					{#if todo.description}
-						<button 
+						<button
 							class="text-white/60 dark:text-dark-gray-600 ml-0.5 cursor-pointer hover:text-white/80 dark:hover:text-dark-gray-500 transition-colors"
 							title="Has description"
 							on:click|stopPropagation={() => {
 								if (!isPrimedForDrag) {
 									const url = new URL(window.location.href);
-									url.searchParams.set('task', todo.id);
+									url.searchParams.set('task_id', todo.id);
 									window.history.pushState({}, '', url.toString());
 									onOpenDetails(todo);
 								}
@@ -195,7 +195,7 @@
 				onClick={() => {
 					if (!isPrimedForDrag) {
 						const url = new URL(window.location.href);
-						url.searchParams.set('task', todo.id);
+						url.searchParams.set('task_id', todo.id);
 						window.history.pushState({}, '', url.toString());
 						onOpenDetails(todo);
 					}

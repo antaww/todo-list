@@ -1,5 +1,6 @@
 import {get, writable} from "svelte/store";
 import {supabase} from "$lib/supabase";
+import { historyStore } from "$stores/history";
 
 export interface ListState {
 	id: string;
@@ -41,6 +42,7 @@ function createListStore() {
 						...state,
 						title: "Untitled List",
 					}));
+					historyStore.add(listId, "Untitled List");
 					return;
 				}
 				throw supabaseError;
@@ -64,19 +66,24 @@ function createListStore() {
 					...state,
 					title: "Untitled List",
 				}));
+				historyStore.add(listId, "Untitled List");
 				return;
 			}
 
+			const confirmedTitle = data.title || "Untitled List";
 			update(state => ({
 				...state,
-				title: data.title || "Untitled List",
+				title: confirmedTitle,
 			}));
+			historyStore.add(listId, confirmedTitle);
 		} catch (e) {
 			console.error('Error loading list title:', e);
+			const errorTitle = "Untitled List";
 			update(state => ({
 				...state,
-				title: "Untitled List",
+				title: errorTitle,
 			}));
+			historyStore.add(listId, errorTitle);
 		}
 	}
 
@@ -96,9 +103,9 @@ function createListStore() {
             title text NOT NULL DEFAULT 'Untitled List',
             created_at timestamptz DEFAULT now()
           );
-          
+
           ALTER TABLE lists ENABLE ROW LEVEL SECURITY;
-          
+
           CREATE POLICY "Allow public access on lists"
             ON lists
             FOR ALL
@@ -151,19 +158,23 @@ function createListStore() {
 							...state,
 							title: "Untitled List",
 						}));
+						historyStore.add(listId, "Untitled List");
 						return;
 					}
 					throw supabaseError;
 				}
+				const confirmedTitle = data?.title || "Untitled List";
 				update(state => ({
 					...state,
-					title: data?.title || "Untitled List",
+					title: confirmedTitle,
 				}));
+				historyStore.add(listId, confirmedTitle);
 			} catch (e) {
 				update(state => ({
 					...state,
 					title: "Untitled List",
 				}));
+				historyStore.add(listId, "Untitled List");
 			}
 		},
 
@@ -198,24 +209,20 @@ function createListStore() {
 						? e.message
 						: "An error occurred while initializing",
 				}));
+				historyStore.add(listId, "Untitled List");
 			}
 		},
 
 		updateTitle: async (newTitle: string) => {
-			if (!newTitle.trim()) {
-				update(state => ({
-					...state,
-					title: "Untitled List",
-				}));
-				return;
-			}
+			const trimmedTitle = newTitle.trim();
+			const finalTitle = trimmedTitle === '' ? "Untitled List" : trimmedTitle;
 
 			const state = get(store);
-			if (newTitle.trim() === state.title) return;
+			if (finalTitle === state.title) return;
 
 			update(state => ({
 				...state,
-				title: newTitle.trim(),
+				title: finalTitle,
 			}));
 
 			try {
@@ -229,25 +236,28 @@ function createListStore() {
 					const {error: insertError} = await supabase.from("lists").insert([
 						{
 							id: state.id,
-							title: newTitle.trim(),
+							title: finalTitle,
 						},
 					]);
 
 					if (insertError) throw insertError;
+					historyStore.add(state.id, finalTitle);
 					return;
 				}
 
 				const {error: updateError} = await supabase
 					.from("lists")
-					.update({title: newTitle.trim()})
+					.update({title: finalTitle})
 					.eq("id", state.id);
 
 				if (updateError) throw updateError;
+				historyStore.add(state.id, finalTitle);
 			} catch (e) {
 				update(state => ({
 					...state,
 					error: "Failed to update list title",
 				}));
+				console.error('Error updating list title in DB:', e);
 			}
 		},
 

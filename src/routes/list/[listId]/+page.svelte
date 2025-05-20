@@ -1,58 +1,29 @@
 <script lang="ts">
-	import {onDestroy, onMount} from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import Sidebar from '@components/Sidebar.svelte';
 	import Toaster from '@components/ui/Toaster.svelte';
-	import {startLastSeenTracking} from '$helpers/lastSeen';
-	import {supabase} from '$lib/supabase';
+	import { startLastSeenTracking } from '$helpers/lastSeen';
 	import TodoList from '@components/TodoList.svelte';
+	import type { PageData } from './$types';
+	import { browser } from '$app/environment';
 
-	export let data;
-	const task = data?.task;
+	export let data: PageData;
+	$: task = data?.task;
+	$: listId = data?.listId; // Get listId from server data
 
-	let listId: string;
-	let error: string | null = null;
 	let isSidebarOpen = true;
 	let cleanup: (() => void) | null = null;
 
 	onMount(async () => {
 		try {
-			const urlParams = new URLSearchParams(window.location.search);
-			listId = urlParams.get('list') || crypto.randomUUID();
-
-			if (!urlParams.get('list')) {
-				const newUrl = `${window.location.pathname}?list=${listId}`;
-				window.history.pushState({listId}, '', newUrl);
-			}
-
-			try {
-				await supabase.from('todos')
-					.select(
-					'count',
-					{
-						count: 'exact',
-						head: true,
-					},
-				);
-			} catch (err: unknown) {
-				if (err instanceof Error) {
-					error = `Database connection error: ${err.message}. Please refresh the page.`;
-				} else {
-					error = 'Database connection error. Please refresh the page.';
-				}
-			}
-
-			// Démarrer le tracking du last seen
 			cleanup = startLastSeenTracking();
 		} catch (e) {
-			console.error('Error in App initialization:', e);
-			error = 'Failed to initialize application. Please refresh the page.';
+			console.error('Error in App client-side initialization:', e);
 		}
 	});
 
 	onDestroy(() => {
-		if (cleanup) {
-			cleanup();
-		}
+        cleanup?.();
 	});
 </script>
 
@@ -71,14 +42,14 @@
 <Toaster/>
 
 <div class="min-h-screen">
-	<Sidebar bind:isOpen={isSidebarOpen}/>
+	<Sidebar bind:isOpen={isSidebarOpen} currentListId={listId} /> <!-- Pass currentListId to Sidebar -->
 	<main class="transition-[margin] duration-500 {isSidebarOpen ? 'lg:ml-80' : ''} flex min-h-screen flex-col items-center justify-start lg:p-8">
 		<div class="w-full">
-			{#if error}
+			{#if data.dbError}
 				<div class="p-4 bg-red-100 text-red-700 rounded-lg">
-					{error}
+					{data.dbError}
 				</div>
-			{:else if listId}
+			{:else if listId && browser}
 				<TodoList {listId}/>
 			{/if}
 		</div>

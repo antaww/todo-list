@@ -29,6 +29,7 @@
 
     export let listId: string;
 
+    let previousListId: string | null = null;
     let subscription: RealtimeChannel[] = [];
     let deleteDialogOpen = false;
     let searchQuery = '';
@@ -36,10 +37,10 @@
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let allowDragViaLongPress = false;
     let successfullyLongPressedTodoId: string | null = null;
-    let currentTargetTodoIdForLongPress: string | null = null; // To know which todo the timer is for
-    const LONG_PRESS_DURATION = 500; // ms
+    let currentTargetTodoIdForLongPress: string | null = null;
+    const LONG_PRESS_DURATION = 500;
     let touchStartCoords: { x: number, y: number } | null = null;
-    const TOUCH_MOVE_THRESHOLD = 10; // pixels
+    const TOUCH_MOVE_THRESHOLD = 10;
 
     const flipDurationMs = 300;
     let isDragging = false;
@@ -55,10 +56,6 @@
     let showDeleteListDialog = false;
     let deleteConfirmListName = '';
 
-    if (browser) {
-        $: void $historyStore;
-    }
-
     function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty', direction: 'asc' | 'desc'): Todo[] {
         const sorted = [...todos].sort((a, b) => {
             let comparison = 0;
@@ -72,7 +69,7 @@
                 case 'difficulty':
                     comparison = (a.difficulty ?? 0) - (b.difficulty ?? 0);
                     break;
-                default: // 'order'
+                default:
                     comparison = (a.order ?? 0) - (b.order ?? 0);
                     break;
             }
@@ -117,7 +114,7 @@
     function handleDndConsiderActive(e: CustomEvent<{items: Todo[]}>): void {
         isDragging = true;
         activeDndItems = e.detail.items;
-        successfullyLongPressedTodoId = null; // Drag has started, remove primed state
+        successfullyLongPressedTodoId = null;
     }
 
     function handleDndFinalizeActive(e: CustomEvent<{items: Todo[]}>): void {
@@ -129,14 +126,14 @@
             if (isTouchDevice) {
                 allowDragViaLongPress = false;
             }
-            successfullyLongPressedTodoId = null; // Ensure reset after drag, even if consider didn't fire for some reason
+            successfullyLongPressedTodoId = null;
         });
     }
 
     function handleDndConsiderCompleted(e: CustomEvent<{items: Todo[]}>): void {
         isDragging = true;
         completedDndItems = e.detail.items;
-        successfullyLongPressedTodoId = null; // Drag has started, remove primed state
+        successfullyLongPressedTodoId = null;
     }
 
     function handleDndFinalizeCompleted(e: CustomEvent<{items: Todo[]}>): void {
@@ -148,7 +145,7 @@
             if (isTouchDevice) {
                 allowDragViaLongPress = false;
             }
-            successfullyLongPressedTodoId = null; // Ensure reset after drag
+            successfullyLongPressedTodoId = null;
         });
     }
 
@@ -280,23 +277,6 @@
         currentTargetTodoIdForLongPress = null;
     }
 
-    $: if (listId && $todosStore.items.length > 0) {
-        const title = $listStore.title && $listStore.title.trim() ? $listStore.title : 'Untitled List';
-        historyStore.add(listId, title);
-    }
-
-    $: if ($listStore.title) {
-        if ($listStore.title !== 'Untitled List') {
-            document.title = `${$listStore.title} - Todolist Realtime`;
-            if ($favoritesStore.some(f => f.id === listId)) {
-                favoritesStore.updateTitle(listId, $listStore.title);
-            }
-            historyStore.updateTitle(listId, $listStore.title);
-        } else {
-            document.title = 'Todolist Realtime';
-        }
-    }
-
     function handleExportCsv(): void {
         if ($todosStore.items.length === 0) {
             addToast({
@@ -346,7 +326,7 @@
                         const title = typeof item.title === 'string' ? item.title.trim() : null;
                         if (!title) {
                             console.warn('Skipping row due to missing title:', item);
-                            continue; // Skip if no title
+                            continue;
                         }
 
                         const completed = String(item.completed).toLowerCase() === 'true' || item.completed === '1';
@@ -354,7 +334,7 @@
 
                         await todosStore.add(listId, {
                             title,
-                            difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(5, difficulty)), // ensure 0-5
+                            difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(5, difficulty)),
                         });
                         importedCount++;
                     }
@@ -381,44 +361,40 @@
         input.click();
     }
 
-    async function setupRealtimeSubscription() {
+    async function setupRealtimeSubscription(currentListId: string) {
         try {
             for (const sub of subscription) { await sub.unsubscribe(); }
             subscription = [];
 
             const todosChannel =
-				supabase.channel('todos-changes')
+				supabase.channel(`todos-changes-${currentListId}`)
                 .on(
                 	'postgres_changes',
                     {
                     	event: '*',
                         schema: 'public',
                         table: 'todos',
-                        filter: `list_id=eq.${listId}`,
+                        filter: `list_id=eq.${currentListId}`,
                     },
                     async (payload) => {
-                        console.log('Real-time event received for todos table:', payload);
                         if (!$todosStore.editingId) {
-                            console.log('Reloading todos due to real-time event.');
-                            await todosStore.load(listId);
-                        } else {
-                            console.log('Skipping todo reload due to editingId being set.');
+                            await todosStore.load(currentListId);
                         }
                     },
                 );
 
             const listsChannel =
-				supabase.channel('lists-changes')
+				supabase.channel(`lists-changes-${currentListId}`)
                 .on(
                 	'postgres_changes',
                     {
                     	event: '*',
                         schema: 'public',
                         table: 'lists',
-                        filter: `id=eq.${listId}`,
+                        filter: `id=eq.${currentListId}`,
 					},
                     async () => {
-                    	if (!$listStore.isEditing) { await listStore.load(listId); }
+                    	if (!$listStore.isEditing) { await listStore.load(currentListId); }
                     },
                 );
 
@@ -436,33 +412,60 @@
         }
     }
 
-    onMount(async () => {
+    async function initializeList(currentListId: string) {
+        if (!currentListId) return;
+
         todosStore.setLoading(true);
         listStore.setLoading(true);
+
         await Promise.all([
-            listStore.initialize(listId),
-            todosStore.load(listId),
+            listStore.initialize(currentListId),
+            todosStore.load(currentListId),
         ]);
-        await setupRealtimeSubscription();
+        await setupRealtimeSubscription(currentListId);
+
         todosStore.setLoading(false);
         listStore.setLoading(false);
+
         isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 		const urlParams = new URLSearchParams(window.location.search);
-		const taskIdFromUrl = urlParams.get('task');
+		const taskIdFromUrl = urlParams.get('task_id');
 
 		if (taskIdFromUrl) {
 			const todoToOpen = $todosStore.items.find(t => t.id === taskIdFromUrl);
 			if (todoToOpen) {
 				openTodoDetailModal(todoToOpen);
-				await tick(); // Wait for modal and list to render
+				await tick();
 				const element = document.getElementById(`todo-item-${taskIdFromUrl}`);
 				if (element) {
 					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 				}
 			}
 		}
+    }
+
+    onMount(async () => {
+        isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (listId) {
+            previousListId = listId;
+            await initializeList(listId);
+        }
     });
+
+    $: if (browser && listId && listId !== previousListId) {
+        previousListId = listId;
+        initializeList(listId);
+    }
+
+    // Reactive block to update document.title based on the current list's title
+    $: if (browser && $listStore.id === listId && $listStore.title) {
+        if ($listStore.title !== 'Untitled List') {
+            document.title = `${$listStore.title} - Todolist Realtime`;
+        } else {
+            document.title = 'Todolist Realtime';
+        }
+    }
 
     onDestroy(() => {
         for (const sub of subscription) {
@@ -470,17 +473,6 @@
             });
         }
     });
-
-    function handleStartEdit(todo: Todo) {
-		console.log('handleStartEdit', todo);
-		// todosStore.setEditing(todo.id, true);
-	}
-
-    function handleUpdateTodoDifficultyEvent(event: CustomEvent<{ todo: Todo; difficulty: number }>) {
-        if (event.detail.todo && typeof event.detail.difficulty === 'number') {
-            todosStore.updateDifficulty(event.detail.todo, event.detail.difficulty);
-        }
-    }
 
     function handleModalUpdateTodoDifficulty(detail: { todo: Todo; difficulty: number }) {
         if (detail.todo && typeof detail.difficulty === 'number') {
@@ -518,7 +510,7 @@
         selectedTodoIdForModal = null;
 
 		const url = new URL(window.location.href);
-        url.searchParams.delete('task');
+        url.searchParams.delete('task_id');
         window.history.pushState({}, '', url.toString());
     }
 
@@ -558,7 +550,7 @@
                 return;
             }
 
-            const deletedListTitle = $listStore.title; 
+            const deletedListTitle = $listStore.title;
             favoritesStore.remove(listId);
             historyStore.remove(listId);
 
@@ -825,9 +817,9 @@
         transition: transform 0.2s;
     }
 
-    .primed-for-drag > :global(div:first-child) { /* Target the Card component inside */
-        outline: 2px solid #fbbf24; /* A yellow-ish color, similar to Tailwind's amber-400. Adjust as needed. */
-        outline-offset: -1px; /* To make the outline appear slightly inside or on the border */
+    .primed-for-drag > :global(div:first-child) {
+        outline: 2px solid #fbbf24;
+        outline-offset: -1px;
     }
 
     .dnd-item[aria-grabbed="true"] {

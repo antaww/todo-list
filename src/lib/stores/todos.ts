@@ -305,18 +305,16 @@ function createTodosStore() {
 			}));
 
 			try {
-				console.log('Attempting to update description for todo:', todo.id, 'to:', newDescription.trim());
 				const { data: updateData, error: supabaseError } = await supabase
 					.from('todos')
 					.update({ description: newDescription.trim() })
 					.eq('id', todo.id)
-					.select(); // Adding .select() for more info
+					.select();
 
 				if (supabaseError) {
 					console.error('Supabase error updating description:', supabaseError);
 					throw supabaseError;
 				}
-				console.log('Supabase description update successful:', updateData);
 			} catch (e) {
 				console.error('Caught error in updateDescription:', e);
 				if (lastUpdateTime === updateStartTime) { // Revert only if this is the last update attempt

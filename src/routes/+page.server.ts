@@ -1,30 +1,8 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const load: PageServerLoad = async ({ url }) => {
-  const listId = url.searchParams.get('list');
-  const taskId = url.searchParams.get('task');
-
-  let task = null;
-
-  if (listId && taskId) {
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data, error } = await supabase
-      .from('todos')
-      .select('*')
-      .eq('id', taskId)
-      .eq('list_id', listId)
-      .maybeSingle();
-
-    if (!error && data) {
-      task = data;
-    }
-  }
-
-  return {
-    task
-  };
-}; 
+export const load: PageServerLoad = async () => {
+	const newListId = crypto.randomUUID();
+	// console.log(`[ROOT /+page.server.ts] No list specified, redirecting to /list/${newListId}`); // Removed debug log
+	redirect(307, `/list/${newListId}`);
+};

@@ -13,9 +13,9 @@
 	import ScrollArea from '@components/ui/ScrollArea.svelte';
 
 	export let isOpen = false;
+	export let currentListId = '';
 	let searchValue = '';
 	let isMobile = false;
-	let currentListId = '';
 
 	let checkingDb = false;
 	let listExistsInDb: boolean | null = null;
@@ -23,8 +23,6 @@
 	let checkError: string | null = null;
 
 	onMount(() => {
-		currentListId = new URLSearchParams(window.location.search).get('list') || '';
-
 		const checkMobile = () => {
 			isMobile = window.innerWidth <= 1024;
 			if (isMobile) {
@@ -92,7 +90,7 @@
 
 	function createNewList() {
 		const newListId = crypto.randomUUID();
-		window.location.href = `${window.location.pathname}?list=${newListId}`;
+		window.location.href = `/list/${newListId}`;
 		if (isMobile) {
 			isOpen = false;
 		}
@@ -104,7 +102,7 @@
 	}
 
 	function openList(id: string) {
-		window.location.href = `${window.location.pathname}?list=${id}`;
+		window.location.href = `/list/${id}`;
 		if (isMobile) {
 			isOpen = false;
 		}
@@ -191,14 +189,13 @@
 										<ScrollArea class="max-h-40" scrollColorClass="bg-white/20">
 											<div class="flex flex-col gap-1">
 												{#each filteredFavorites as favorite}
-													<button
-														transition:fade={{ duration: 150 }}
-														class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left {currentListId === favorite.id ? 'bg-white/10' : ''}"
-														on:click={() => openList(favorite.id)}
+													<a
+														href={`/list/${favorite.id}`}
+														class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left"
 													>
 														<Star class="text-yellow-400" size={16} fill="currentColor"/>
 														<span class="truncate text-white">{favorite.title}</span>
-													</button>
+													</a>
 												{/each}
 											</div>
 										</ScrollArea>
@@ -220,17 +217,16 @@
 										<ScrollArea class="h-full" scrollColorClass="bg-white/20">
 											<div class="flex flex-col gap-1">
 												{#each filteredHistory as item}
-													<div class="flex items-center group">
-														<button
-															transition:fade={{ duration: 150 }}
-															class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left {currentListId === item.id ? 'bg-white/10' : ''} flex-1"
-															on:click={() => openList(item.id)}
+													<div class="flex items-center group gap-2">
+														<a
+															class="flex items-center px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors w-full text-left {currentListId === item.id ? 'bg-white/10' : ''} flex-1"
+															href={`/list/${item.id}`}
 														>
 															<span class="truncate text-white">{item.title}</span>
-														</button>
+														</a>
 														<Button
+															icon={true}
 															variant="icon"
-															class="ml-2 rounded-full hover:bg-white/10 focus:bg-white/10 transition-colors flex items-center justify-center"
 															on:click={(e) => handleRemoveHistoryItem(e, item.id)}
 														>
 															<X size={16}/>
