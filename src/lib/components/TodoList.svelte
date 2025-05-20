@@ -803,6 +803,7 @@
         onUpdateDescription={handleModalUpdateTodoDescription}
         onUpdateDifficulty={handleModalUpdateTodoDifficulty}
         onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+        onToggle={(item) => todosStore.toggle(item)}
         todo={selectedTodoForModal}
     />
 {/if}

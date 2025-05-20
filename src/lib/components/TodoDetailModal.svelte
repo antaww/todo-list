@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import type { Todo } from '$lib/types';
 	import Button from '@components/ui/Button.svelte';
+	import Checkbox from '@components/ui/Checkbox.svelte';
 	import DifficultyStars from '@components/DifficultyStars.svelte';
 	import { Edit2, Save, Share2, X } from 'lucide-svelte';
 	import Dialog from '@components/ui/Dialog.svelte';
@@ -19,6 +20,7 @@
 	export let onUpdateDescription: ((detail: { todo: Todo; description: string }) => void) | undefined = undefined;
 	export let onUpdateDifficulty: ((detail: { todo: Todo; difficulty: number }) => void) | undefined = undefined;
 	export let onUpdateTitle: ((detail: { todo: Todo; title: string }) => void) | undefined = undefined;
+	export let onToggle: ((item: Todo) => void) | undefined = undefined;
 
 	let showCopyTooltip = false;
 	let tooltipMessage = '';
@@ -31,6 +33,9 @@
 	let isEditingDescription = false;
 	let editableDescription = '';
 	let descriptionTextareaInstance: SvelteComponent & { focus: () => void; } | null = null;
+
+	let checked: boolean | undefined = undefined;
+	$: if (todo) checked = todo.completed;
 
 	let descriptionEditorWrapper: HTMLDivElement;
 
@@ -159,6 +164,12 @@
 		}
 	}
 
+	function handleToggleCompleted() {
+		if (todo && onToggle) {
+			onToggle(todo);
+		}
+	}
+
 	async function handleShare() {
 		if (!todo) return;
 		try {
@@ -186,7 +197,7 @@
 	cancelLabel=""
 	size="large"
 >
-	<div slot="title" class="w-full mr-3">
+	<div slot="title" class="w-full mr-3 relative">
 		{#if todo}
 			{#if isEditingTitle}
 				<div class="flex items-center gap-2 flex-1 w-full">
@@ -200,8 +211,11 @@
 					/>
 				</div>
 			{:else}
-				<div class="flex items-center gap-2 cursor-pointer" on:click={handleEditTitle} title="Edit title">
-					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all">{todo.title}</h2>
+				<div class="flex items-center gap-2 cursor-pointer group/title mr-2" title="Edit title">
+					<div class="mr-2.5 flex-shrink-0" on:click|stopPropagation on:keydown|stopPropagation>
+						<Checkbox bind:checked on:change={handleToggleCompleted} size="h-6 w-6" />
+					</div>
+					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo.completed ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo.title}</h2>
 				</div>
 			{/if}
 		{/if}
@@ -256,10 +270,12 @@
 				</div>
 			</div>
 		{:else}
-			<div class="mb-4" in:fade={{duration: 150}}>
-				<Button variant="primary" onClick={handleEditDescription} class="w-full border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100 py-2.5">
-					<Edit2 size={16} class="mr-2"/> Add Description
-				</Button>
+			<div class="mb-4 py-3 px-2 -mx-2 rounded-md hover:bg-white/5 dark:hover:bg-dark-gray-700/40 transition-colors duration-150 cursor-pointer group/add-desc"
+			     on:click={handleEditDescription} title="Add description" in:fade={{duration: 150}}>
+				<div class="flex items-center text-white/60 dark:text-dark-gray-400 group-hover/add-desc:text-white dark:group-hover/add-desc:text-dark-foreground transition-colors">
+					<Edit2 size={18} class="mr-2.5 flex-shrink-0"/>
+					<span class="text-sm font-medium">Add a description for this task</span>
+				</div>
 			</div>
 		{/if}
 	{/if}
@@ -278,4 +294,4 @@
 			</div>
 		</div>
 	</div>
-</Dialog> 
+</Dialog>

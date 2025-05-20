@@ -22,9 +22,7 @@
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape' && open) {
 			e.preventDefault();
-			if (onCancel) {
-				onCancel();
-			}
+			onCancel?.();
 		}
 	}
 
@@ -35,22 +33,16 @@
 
 	function handleBackdropClick(e: MouseEvent) {
 		if (e.target === dialogElement) {
-			if (onCancel) {
-				onCancel();
-			}
+			onCancel?.();
 		}
 	}
 
 	function doCancel() {
-		if (onCancel) {
-			onCancel();
-		}
+		onCancel?.();
 	}
 
 	function doConfirm() {
-		if (onConfirm) {
-			onConfirm();
-		}
+		onConfirm?.();
 	}
 </script>
 
@@ -58,8 +50,8 @@
 	<div
 		bind:this={dialogElement}
 		class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-		transition:fade={{duration: 150}}
 		on:click={handleBackdropClick}
+		transition:fade={{duration: 150}}
 	>
 		<Card
 			class="w-full {size === 'small' ? 'max-w-sm' : size === 'large' ? 'max-w-[70vw] h-[70vh]' : 'max-w-xl'} shadow-xl flex flex-col"
@@ -73,10 +65,11 @@
 				{/if}
 				{#if showCloseButton}
 					<Button
-						variant="icon"
+						ariaLabel="Close dialog"
+						class="self-start"
 						icon={true}
 						onClick={doCancel}
-						ariaLabel="Close dialog"
+						variant="icon"
 					>
 						<X size={20}/>
 					</Button>
