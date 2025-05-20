@@ -34,10 +34,23 @@
 	let editableDescription = '';
 	let descriptionTextareaInstance: SvelteComponent & { focus: () => void; } | null = null;
 
-	let checked: boolean | undefined = undefined;
-	$: if (todo) checked = todo.completed;
-
 	let descriptionEditorWrapper: HTMLDivElement;
+
+	// Logic for checkbox state and toggling, similar to TodoItem.svelte
+	let internalCompleted = todo?.completed ?? false;
+	let previousCompleted = internalCompleted;
+
+	// Update internalCompleted when the todo prop changes (e.g., from store update or new todo in modal)
+	$: if (todo) {
+		previousCompleted = internalCompleted;
+		internalCompleted = todo.completed;
+	}
+
+	// When user clicks checkbox, internalCompleted changes via bind:checked.
+	// If it's different from the previous state, call onToggle.
+	$: if (todo && onToggle && internalCompleted !== previousCompleted) {
+		onToggle(todo);
+	}
 
 	function handleClickOutsideDescription(event: MouseEvent) {
 		if (isEditingDescription && descriptionEditorWrapper && !descriptionEditorWrapper.contains(event.target as Node)) {
@@ -164,12 +177,6 @@
 		}
 	}
 
-	function handleToggleCompleted() {
-		if (todo && onToggle) {
-			onToggle(todo);
-		}
-	}
-
 	async function handleShare() {
 		if (!todo) return;
 		try {
@@ -213,9 +220,9 @@
 			{:else}
 				<div class="flex items-center gap-2 cursor-pointer group/title mr-2" title="Edit title">
 					<div class="mr-2.5 flex-shrink-0" on:click|stopPropagation on:keydown|stopPropagation>
-						<Checkbox bind:checked on:change={handleToggleCompleted} size="h-6 w-6" />
+						<Checkbox bind:checked={internalCompleted} size="h-6 w-6" />
 					</div>
-					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo.completed ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo.title}</h2>
+					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.completed ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo?.title}</h2>
 				</div>
 			{/if}
 		{/if}
