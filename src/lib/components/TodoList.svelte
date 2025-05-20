@@ -26,6 +26,7 @@
     import TodoDetailModal from '@components/TodoDetailModal.svelte';
     import { exportToCsv, importFromCsv } from '$helpers/data';
     import { browser } from '$app/environment';
+	import { pushState } from '$app/navigation';
 
     export let listId: string;
 
@@ -511,7 +512,7 @@
 
 		const url = new URL(window.location.href);
         url.searchParams.delete('task_id');
-        window.history.pushState({}, '', url.toString());
+        pushState(url.toString(), {});
     }
 
     async function actualDeleteList() {

@@ -10,6 +10,7 @@
 	import InputComponent from '@components/ui/Input.svelte';
 	import { sortBy } from '$stores/sort';
 	import DifficultyStars from '@components/DifficultyStars.svelte';
+	import { pushState } from '$app/navigation';
 
 	export let todo: Todo;
 	export let isCompleted = false;
@@ -171,7 +172,7 @@
 								if (!isPrimedForDrag) {
 									const url = new URL(window.location.href);
 									url.searchParams.set('task_id', todo.id);
-									window.history.pushState({}, '', url.toString());
+									pushState(url.toString(), {});
 									onOpenDetails(todo);
 								}
 							}}
@@ -196,7 +197,7 @@
 					if (!isPrimedForDrag) {
 						const url = new URL(window.location.href);
 						url.searchParams.set('task_id', todo.id);
-						window.history.pushState({}, '', url.toString());
+						pushState(url.toString(), {});
 						onOpenDetails(todo);
 					}
 				}}
