@@ -38,6 +38,10 @@
 		{
 			value: 'difficulty',
 			label: 'Difficulty'
+		},
+		{
+			value: 'assigned',
+			label: 'Assigned To'
 		}
 	];
 

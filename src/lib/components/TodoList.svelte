@@ -57,7 +57,7 @@
     let showDeleteListDialog = false;
     let deleteConfirmListName = '';
 
-    function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty', direction: 'asc' | 'desc'): Todo[] {
+    function sortTodos(todos: Todo[], by: 'name' | 'date' | 'order' | 'difficulty' | 'assigned', direction: 'asc' | 'desc'): Todo[] {
         const sorted = [...todos].sort((a, b) => {
             let comparison = 0;
             switch (by) {
@@ -69,6 +69,17 @@
                     break;
                 case 'difficulty':
                     comparison = (a.difficulty ?? 0) - (b.difficulty ?? 0);
+                    break;
+                case 'assigned':
+                    if (a.assigned_to && b.assigned_to) {
+                        comparison = a.assigned_to.localeCompare(b.assigned_to);
+                    } else if (a.assigned_to) {
+                        comparison = -1; // a comes before b (b is unassigned)
+                    } else if (b.assigned_to) {
+                        comparison = 1;  // b comes before a (a is unassigned)
+                    } else {
+                        comparison = 0; // both are unassigned
+                    }
                     break;
                 default:
                     comparison = (a.order ?? 0) - (b.order ?? 0);
