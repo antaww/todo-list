@@ -7,10 +7,15 @@
 	import { Edit2, Save, Share2, X } from 'lucide-svelte';
 	import Dialog from '@components/ui/Dialog.svelte';
 	import Input from '@components/ui/Input.svelte';
-	import Textarea from '@components/ui/Textarea.svelte';
 	import Markdown from '@components/ui/Markdown.svelte';
 	import { tick, onMount, onDestroy } from 'svelte';
 	import type { SvelteComponent } from 'svelte';
+
+	import { Carta, MarkdownEditor } from 'carta-md';
+	import 'carta-md/default.css';
+	import { code } from '@cartamd/plugin-code';
+	import '@cartamd/plugin-code/default.css';
+	import DOMPurify from 'isomorphic-dompurify';
 
 	export let isOpen = false;
 	export let todo: Todo | null = null;
@@ -32,8 +37,6 @@
 
 	let isEditingDescription = false;
 	let editableDescription = '';
-	let descriptionTextareaInstance: SvelteComponent & { focus: () => void; } | null = null;
-
 	let descriptionEditorWrapper: HTMLDivElement;
 
 	// Logic for checkbox state and toggling, similar to TodoItem.svelte
@@ -63,7 +66,6 @@
 			tick().then(() => {
 				document.addEventListener('click', handleClickOutsideDescription, true);
 			});
-			descriptionTextareaInstance?.focus();
 		} else {
 			document.removeEventListener('click', handleClickOutsideDescription, true);
 		}
@@ -87,11 +89,11 @@
 		editableDescription = todo.description || '';
 	}
 
-	$: if (isEditingDescription && todo) {
-		tick().then(() => {
-			descriptionTextareaInstance?.focus();
-		});
-	}
+	const carta = new Carta({
+		sanitizer: DOMPurify.sanitize,
+		extensions: [code()],
+		theme: 'github-dark'
+	});
 
 	function requestClose() {
 		if (onClose) {
@@ -167,16 +169,6 @@
 		isEditingDescription = false;
 	}
 
-	function handleDescriptionTextareaKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && event.ctrlKey) {
-			event.preventDefault();
-			handleSaveDescription();
-		} else if (event.key === 'Escape') {
-			event.preventDefault();
-			handleCancelEditDescription();
-		}
-	}
-
 	async function handleShare() {
 		if (!todo) return;
 		try {
@@ -245,21 +237,15 @@
 				<h3 class="text-md font-semibold text-white dark:text-dark-foreground mb-2 flex items-center justify-between">
 					Description
 				</h3>
-				<Textarea
-					bind:this={descriptionTextareaInstance}
-					bind:value={editableDescription}
-					class="w-full min-h-[100px] text-sm"
-					placeholder="Enter task description (Markdown supported)"
-					rows={5}
-					on:keydown={handleDescriptionTextareaKeydown}
-				/>
+				<div class="carta-wrapper border border-white/20 dark:border-dark-gray-600 rounded-md">
+					<MarkdownEditor bind:value={editableDescription} {carta} placeholder="Enter task description (Markdown supported)" />
+				</div>
 				<div class="mt-3 flex justify-end gap-2">
 					<Button variant="icon" onClick={handleCancelEditDescription} title="Cancel" class="border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100">
 						<X size={16} class="mr-1 sm:mr-2"/> Cancel
 					</Button>
 					<Button variant="primary" onClick={handleSaveDescription} title="Save description" class="bg-green-500/80 hover:bg-green-600/90 border-green-500/30">
-						<Save size={16} class="mr-3 sm:mr-2"/> Save
-						<span class="ml-2 text-xs text-white/70 dark:text-dark-gray-300 hidden lg:block">(CTRL+Enter)</span>
+						<Save size={16} class="mr-1 sm:mr-2"/> Save
 					</Button>
 				</div>
 			</div>
@@ -302,3 +288,67 @@
 		</div>
 	</div>
 </Dialog>
+
+<style>
+  /* Set your monospace font  */
+  /* Required to have the editor working correctly! */
+  :global(.carta-font-code) {
+    font-family: 'Courier New', Courier, monospace; /* Example font stack */
+    font-size: 0.95rem; /* Adjusted for consistency */
+    line-height: 1.2rem; /* Adjusted for consistency */
+    letter-spacing: normal;
+  }
+
+  .carta-wrapper :global(.carta-editor) {
+	  min-height: 150px;
+	  /* max-height: 400px; */
+	  /* overflow-y: auto; */
+		padding: 0.5rem;
+  }
+
+  .carta-wrapper :global(.carta-toolbar) {
+	  padding: 0.25rem 0.5rem;
+	  border-bottom: 1px solid var(--color-border, #e0e0e0); /* Use a CSS variable or a direct color */
+  }
+
+  /* Dark mode adjustments if needed */
+  .dark .carta-wrapper :global(.carta-toolbar) {
+	  border-bottom: 1px solid var(--dark-color-border, #4a4a4a);
+  }
+
+  /* Custom styles for better dark mode visibility - V3 */
+  .dark :global(div.carta-editor.carta-theme__default) {
+    --text-color: #E2E8F0; /* Tailwind gray-300, for general text within editor if not overridden */
+    --caret-color: #E2E8F0; /* Caret color */
+    --border-color: #4A5568; /* Border color within editor components */
+    --hover-color: #364152;  /* A slightly lighter shade for general hover states */
+    --selection-color: #4A5568; /* Text selection color */
+  }
+
+  .dark :global(div.carta-editor.carta-theme__default textarea::placeholder) {
+    color: #A0AEC0 !important; /* Tailwind gray-500 */
+    opacity: 1 !important; /* Ensure placeholder is fully opaque */
+  }
+
+  .dark :global(div.carta-editor.carta-theme__default .carta-toolbar) {
+    background-color: #1A202C !important; /* Tailwind gray-900, darker for toolbar */
+    border-bottom: 1px solid #2D3748 !important; /* Tailwind gray-800 */
+  }
+
+  .dark :global(div.carta-editor.carta-theme__default .carta-toolbar button.carta-icon) {
+    background-color: transparent !important;
+  }
+
+  /* Target the SVG path directly for fill */
+  .dark :global(div.carta-editor.carta-theme__default .carta-toolbar button.carta-icon svg path) {
+    fill: #A0AEC0 !important; /* Tailwind gray-500 for icons, slightly dimmer */
+  }
+
+  .dark :global(div.carta-editor.carta-theme__default .carta-toolbar button.carta-icon:hover) {
+    background-color: #2D3748 !important; /* Tailwind gray-800 for hover background */
+  }
+
+  .dark :global(div.carta-editor.carta-theme__default .carta-toolbar button.carta-icon:hover svg path) {
+    fill: #E2E8F0 !important; /* Tailwind gray-300 for icons on hover, brighter */
+  }
+</style>
