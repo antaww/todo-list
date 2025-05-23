@@ -36,3 +36,22 @@
 		background-color: #444;
 	}
 }
+
+.carta-theme__default button {
+	color: white !important;
+}
+
+.carta-theme__default .carta-icon:hover, .carta-theme__default .carta-icon-full:hover {
+	background: #e9e9e930 !important;
+}
+
+textarea.carta-font-code::selection {
+	background: #e9e9e930 !important;
+	color: white !important;
+}
+
+.carta-theme__default .carta-input, .carta-theme__default .carta-renderer {
+	min-height: 200px !important;
+	height: 200px !important;
+	overflow-y: scroll;
+  }
