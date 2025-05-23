@@ -229,6 +229,11 @@
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
 			Created at: {formatDate(todo.created_at)}
 		</p>
+		{#if todo.assigned_to}
+			<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
+				Assigned to: {todo.assigned_to}
+			</p>
+		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
 			Status: {todo.completed ? 'Completed' : 'Pending'}
 		</p>

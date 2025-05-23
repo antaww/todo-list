@@ -107,7 +107,7 @@ function createTodosStore() {
 			}
 		},
 
-		add: async (listId: string, { title, difficulty, description }: { title: string; difficulty: number; description?: string }) => {
+		add: async (listId: string, { title, difficulty, description, assignedTo }: { title: string; difficulty: number; description?: string; assignedTo?: string }) => {
 			const state = get(store);
 			const order = state.items.filter((t: Todo) => !t.completed).length;
 			const tempId = 'temp_' + Date.now();
@@ -120,7 +120,8 @@ function createTodosStore() {
 				id: tempId,
 				list_id: listId,
 				order,
-				title: title.trim()
+				title: title.trim(),
+				assigned_to: assignedTo ? assignedTo.trim() : undefined
 			};
 
 			update((state) => ({
@@ -144,7 +145,8 @@ function createTodosStore() {
 							difficulty: newTodo.difficulty,
 							list_id: newTodo.list_id,
 							order: newTodo.order,
-							title: newTodo.title
+							title: newTodo.title,
+							assigned_to: newTodo.assigned_to
 						}
 					])
 					.select();
@@ -390,7 +392,7 @@ function createTodosStore() {
 			const activeTodos = reorderTodos(
 				state.items
 				     .filter((t: Todo) => !t.completed)
-				     .sort((a: Todo, b: Todo) => a.order - b.order),
+				     .sort((a: Todo, b: Todo) => (a.order ?? 0) - (b.order ?? 0)),
 			);
 
 			const currentIndex = activeTodos.findIndex((t: Todo) => t.id === todo.id);

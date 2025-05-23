@@ -1,10 +1,21 @@
 export interface Todo {
-	completed: boolean;
-	created_at: string;
-	description?: string;
-	difficulty: number; // 0-10, representing 0-5 stars with half-star increments
 	id: string;
 	list_id: string;
-	order: number;
 	title: string;
+	completed: boolean;
+	created_at: string;
+	difficulty?: number; // 0-10, representing 0-5 stars with half-star increments
+	description?: string;
+	order?: number;
+	assigned_to?: string;
+}
+
+export interface List {
+	id: string;
+	name: string;
+	created_at: string;
+	last_seen_at?: string;
+	share_id?: string;
+	shared_with_me?: boolean;
+	user_id?: string;
 }

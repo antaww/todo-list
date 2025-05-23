@@ -12,13 +12,14 @@
 	export let hasCompletedTodos = false;
 	export let loading = false;
 	export let searchResultsCount: number | undefined = undefined;
-	export let onAdd: (detail: { title: string; difficulty: number; description?: string }) => void = () => {};
+	export let onAdd: (detail: { title: string; difficulty: number; description?: string; assignedTo?: string }) => void = () => {};
 	export let onSort: (detail: { by: SortByType, direction: 'asc' | 'desc' }) => void = () => {};
 	export let onSearch: (searchText: string) => void = () => {};
 
 	let newTodoDescription = '';
 	let newTodoDifficulty = 0;
 	let newTodoTitle = '';
+	let newTodoAssignedTo = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
 
 	const sortOptions = [
@@ -43,10 +44,11 @@
 	function handleSubmit() {
 		if (!newTodoTitle.trim()) return;
 		debouncedSearch.cancel();
-		onAdd({ title: newTodoTitle.trim(), difficulty: newTodoDifficulty, description: newTodoDescription.trim() });
+		onAdd({ title: newTodoTitle.trim(), difficulty: newTodoDifficulty, description: newTodoDescription.trim(), assignedTo: newTodoAssignedTo.trim() });
 		newTodoTitle = '';
 		newTodoDescription = '';
 		newTodoDifficulty = 0;
+		newTodoAssignedTo = '';
 		$searchMode = false;
 		onSearch('');
 	}
@@ -117,6 +119,13 @@
 					interactive={true}
 					onUpdate={(d) => (newTodoDifficulty = d)}
 					size={18}
+				/>
+				<Input
+					bind:value={newTodoAssignedTo}
+					class="text-sm mt-2"
+					disabled={loading}
+					maxLength={15}
+					placeholder="Assign to..."
 				/>
 			</div>
 		{/if}

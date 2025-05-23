@@ -164,6 +164,11 @@
 							<DifficultyStars difficulty={todo.difficulty} interactive={!isEditing} onUpdate={handleUpdateDifficulty} size={14} />
 						</div>
 					{/if}
+					{#if todo.assigned_to}
+						<span class="text-xs text-white/70 dark:text-dark-gray-300 ml-1 truncate" title={todo.assigned_to}>
+							(@{todo.assigned_to})
+						</span>
+					{/if}
 					{#if todo.description}
 						<button
 							class="text-white/60 dark:text-dark-gray-600 ml-0.5 cursor-pointer hover:text-white/80 dark:hover:text-dark-gray-500 transition-colors"
