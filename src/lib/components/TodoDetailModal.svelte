@@ -25,6 +25,7 @@
 	export let onUpdateDescription: ((detail: { todo: Todo; description: string }) => void) | undefined = undefined;
 	export let onUpdateDifficulty: ((detail: { todo: Todo; difficulty: number }) => void) | undefined = undefined;
 	export let onUpdateTitle: ((detail: { todo: Todo; title: string }) => void) | undefined = undefined;
+	export let onUpdateAssignedTo: ((detail: { todo: Todo; assignedTo: string }) => void) | undefined = undefined;
 	export let onToggle: ((item: Todo) => void) | undefined = undefined;
 
 	let showCopyTooltip = false;
@@ -38,6 +39,10 @@
 	let isEditingDescription = false;
 	let editableDescription = '';
 	let descriptionEditorWrapper: HTMLDivElement;
+
+	let isEditingAssignedTo = false;
+	let editableAssignedTo = '';
+	let assignedToInputInstance: SvelteComponent & { focus: () => void; } | null = null;
 
 	// Logic for checkbox state and toggling, similar to TodoItem.svelte
 	let internalCompleted = todo?.completed ?? false;
@@ -79,6 +84,10 @@
 		editableTitle = todo.title;
 	}
 
+	$: if (todo && !isEditingAssignedTo) {
+		editableAssignedTo = todo.assigned_to || '';
+	}
+
 	$: if (isEditingTitle && todo) {
 		tick().then(() => {
 			titleInputInstance?.focus();
@@ -87,6 +96,12 @@
 
 	$: if (todo && !isEditingDescription) {
 		editableDescription = todo.description || '';
+	}
+
+	$: if (isEditingAssignedTo && todo) {
+		tick().then(() => {
+			assignedToInputInstance?.focus();
+		});
 	}
 
 	const carta = new Carta({
@@ -101,6 +116,7 @@
 		}
 		isEditingTitle = false;
 		isEditingDescription = false;
+		isEditingAssignedTo = false;
 	}
 
 	function formatDate(dateString: string) {
@@ -169,6 +185,40 @@
 		isEditingDescription = false;
 	}
 
+	function handleEditAssignedTo(event?: MouseEvent) {
+		if (event) event.stopPropagation(); // Prevent click on parent div from re-triggering
+		if (!todo) return;
+		editableAssignedTo = todo.assigned_to || '';
+		isEditingAssignedTo = true;
+	}
+
+	function handleCancelEditAssignedTo() {
+		isEditingAssignedTo = false;
+		if (todo) {
+			editableAssignedTo = todo.assigned_to || '';
+		}
+	}
+
+	function handleSaveAssignedTo() {
+		if (todo && onUpdateAssignedTo) {
+			const newAssignedTo = editableAssignedTo.trim();
+			if (newAssignedTo !== (todo.assigned_to || '').trim()) {
+				onUpdateAssignedTo({ todo, assignedTo: newAssignedTo });
+			}
+		}
+		isEditingAssignedTo = false;
+	}
+
+	function handleAssignedToInputKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			handleSaveAssignedTo();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			handleCancelEditAssignedTo();
+		}
+	}
+
 	async function handleShare() {
 		if (!todo) return;
 		try {
@@ -229,10 +279,41 @@
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
 			Created at: {formatDate(todo.created_at)}
 		</p>
-		{#if todo.assigned_to}
-			<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
-				Assigned to: {todo.assigned_to}
-			</p>
+		{#if todo.assigned_to || isEditingAssignedTo}
+			<div class="text-sm text-white/70 dark:text-dark-gray-300 mb-2 flex items-center group/assigned">
+				Assigned to:&nbsp;
+				{#if isEditingAssignedTo}
+					<Input
+						bind:this={assignedToInputInstance}
+						bind:value={editableAssignedTo}
+						placeholder="Name..."
+						class="w-full text-sm py-0.5 px-1 h-auto"
+						maxLength={15}
+						onBlur={handleSaveAssignedTo}
+						onKeydown={handleAssignedToInputKeydown}
+					/>
+					<Button variant="icon" onClick={handleCancelEditAssignedTo} title="Cancel" class="p-1 ml-1">
+						<X size={16} />
+					</Button>
+					<Button variant="icon" onClick={handleSaveAssignedTo} title="Save" class="p-1 ml-1">
+						<Save size={16} />
+					</Button>
+				{:else}
+					<span class="cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors" on:click={() => handleEditAssignedTo()} title="Edit assigned person">
+						{todo.assigned_to || 'Nobody assigned.'}
+					</span>
+					<Button variant="icon" onClick={(e) => handleEditAssignedTo(e)} title="Edit assigned person" class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity">
+						<Edit2 size={14} />
+					</Button>
+				{/if}
+			</div>
+		{:else}
+			<div class="text-sm text-white/70 dark:text-dark-gray-300 mb-2 flex items-center group/assigned cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors" on:click={() => handleEditAssignedTo()} title="Assign to someone">
+				Assigned to: Nobody assigned.
+				<Button variant="icon" onClick={(e) => handleEditAssignedTo(e)} title="Assign to someone" class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity">
+					<Edit2 size={14} />
+				</Button>
+			</div>
 		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
 			Status: {todo.completed ? 'Completed' : 'Pending'}

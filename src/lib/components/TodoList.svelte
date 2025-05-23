@@ -506,13 +506,14 @@
         isModalOpen = true;
     }
 
-    function handleCloseModal(): void {
+    function handleCloseModal() {
         isModalOpen = false;
         selectedTodoIdForModal = null;
-
-		const url = new URL(window.location.href);
-        url.searchParams.delete('task_id');
-        pushState(url.toString(), {});
+        if (browser) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('task_id');
+            pushState(url.toString(), {});
+        }
     }
 
     async function actualDeleteList() {
@@ -610,6 +611,63 @@
             addToast({ data: { title: 'Copy Failed', description: 'Could not copy list name.', type: 'error' } });
         }
     }
+
+    function handleOpenTodoDetails(todo: Todo) {
+        selectedTodoIdForModal = todo.id;
+		setTimeout(() => { // Ensure modal has a chance to mount/react to new todo ID
+			isModalOpen = true;
+		}, 0);
+    }
+
+	function handleUpdateAssignedTo({ todo, assignedTo }: { todo: Todo; assignedTo: string }) {
+		todosStore.updateAssignedTo(todo, assignedTo);
+		addToast({
+			data: {
+				title: 'Assigned Person Updated',
+				description: `Task "${todo.title}" assigned to ${assignedTo || 'nobody'}.`,
+				type: 'success'
+			}
+		});
+	}
+
+	function handleUpdateDescription({ todo, description }: { todo: Todo; description: string }) {
+		if (todo) {
+			todosStore.updateDescription(todo, description);
+			addToast({
+				data: {
+					title: 'Description Updated',
+					description: `Task "${todo.title}" description updated.`,
+					type: 'success'
+				}
+			});
+		}
+	}
+
+	function handleUpdateTitle(detail: { todo: Todo; title: string }) {
+		if (detail.todo) {
+			todosStore.updateTitle(detail.todo, detail.title);
+			addToast({
+				data: {
+					title: 'Title Updated',
+					description: `Task "${detail.todo.title}" title updated.`,
+					type: 'success'
+				}
+			});
+		}
+	}
+
+	function handleUpdateDifficulty(detail: { todo: Todo; difficulty: number }) {
+		if (detail.todo && typeof detail.difficulty === 'number') {
+			todosStore.updateDifficulty(detail.todo, detail.difficulty);
+			addToast({
+				data: {
+					title: 'Difficulty Updated',
+					description: `Task "${detail.todo.title}" difficulty set to ${detail.difficulty}.`,
+					type: 'success'
+				}
+			});
+		}
+	}
 </script>
 
 <div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
@@ -689,9 +747,10 @@
                             on:touchend={handleTouchEnd}
                         >
                             <TodoItem
+                                isCompleted={false}
                                 isPrimedForDrag={isPrimed}
                                 onDelete={() => todosStore.delete(todo)}
-                                onOpenDetails={(item) => openTodoDetailModal(item)}
+                                onOpenDetails={(item) => handleOpenTodoDetails(item)}
                                 onToggle={() => todosStore.toggle(todo)}
                                 onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
                                 onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
@@ -744,7 +803,7 @@
                                     isCompleted={true}
                                     isPrimedForDrag={isPrimed}
                                     onDelete={() => todosStore.delete(todo)}
-                                    onOpenDetails={(item) => openTodoDetailModal(item)}
+                                    onOpenDetails={(item) => handleOpenTodoDetails(item)}
                                     onToggle={() => todosStore.toggle(todo)}
                                     onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
                                     onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
@@ -799,12 +858,13 @@
 
 {#if selectedTodoForModal}
     <TodoDetailModal
-        isOpen={isModalOpen}
+        bind:isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onUpdateDescription={handleModalUpdateTodoDescription}
-        onUpdateDifficulty={handleModalUpdateTodoDifficulty}
+        onUpdateDescription={(detail) => todosStore.updateDescription(detail.todo, detail.description)}
+        onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
         onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
         onToggle={(item) => todosStore.toggle(item)}
+        onUpdateAssignedTo={handleUpdateAssignedTo}
         todo={selectedTodoForModal}
     />
 {/if}

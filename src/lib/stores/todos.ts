@@ -382,6 +382,53 @@ function createTodosStore() {
 			}
 		},
 
+		updateAssignedTo: async (todo: Todo, newAssignedTo: string) => {
+			const updateStartTime = Date.now();
+			lastUpdateTime = updateStartTime;
+			const oldAssignedTo = todo.assigned_to;
+
+			// Optimistic update
+			update(state => ({
+				...state,
+				items: state.items.map((t: Todo) =>
+					t.id === todo.id ?
+						{
+							...t,
+							assigned_to: newAssignedTo.trim(),
+						} :
+						t,
+				),
+			}));
+
+			try {
+				const { error: supabaseError } = await supabase
+					.from('todos')
+					.update({ assigned_to: newAssignedTo.trim() })
+					.eq('id', todo.id);
+
+				if (supabaseError) {
+					console.error('Supabase error updating assigned_to:', supabaseError);
+					throw supabaseError;
+				}
+			} catch (e) {
+				console.error('Caught error in updateAssignedTo:', e);
+				if (lastUpdateTime === updateStartTime) { // Revert only if this is the last update attempt
+					update(state => ({
+						...state,
+						items: state.items.map((t: Todo) =>
+							t.id === todo.id ?
+								{
+									...t,
+									assigned_to: oldAssignedTo, // Revert to original value
+								} :
+								t,
+						),
+						error: 'Failed to update assigned person',
+					}));
+				}
+			}
+		},
+
 		move: async (todo: Todo, direction: "up" | "down") => {
 			if (isMoving) return;
 			isMoving = true;
