@@ -125,7 +125,7 @@
 					class="text-sm mt-2"
 					disabled={loading}
 					maxLength={15}
-					placeholder="Assign to..."
+					placeholder="Assign to... (optional)"
 				/>
 			</div>
 		{/if}
