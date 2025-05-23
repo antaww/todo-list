@@ -26,10 +26,10 @@
 		"vite": "^5.4.14"
 	},
 	"dependencies": {
-		"@cartamd/plugin-code": "^4.0.6",
+		"@cartamd/plugin-code": "^4.0.0",
 		"@melt-ui/svelte": "^0.86.3",
 		"@supabase/supabase-js": "^2.48.1",
-		"carta-md": "^4.7.0",
+		"carta-md": "4.6.4",
 		"isomorphic-dompurify": "^2.25.0",
 		"lucide-svelte": "^0.475.0",
 		"marked": "^15.0.11",

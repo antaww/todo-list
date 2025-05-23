@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@cartamd/plugin-code':
-        specifier: ^4.0.6
-        version: 4.0.6(carta-md@4.7.0(svelte@4.2.19))
+        specifier: ^4.0.0
+        version: 4.0.6(carta-md@4.6.4(svelte@4.2.19))
       '@melt-ui/svelte':
         specifier: ^0.86.3
         version: 0.86.3(svelte@4.2.19)
@@ -18,8 +18,8 @@ importers:
         specifier: ^2.48.1
         version: 2.48.1
       carta-md:
-        specifier: ^4.7.0
-        version: 4.7.0(svelte@4.2.19)
+        specifier: 4.6.4
+        version: 4.6.4(svelte@4.2.19)
       isomorphic-dompurify:
         specifier: ^2.25.0
         version: 2.25.0
@@ -1097,8 +1097,8 @@ packages:
   caniuse-lite@1.0.30001692:
     resolution: {integrity: sha512-A95VKan0kdtrsnMubMKxEKUKImOPSuCpYgxSQBo036P5YYgVIcOYJEgt/txJWqObiRQeISNCfef9nvlQ0vbV7A==}
 
-  carta-md@4.7.0:
-    resolution: {integrity: sha512-SQAbHkJ4I9IOVkRFiBnFBi36fdKvXa2SLUf6cumSHh+aLVBvRPR76qL9eYrj9/XOjn7C3h5ZGNqJDX1nRYVJ1w==}
+  carta-md@4.6.4:
+    resolution: {integrity: sha512-hMhczUwTtb4r1EpswHbp3ZviMjEUjVd0svHU2WerfCBMzWq7JuwNw4KTEb8D+uifXRkUyYiufEOGZju7mSl6HQ==}
     peerDependencies:
       svelte: ^3.54.0 || ^4.0.0 || ^5.0.0-next.1
 
@@ -2305,10 +2305,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.3
       lru-cache: 10.4.3
 
-  '@cartamd/plugin-code@4.0.6(carta-md@4.7.0(svelte@4.2.19))':
+  '@cartamd/plugin-code@4.0.6(carta-md@4.6.4(svelte@4.2.19))':
     dependencies:
       '@shikijs/rehype': 1.29.2
-      carta-md: 4.7.0(svelte@4.2.19)
+      carta-md: 4.6.4(svelte@4.2.19)
       unified: 11.0.5
 
   '@cloudflare/kv-asset-handler@0.3.4':
@@ -3062,7 +3062,7 @@ snapshots:
 
   caniuse-lite@1.0.30001692: {}
 
-  carta-md@4.7.0(svelte@4.2.19):
+  carta-md@4.6.4(svelte@4.2.19):
     dependencies:
       diff: 5.2.0
       esm-env: 1.2.2
