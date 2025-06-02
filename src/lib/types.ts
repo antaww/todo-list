@@ -3,6 +3,7 @@ export interface Todo {
 	list_id: string;
 	title: string;
 	completed: boolean;
+	working: boolean;
 	created_at: string;
 	difficulty?: number; // 0-10, representing 0-5 stars with half-star increments
 	description?: string;

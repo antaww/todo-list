@@ -763,6 +763,7 @@
                                 onDelete={() => todosStore.delete(todo)}
                                 onOpenDetails={(item) => handleOpenTodoDetails(item)}
                                 onToggle={() => todosStore.toggle(todo)}
+                                onToggleWorking={() => todosStore.toggleWorking(todo)}
                                 onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
                                 onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
                                 searchQuery={searchQuery}
@@ -816,6 +817,7 @@
                                     onDelete={() => todosStore.delete(todo)}
                                     onOpenDetails={(item) => handleOpenTodoDetails(item)}
                                     onToggle={() => todosStore.toggle(todo)}
+                                    onToggleWorking={() => todosStore.toggleWorking(todo)}
                                     onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
                                     onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
                                     searchQuery={searchQuery}

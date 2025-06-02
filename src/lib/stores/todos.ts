@@ -114,6 +114,7 @@ function createTodosStore() {
 
 			const newTodo: Todo = {
 				completed: false,
+				working: false,
 				created_at: new Date().toISOString(),
 				description,
 				difficulty,
@@ -245,6 +246,60 @@ function createTodosStore() {
 			} finally {
 				if (lastUpdateTime === updateStartTime) {
 					isMoving = false;
+				}
+			}
+		},
+
+		toggleWorking: async (todo: Todo) => {
+			const updateStartTime = Date.now();
+			lastUpdateTime = updateStartTime;
+
+			const newWorking = !todo.working;
+
+			// Optimistic update
+			update(state => ({
+				...state,
+				items: state.items.map((t: Todo) =>
+					t.id === todo.id
+					? {
+							...t,
+							working: newWorking,
+						}
+					: t,
+				),
+			}));
+
+			try {
+				const {error: supabaseError} = await supabase
+					.from("todos")
+					.update({
+						working: newWorking,
+					})
+					.eq("id", todo.id);
+
+				if (supabaseError) throw supabaseError;
+
+				addToast({
+					data: {
+						title: newWorking ? "Started working" : "Stopped working",
+						description: `${todo.title.substring(0, 30)}${todo.title.length > 30 ? '...' : ''}`,
+						type: "success",
+					},
+				});
+			} catch (e) {
+				if (lastUpdateTime === updateStartTime) {
+					update(state => ({
+						...state,
+						error: "Failed to update working status",
+						items: state.items.map((t: Todo) =>
+							t.id === todo.id
+							? {
+									...t,
+									working: todo.working, // Revert to original working status
+								}
+							: t,
+						),
+					}));
 				}
 			}
 		},

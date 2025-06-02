@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen} from 'lucide-svelte';
+	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen, Clock, PauseCircle, PlayCircle} from 'lucide-svelte';
 	import {tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '@components/ui/Checkbox.svelte';
@@ -21,6 +21,7 @@
 	export let onDelete: (item: Todo) => void = () => {};
 	export let onOpenDetails: (item: Todo) => void = () => {};
 	export let onToggle: (item: Todo) => void = () => {};
+	export let onToggleWorking: (item: Todo) => void = () => {};
 	export let onUpdateDifficulty: (detail: { todo: Todo; difficulty: number }) => void = () => {};
 	export let onUpdateTitle: (detail: { todo: Todo; title: string }) => void = () => {};
 
@@ -140,7 +141,7 @@
 			/>
 		{:else}
 			<span
-				class="flex-1 text-white dark:text-dark-foreground text-sm cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
+				class="flex-1 text-white dark:text-dark-foreground text-sm cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} {todo.working ? 'text-orange-300 dark:text-orange-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
 				on:click={() => {
 					if (!isPrimedForDrag) {
 						isEditing = true;
@@ -210,6 +211,26 @@
 			>
 				<Eye class="sm:hidden" size={16}/>
 				<Eye class="hidden sm:block" size={18}/>
+			</Button>
+			<Button
+				ariaLabel={todo.working ? "Stop working" : "Start working"}
+				title={todo.working ? "Stop working" : "Start working"}
+				class="h-6 w-6 sm:h-7 sm:w-7 {todo.working ? 'text-orange-500 hover:text-orange-600' : 'hover:text-orange-400'}"
+				icon={true}
+				onClick={() => {
+					if (!isPrimedForDrag) {
+						onToggleWorking(todo);
+					}
+				}}
+				variant="icon"
+			>
+				{#if todo.working}
+					<PauseCircle class="sm:hidden" size={16}/>
+					<PauseCircle class="hidden sm:block" size={18}/>
+				{:else}
+					<PlayCircle class="sm:hidden" size={16}/>
+					<PlayCircle class="hidden sm:block" size={18}/>
+				{/if}
 			</Button>
 			<Button
 				ariaLabel="Edit todo"
