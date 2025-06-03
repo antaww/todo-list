@@ -43,6 +43,8 @@
     let touchStartCoords: { x: number, y: number } | null = null;
     const TOUCH_MOVE_THRESHOLD = 10;
 
+    let currentTab: Todo['status'] = 'Working';
+
     const flipDurationMs = 300;
     let isDragging = false;
     let isUpdatingOrder = false;
@@ -783,6 +785,36 @@
             />
         </div>
 
+        <div class="flex border-b border-white/20 mb-4">
+            <button
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                    currentTab === 'Working' ? 'border-orange-400 text-orange-400' :
+                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                }"
+                on:click={() => currentTab = 'Working'}
+            >
+                In Progress ({workingTodos.length})
+            </button>
+            <button
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                    currentTab === 'Todo' ? 'border-blue-400 text-blue-400' :
+                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                }"
+                on:click={() => currentTab = 'Todo'}
+            >
+                To Do ({activeTodos.length})
+            </button>
+            <button
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                    currentTab === 'Done' ? 'border-green-400 text-green-400' :
+                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                }"
+                on:click={() => currentTab = 'Done'}
+            >
+                Completed ({completedTodos.length})
+            </button>
+        </div>
+
         {#if $todosStore.loading}
             <div class="text-center py-4 text-white font-medium flex items-center justify-center gap-2">
                 <Loader2 class="animate-spin" size={20}/>
@@ -791,141 +823,155 @@
         {:else}
             <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
                 {#key listId}
-                    {#if workingDndItems.length > 0}
+                    {#if currentTab === 'Working'}
                         <div class="my-4">
-                            <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingDndItems.length})</h3>
-                            <div
-                                class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
-                                style="overflow-y: auto;"
-                                id="working-todos"
-                                use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                                on:consider={handleDndConsiderWorking}
-                                on:finalize={handleDndFinalizeWorking}
-                            >
-                                {#each workingDndItems as todo (todo.id)}
-                                    {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
-                                    <div
-                                        id={`todo-item-${todo.id}`}
-                                        class:dnd-item={$sortBy === 'order'}
-                                        class:primed-for-drag={isPrimed}
-                                        animate:flip={{duration: 250}}
-                                        on:touchstart|passive={e => handleTouchStart(e, todo)}
-                                        on:touchmove|passive={handleTouchMove}
-                                        on:touchend={handleTouchEnd}
-                                    >
-                                        <TodoItem
-                                            isCompleted={false}
-                                            isPrimedForDrag={isPrimed}
-                                            onDelete={() => todosStore.delete(todo)}
-                                            onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                            onToggle={() => todosStore.toggle(todo)}
-                                            onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                            onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                            onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                            searchQuery={searchQuery}
-                                            {todo}
-                                        />
-                                    </div>
-                                {/each}
-                            </div>
-                        </div>
-                    {/if}
-
-                    {#if activeDndItems.length > 0 || (workingDndItems.length === 0 && completedDndItems.length === 0)}
-                        {#if workingDndItems.length > 0}
-                            <div class="my-6 border-t border-white/30"/>
-                        {/if}
-                        <div class="my-4">
-                            <h3 class="text-white/80 text-sm font-medium mb-2 px-1">To Do ({activeDndItems.length})</h3>
-                            <div
-                                class="space-y-2 p-3 {activeDndItems.length > 0 ? 'border border-gray-300/30 rounded-md bg-gray-300/5' : ''}"
-                                style="overflow-y: auto;"
-                                id="active-todos"
-                                use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                                on:consider={handleDndConsiderActive}
-                                on:finalize={handleDndFinalizeActive}
-                            >
-                                {#each activeDndItems as todo (todo.id)}
-                                    {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
-                                    <div
-										id={`todo-item-${todo.id}`}
-                                        class:dnd-item={$sortBy === 'order'}
-                                        class:primed-for-drag={isPrimed}
-                                        animate:flip={{duration: 250}}
-                                        on:touchstart|passive={e => handleTouchStart(e, todo)}
-                                        on:touchmove|passive={handleTouchMove}
-                                        on:touchend={handleTouchEnd}
-                                    >
-                                        <TodoItem
-                                            isCompleted={false}
-                                            isPrimedForDrag={isPrimed}
-                                            onDelete={() => todosStore.delete(todo)}
-                                            onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                            onToggle={() => todosStore.toggle(todo)}
-                                            onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                            onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                            onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                            searchQuery={searchQuery}
-                                            {todo}
-                                        />
-                                    </div>
-                                {/each}
-                            </div>
-                        </div>
-                    {/if}
-
-                    {#if completedDndItems.length > 0}
-                        <div class="my-6 border-t border-white/30" />
-
-                        <div class="flex justify-between items-center mb-4 px-1">
-                            <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
-                            {#if completedDndItems.length > 0}
-                                <Button
-                                    variant="icon"
-                                    icon={true}
-                                    onClick={openDeleteDialog}
-                                    ariaLabel="Delete all completed tasks"
-                                    title="Delete all completed tasks"
-                                    class="hover:text-red-500 transition-colors"
+                            <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingTodos.length})</h3>
+                            {#if workingDndItems.length > 0}
+                                <div
+                                    class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
+                                    style="overflow-y: auto;"
+                                    id="working-todos"
+                                    use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                                    on:consider={handleDndConsiderWorking}
+                                    on:finalize={handleDndFinalizeWorking}
                                 >
-                                    <Trash2 size={20}/>
-                                </Button>
+                                    {#each workingDndItems as todo (todo.id)}
+                                        {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                        <div
+                                            id={`todo-item-${todo.id}`}
+                                            class:dnd-item={$sortBy === 'order'}
+                                            class:primed-for-drag={isPrimed}
+                                            animate:flip={{duration: 250}}
+                                            on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                            on:touchmove|passive={handleTouchMove}
+                                            on:touchend={handleTouchEnd}
+                                        >
+                                            <TodoItem
+                                                isCompleted={false}
+                                                isPrimedForDrag={isPrimed}
+                                                onDelete={() => todosStore.delete(todo)}
+                                                onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                                onToggle={() => todosStore.toggle(todo)}
+                                                onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                                onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                                onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                                searchQuery={searchQuery}
+                                                {todo}
+                                            />
+                                        </div>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <p class="text-white/50 p-4 text-center border border-dashed border-white/20 rounded-md bg-white/5">
+                                    No tasks in progress.
+                                </p>
                             {/if}
                         </div>
+                    {/if}
 
-                        <div
-                            class="space-y-2 p-3 border border-gray-500/30 rounded-md bg-gray-500/5"
-                            style="overflow-y: auto;"
-                            id="completed-todos"
-                            use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                            on:consider={handleDndConsiderCompleted}
-                            on:finalize={handleDndFinalizeCompleted}
-                        >
-                            {#each completedDndItems as todo (todo.id)}
-                                {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                    {#if currentTab === 'Todo'}
+                        <div class="my-4">
+                            <h3 class="text-white/80 text-sm font-medium mb-2 px-1">To Do ({activeTodos.length})</h3>
+                            {#if activeDndItems.length > 0}
                                 <div
-									id={`todo-item-${todo.id}`}
-                                    class:dnd-item={$sortBy === 'order'}
-                                    class:primed-for-drag={isPrimed}
-                                    animate:flip={{duration: 250}}
-                                    on:touchstart|passive={e => handleTouchStart(e, todo)}
-                                    on:touchmove|passive={handleTouchMove}
-                                    on:touchend={handleTouchEnd}
+                                    class="space-y-2 p-3 border border-gray-300/30 rounded-md bg-gray-300/5"
+                                    style="overflow-y: auto;"
+                                    id="active-todos"
+                                    use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                                    on:consider={handleDndConsiderActive}
+                                    on:finalize={handleDndFinalizeActive}
                                 >
-                                    <TodoItem
-                                        isCompleted={true}
-                                        isPrimedForDrag={isPrimed}
-                                        onDelete={() => todosStore.delete(todo)}
-                                        onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                        onToggle={() => todosStore.toggle(todo)}
-                                        onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                        onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                        onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                        searchQuery={searchQuery}
-                                        {todo}
-                                    />
+                                    {#each activeDndItems as todo (todo.id)}
+                                        {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                        <div
+                                            id={`todo-item-${todo.id}`}
+                                            class:dnd-item={$sortBy === 'order'}
+                                            class:primed-for-drag={isPrimed}
+                                            animate:flip={{duration: 250}}
+                                            on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                            on:touchmove|passive={handleTouchMove}
+                                            on:touchend={handleTouchEnd}
+                                        >
+                                            <TodoItem
+                                                isCompleted={false}
+                                                isPrimedForDrag={isPrimed}
+                                                onDelete={() => todosStore.delete(todo)}
+                                                onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                                onToggle={() => todosStore.toggle(todo)}
+                                                onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                                onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                                onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                                searchQuery={searchQuery}
+                                                {todo}
+                                            />
+                                        </div>
+                                    {/each}
                                 </div>
-                            {/each}
+                            {:else}
+                                <p class="text-white/50 p-4 text-center border border-dashed border-white/20 rounded-md bg-white/5">
+                                    No tasks to do.
+                                </p>
+                            {/if}
+                        </div>
+                    {/if}
+
+                    {#if currentTab === 'Done'}
+                        <div class="my-4">
+                            <div class="flex justify-between items-center mb-2 px-1">
+                                <h3 class="text-white/80 text-sm font-medium">Completed ({completedTodos.length})</h3>
+                                {#if completedDndItems.length > 0}
+                                    <Button
+                                        variant="icon"
+                                        icon={true}
+                                        onClick={openDeleteDialog}
+                                        ariaLabel="Delete all completed tasks"
+                                        title="Delete all completed tasks"
+                                        class="hover:text-red-500 transition-colors"
+                                    >
+                                        <Trash2 size={20}/>
+                                    </Button>
+                                {/if}
+                            </div>
+                            {#if completedDndItems.length > 0}
+                                <div
+                                    class="space-y-2 p-3 border border-gray-500/30 rounded-md bg-gray-500/5"
+                                    style="overflow-y: auto;"
+                                    id="completed-todos"
+                                    use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                                    on:consider={handleDndConsiderCompleted}
+                                    on:finalize={handleDndFinalizeCompleted}
+                                >
+                                    {#each completedDndItems as todo (todo.id)}
+                                        {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                        <div
+                                            id={`todo-item-${todo.id}`}
+                                            class:dnd-item={$sortBy === 'order'}
+                                            class:primed-for-drag={isPrimed}
+                                            animate:flip={{duration: 250}}
+                                            on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                            on:touchmove|passive={handleTouchMove}
+                                            on:touchend={handleTouchEnd}
+                                        >
+                                            <TodoItem
+                                                isCompleted={true}
+                                                isPrimedForDrag={isPrimed}
+                                                onDelete={() => todosStore.delete(todo)}
+                                                onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                                onToggle={() => todosStore.toggle(todo)}
+                                                onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                                onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                                onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                                searchQuery={searchQuery}
+                                                {todo}
+                                            />
+                                        </div>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <p class="text-white/50 p-4 text-center border border-dashed border-white/20 rounded-md bg-white/5">
+                                    No completed tasks.
+                                </p>
+                            {/if}
                         </div>
                     {/if}
                 {/key}
