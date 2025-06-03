@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@cartamd/plugin-code':
-        specifier: ^4.0.0
+        specifier: ^4.0.6
         version: 4.0.6(carta-md@4.6.4(svelte@4.2.19))
       '@melt-ui/svelte':
         specifier: ^0.86.3
@@ -1094,8 +1094,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  caniuse-lite@1.0.30001692:
-    resolution: {integrity: sha512-A95VKan0kdtrsnMubMKxEKUKImOPSuCpYgxSQBo036P5YYgVIcOYJEgt/txJWqObiRQeISNCfef9nvlQ0vbV7A==}
+  caniuse-lite@1.0.30001720:
+    resolution: {integrity: sha512-Ec/2yV2nNPwb4DnTANEV99ZWwm3ZWfdlfkQbWSDDt+PsXEVYwlhPH8tdMaPunYTKKmz7AnHi2oNEi1GcmKCD8g==}
 
   carta-md@4.6.4:
     resolution: {integrity: sha512-hMhczUwTtb4r1EpswHbp3ZviMjEUjVd0svHU2WerfCBMzWq7JuwNw4KTEb8D+uifXRkUyYiufEOGZju7mSl6HQ==}
@@ -3019,7 +3019,7 @@ snapshots:
   autoprefixer@10.4.20(postcss@8.5.3):
     dependencies:
       browserslist: 4.24.4
-      caniuse-lite: 1.0.30001692
+      caniuse-lite: 1.0.30001720
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
@@ -3051,7 +3051,7 @@ snapshots:
 
   browserslist@4.24.4:
     dependencies:
-      caniuse-lite: 1.0.30001692
+      caniuse-lite: 1.0.30001720
       electron-to-chromium: 1.5.83
       node-releases: 2.0.19
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
@@ -3060,7 +3060,7 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
-  caniuse-lite@1.0.30001692: {}
+  caniuse-lite@1.0.30001720: {}
 
   carta-md@4.6.4(svelte@4.2.19):
     dependencies:
