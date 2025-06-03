@@ -49,6 +49,7 @@
 
     let activeDndItems: Todo[] = [];
     let completedDndItems: Todo[] = [];
+    let workingDndItems: Todo[] = [];
 
     let isModalOpen = false;
     let selectedTodoIdForModal: string | null = null;
@@ -113,12 +114,14 @@
     $: filteredTodos = searchQuery
                        ? $todosStore.items.filter(todo => fuzzyMatch(todo.title, searchQuery))
                        : $todosStore.items;
-    $: activeTodos = sortTodos(filteredTodos.filter(t => !t.completed), $sortBy, $sortDirection);
-    $: completedTodos = sortTodos(filteredTodos.filter(t => t.completed), $sortBy, $sortDirection);
+    $: workingTodos = sortTodos(filteredTodos.filter(t => t.status === 'Working'), $sortBy, $sortDirection);
+    $: activeTodos = sortTodos(filteredTodos.filter(t => t.status === 'Todo'), $sortBy, $sortDirection);
+    $: completedTodos = sortTodos(filteredTodos.filter(t => t.status === 'Done'), $sortBy, $sortDirection);
 
     $: dndDragDisabled = $sortBy !== 'order';
 
     $: if (!isDragging && !isUpdatingOrder) {
+        workingDndItems = [...workingTodos];
         activeDndItems = [...activeTodos];
         completedDndItems = [...completedTodos];
     }
@@ -133,7 +136,26 @@
         const originalItems = [...activeDndItems];
         activeDndItems = e.detail.items;
         isUpdatingOrder = true;
-        updateTodoOrders(activeDndItems, false, originalItems).finally(() => {
+        updateTodoOrders(activeDndItems, 'Todo', originalItems).finally(() => {
+            isUpdatingOrder = false;
+            if (isTouchDevice) {
+                allowDragViaLongPress = false;
+            }
+            successfullyLongPressedTodoId = null;
+        });
+    }
+
+    function handleDndConsiderWorking(e: CustomEvent<{items: Todo[]}>): void {
+        isDragging = true;
+        workingDndItems = e.detail.items;
+        successfullyLongPressedTodoId = null;
+    }
+
+    function handleDndFinalizeWorking(e: CustomEvent<{items: Todo[]}>): void {
+        const originalItems = [...workingDndItems];
+        workingDndItems = e.detail.items;
+        isUpdatingOrder = true;
+        updateTodoOrders(workingDndItems, 'Working', originalItems).finally(() => {
             isUpdatingOrder = false;
             if (isTouchDevice) {
                 allowDragViaLongPress = false;
@@ -152,7 +174,7 @@
         const originalItems = [...completedDndItems];
         completedDndItems = e.detail.items;
         isUpdatingOrder = true;
-        updateTodoOrders(completedDndItems, true, originalItems).finally(() => {
+        updateTodoOrders(completedDndItems, 'Done', originalItems).finally(() => {
             isUpdatingOrder = false;
             if (isTouchDevice) {
                 allowDragViaLongPress = false;
@@ -161,11 +183,11 @@
         });
     }
 
-    async function updateTodoOrders(items: Todo[], completed: boolean, originalItems: Todo[]): Promise<void> {
+    async function updateTodoOrders(items: Todo[], targetStatus: Todo['status'], originalItems: Todo[]): Promise<void> {
         const updatedTodos = items.map((todo, index) => ({
             ...todo,
             order: index,
-            completed,
+            status: targetStatus,
         }));
 
         try {
@@ -173,7 +195,7 @@
                 id: todo.id,
                 order: todo.order,
                 title: todo.title,
-                completed: todo.completed,
+                status: todo.status,
                 list_id: todo.list_id,
             }));
 
@@ -188,7 +210,7 @@
                         type: 'error',
                     },
                 });
-                if (completed) {
+                if (targetStatus === 'Done') {
                     completedDndItems = originalItems;
                 } else {
                     activeDndItems = originalItems;
@@ -203,20 +225,12 @@
                     type: 'error',
                 },
             });
-            if (completed) {
+            if (targetStatus === 'Done') {
                 completedDndItems = originalItems;
             } else {
                 activeDndItems = originalItems;
             }
         }
-        deleteDialogOpen = false;
-        addToast({
-            data: {
-                title: 'Tasks deleted',
-                description: `Successfully deleted ${completedDndItems.length} completed ${completedDndItems.length === 1 ? 'task' : 'tasks'}.`,
-                type: 'success',
-            },
-        });
     }
 
     function openDeleteDialog(): void {
@@ -341,12 +355,21 @@
                             continue;
                         }
 
-                        const completed = String(item.completed).toLowerCase() === 'true' || item.completed === '1';
+                        const oldCompleted = String(item.completed).toLowerCase() === 'true' || item.completed === '1';
                         const difficulty = parseInt(String(item.difficulty), 10);
+                        const working = String(item.working).toLowerCase() === 'true' || item.working === '1';
+
+                        let status: Todo['status'] = 'Todo';
+                        if (working) {
+                            status = 'Working';
+                        } else if (oldCompleted) {
+                            status = 'Done';
+                        }
 
                         await todosStore.add(listId, {
                             title,
-                            difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(5, difficulty)),
+                            difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(10, difficulty)),
+                            status,
                         });
                         importedCount++;
                     }
@@ -738,6 +761,46 @@
             </div>
         {:else}
             <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
+                {#if workingDndItems.length > 0}
+                    <div class="my-4">
+                        <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingDndItems.length})</h3>
+                        <div
+                            class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
+                            style="overflow-y: auto;"
+                            id="working-todos"
+                            use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                            on:consider={handleDndConsiderWorking}
+                            on:finalize={handleDndFinalizeWorking}
+                        >
+                            {#each workingDndItems as todo (todo.id)}
+                                {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                <div
+                                    id={`todo-item-${todo.id}`}
+                                    class:dnd-item={$sortBy === 'order'}
+                                    class:primed-for-drag={isPrimed}
+                                    animate:flip={{duration: 250}}
+                                    on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                    on:touchmove|passive={handleTouchMove}
+                                    on:touchend={handleTouchEnd}
+                                >
+                                    <TodoItem
+                                        isCompleted={false}
+                                        isPrimedForDrag={isPrimed}
+                                        onDelete={() => todosStore.delete(todo)}
+                                        onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                        onToggle={() => todosStore.toggle(todo)}
+                                        onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                        onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                        onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                        searchQuery={searchQuery}
+                                        {todo}
+                                    />
+                                </div>
+                            {/each}
+                        </div>
+                    </div>
+                {/if}
+
                 <div
                     class="space-y-2 p-3"
                     style="overflow-y: auto;"

@@ -62,8 +62,8 @@
 		}
 	}
 
-	let checked = todo.completed;
-	$: if (checked !== todo.completed) {
+	let checked = todo.status === 'Done';
+	$: if (checked !== (todo.status === 'Done')) {
 		onToggle(todo);
 	}
 
@@ -141,7 +141,7 @@
 			/>
 		{:else}
 			<span
-				class="flex-1 text-white dark:text-dark-foreground text-sm cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.completed ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} {todo.working ? 'text-orange-300 dark:text-orange-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
+				class="flex-1 text-white dark:text-dark-foreground text-sm cursor-pointer hover:text-white/90 dark:hover:text-dark-gray-800 transition duration-200 rounded px-1.5 mx-1 py-0.5 hover:bg-white/10 dark:hover:bg-dark-gray-100 {todo.status === 'Done' ? 'line-through text-white/50 dark:text-dark-gray-400' : ''} {todo.status === 'Working' ? 'text-orange-300 dark:text-orange-400' : ''} max-w-full break-words min-w-0 overflow-hidden"
 				on:click={() => {
 					if (!isPrimedForDrag) {
 						isEditing = true;
@@ -213,9 +213,9 @@
 				<Eye class="hidden sm:block" size={18}/>
 			</Button>
 			<Button
-				ariaLabel={todo.working ? "Stop working" : "Start working"}
-				title={todo.working ? "Stop working" : "Start working"}
-				class="h-6 w-6 sm:h-7 sm:w-7 {todo.working ? 'text-orange-500 hover:text-orange-600' : 'hover:text-orange-400'}"
+				ariaLabel={todo.status === 'Working' ? "Stop working" : "Start working"}
+				title={todo.status === 'Working' ? "Stop working" : "Start working"}
+				class="h-6 w-6 sm:h-7 sm:w-7 {todo.status === 'Working' ? 'text-orange-500 hover:text-orange-600' : 'hover:text-orange-400'}"
 				icon={true}
 				onClick={() => {
 					if (!isPrimedForDrag) {
@@ -224,7 +224,7 @@
 				}}
 				variant="icon"
 			>
-				{#if todo.working}
+				{#if todo.status === 'Working'}
 					<PauseCircle class="sm:hidden" size={16}/>
 					<PauseCircle class="hidden sm:block" size={18}/>
 				{:else}

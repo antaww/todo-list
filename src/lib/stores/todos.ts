@@ -107,14 +107,13 @@ function createTodosStore() {
 			}
 		},
 
-		add: async (listId: string, { title, difficulty, description, assignedTo }: { title: string; difficulty: number; description?: string; assignedTo?: string }) => {
+		add: async (listId: string, { title, difficulty, description, assignedTo, status }: { title: string; difficulty: number; description?: string; assignedTo?: string; status?: Todo['status'] }) => {
 			const state = get(store);
-			const order = state.items.filter((t: Todo) => !t.completed).length;
+			const order = state.items.filter((t: Todo) => t.status === 'Todo').length;
 			const tempId = 'temp_' + Date.now();
 
 			const newTodo: Todo = {
-				completed: false,
-				working: false,
+				status: status || 'Todo',
 				created_at: new Date().toISOString(),
 				description,
 				difficulty,
@@ -141,7 +140,7 @@ function createTodosStore() {
 					.from('todos')
 					.insert([
 						{
-							completed: newTodo.completed,
+							status: newTodo.status,
 							description: newTodo.description,
 							difficulty: newTodo.difficulty,
 							list_id: newTodo.list_id,
@@ -204,11 +203,16 @@ function createTodosStore() {
 			const updateStartTime = Date.now();
 			lastUpdateTime = updateStartTime;
 
-			const newCompleted = !todo.completed;
-			const state = get(store);
-			const newOrder = newCompleted
-			                 ? state.items.filter((t: Todo) => t.completed).length
-			                 : state.items.filter((t: Todo) => !t.completed).length;
+			let newStatus: Todo['status'];
+			let newOrder = todo.order;
+
+			if (todo.status === 'Done') {
+				newStatus = 'Todo';
+			} else if (todo.status === 'Todo') {
+				newStatus = 'Done';
+			} else {
+				newStatus = 'Done';
+			}
 
 			// Optimistic update
 			update(state => ({
@@ -218,7 +222,7 @@ function createTodosStore() {
 					?
 						{
 							...t,
-							completed: newCompleted,
+							status: newStatus,
 							order: newOrder,
 						}
 					:
@@ -230,7 +234,7 @@ function createTodosStore() {
 				const {error: supabaseError} = await supabase
 					.from("todos")
 					.update({
-						completed: newCompleted,
+						status: newStatus,
 						order: newOrder,
 					})
 					.eq("id", todo.id);
@@ -254,7 +258,12 @@ function createTodosStore() {
 			const updateStartTime = Date.now();
 			lastUpdateTime = updateStartTime;
 
-			const newWorking = !todo.working;
+			let newStatus: Todo['status'];
+			if (todo.status === 'Working') {
+				newStatus = 'Todo'; // Or derive previous non-working state if needed, for now, defaults to Todo
+			} else {
+				newStatus = 'Working';
+			}
 
 			// Optimistic update
 			update(state => ({
@@ -263,7 +272,7 @@ function createTodosStore() {
 					t.id === todo.id
 					? {
 							...t,
-							working: newWorking,
+							status: newStatus,
 						}
 					: t,
 				),
@@ -273,7 +282,7 @@ function createTodosStore() {
 				const {error: supabaseError} = await supabase
 					.from("todos")
 					.update({
-						working: newWorking,
+						status: newStatus,
 					})
 					.eq("id", todo.id);
 
@@ -281,7 +290,7 @@ function createTodosStore() {
 
 				addToast({
 					data: {
-						title: newWorking ? "Started working" : "Stopped working",
+						title: newStatus === 'Working' ? "Started working" : "Stopped working",
 						description: `${todo.title.substring(0, 30)}${todo.title.length > 30 ? '...' : ''}`,
 						type: "success",
 					},
@@ -295,7 +304,7 @@ function createTodosStore() {
 							t.id === todo.id
 							? {
 									...t,
-									working: todo.working, // Revert to original working status
+									status: todo.status, // Revert to original status
 								}
 							: t,
 						),
@@ -311,6 +320,18 @@ function createTodosStore() {
 
 			const updateStartTime = Date.now();
 			lastUpdateTime = updateStartTime;
+
+			const state = get(store);
+			const activeTodos = reorderTodos(
+				state.items
+				     .filter((t: Todo) => t.status === 'Todo' || t.status === 'Working') // Updated filter
+				     .sort((a, b) => (a.order || 0) - (b.order || 0)),
+			);
+			const completedTodos = reorderTodos(
+				state.items
+				     .filter((t: Todo) => t.status === 'Done') // Updated filter
+				     .sort((a, b) => (a.order || 0) - (b.order || 0)),
+			);
 
 			// Optimistic update
 			update(state => ({
@@ -493,7 +514,7 @@ function createTodosStore() {
 			const state = get(store);
 			const activeTodos = reorderTodos(
 				state.items
-				     .filter((t: Todo) => !t.completed)
+				     .filter((t: Todo) => t.status === 'Todo' || t.status === 'Working') // Already updated in previous step, ensure consistency
 				     .sort((a: Todo, b: Todo) => (a.order ?? 0) - (b.order ?? 0)),
 			);
 
@@ -540,14 +561,14 @@ function createTodosStore() {
 						id: currentTodo.id,
 						order: targetIndex,
 						title: currentTodo.title,
-						completed: currentTodo.completed,
+						status: currentTodo.status, // Use status
 						list_id: currentTodo.list_id,
 					},
 					{
 						id: targetTodo.id,
 						order: currentIndex,
 						title: targetTodo.title,
-						completed: targetTodo.completed,
+						status: targetTodo.status, // Use status
 						list_id: targetTodo.list_id,
 					},
 				];
@@ -584,14 +605,14 @@ function createTodosStore() {
 
 		deleteAllCompleted: async (listId: string) => {
 			const state = get(store);
-			const completedTodos = state.items.filter((t: Todo) => t.completed);
+			const completedTodos = state.items.filter((t: Todo) => t.status === 'Done');
 
 			if (completedTodos.length === 0) return;
 
 			// Optimistic update
 			update(state => ({
 				...state,
-				items: state.items.filter((t: Todo) => !t.completed),
+				items: state.items.filter((t: Todo) => t.status !== 'Done'),
 			}));
 
 			try {

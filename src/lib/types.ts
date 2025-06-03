@@ -1,9 +1,10 @@
+export type TodoStatus = 'Todo' | 'Working' | 'Done';
+
 export interface Todo {
 	id: string;
 	list_id: string;
 	title: string;
-	completed: boolean;
-	working: boolean;
+	status: TodoStatus;
 	created_at: string;
 	difficulty?: number; // 0-10, representing 0-5 stars with half-star increments
 	description?: string;
