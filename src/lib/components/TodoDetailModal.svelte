@@ -44,20 +44,28 @@
 	let editableAssignedTo = '';
 	let assignedToInputInstance: SvelteComponent & { focus: () => void; } | null = null;
 
-	// Logic for checkbox state and toggling, similar to TodoItem.svelte
-	let internalCompleted = todo?.completed ?? false;
-	let previousCompleted = internalCompleted;
+	// Logic for checkbox state and toggling, reflecting todo.status
+	let internalStatusIsDone = todo?.status === 'Done';
+	let previousStatusIsDone = internalStatusIsDone; // Initialize previous with the current state
 
-	// Update internalCompleted when the todo prop changes (e.g., from store update or new todo in modal)
+	// Update internalStatusIsDone when the todo prop changes (e.g., from store update or new todo in modal)
+	// This ensures the checkbox reflects the true state of the todo item.
 	$: if (todo) {
-		previousCompleted = internalCompleted;
-		internalCompleted = todo.completed;
+		// Update previousStatusIsDone *before* internalStatusIsDone is potentially changed by the new todo prop.
+		// This is crucial to prevent onToggle from firing just because the todo prop changed.
+		previousStatusIsDone = internalStatusIsDone;
+		internalStatusIsDone = todo.status === 'Done';
+		// After internalStatusIsDone reflects the new todo.status, update previousStatusIsDone again
+		// so that the next actual user interaction with the checkbox is compared against the correct previous state.
+		previousStatusIsDone = internalStatusIsDone;
 	}
 
-	// When user clicks checkbox, internalCompleted changes via bind:checked.
-	// If it's different from the previous state, call onToggle.
-	$: if (todo && onToggle && internalCompleted !== previousCompleted) {
+	// When user clicks the checkbox in the modal, internalStatusIsDone changes via bind:checked.
+	// This reactive block then calls onToggle if the new bound state is different from its previous state.
+	$: if (todo && onToggle && internalStatusIsDone !== previousStatusIsDone) {
 		onToggle(todo);
+		// After toggling, ensure previousStatusIsDone matches the new state for the next comparison
+		previousStatusIsDone = internalStatusIsDone;
 	}
 
 	function handleClickOutsideDescription(event: MouseEvent) {
@@ -248,8 +256,9 @@
 >
 	<div slot="title" class="w-full mr-3 relative">
 		{#if todo}
-			{#if isEditingTitle}
-				<div class="flex items-center gap-2 flex-1 w-full">
+			<div class="flex items-center gap-3">
+				<Checkbox bind:checked={internalStatusIsDone} size="h-5 w-5" />
+				{#if isEditingTitle}
 					<Input
 						bind:this={titleInputInstance}
 						bind:value={editableTitle}
@@ -258,15 +267,10 @@
 						onBlur={handleSaveTitle}
 						onKeydown={handleTitleInputKeydown}
 					/>
-				</div>
-			{:else}
-				<div class="flex items-center gap-2 cursor-pointer group/title mr-2" title="Edit title">
-					<div class="mr-2.5 flex-shrink-0" on:click|stopPropagation on:keydown|stopPropagation>
-						<Checkbox bind:checked={internalCompleted} size="h-6 w-6" />
-					</div>
-					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.completed ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo?.title}</h2>
-				</div>
-			{/if}
+				{:else}
+					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.status === 'Done' ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo?.title}</h2>
+				{/if}
+			</div>
 		{/if}
 	</div>
 
@@ -316,7 +320,7 @@
 			</div>
 		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
-			Status: {todo.completed ? 'Completed' : 'Pending'}
+			Status: {todo.status === 'Done' ? 'Completed' : 'Pending'}
 		</p>
 		{#if isEditingDescription}
 			<div class="mb-4" bind:this={descriptionEditorWrapper}>
