@@ -42,6 +42,10 @@
 		{
 			value: 'assigned',
 			label: 'Assigned To'
+		},
+		{
+			value: 'priority',
+			label: 'Priority'
 		}
 	];
 
