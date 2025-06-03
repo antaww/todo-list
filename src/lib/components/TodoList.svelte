@@ -30,6 +30,8 @@
 
     export let listId: string;
 
+    let mounted = false; // Added for client-side rendering gate
+
     let previousListId: string | null = null;
     let subscription: RealtimeChannel[] = [];
     let deleteDialogOpen = false;
@@ -507,6 +509,7 @@
     }
 
     onMount(async () => {
+        mounted = true; // Set mounted to true on client
         isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         if (listId) {
             // previousListId = listId; // No longer set here, will be set by reactive block after first init
@@ -739,6 +742,7 @@
 	}
 </script>
 
+{#if mounted}
 <div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
     <Button
         ariaLabel="Toggle wide mode"
@@ -1061,3 +1065,10 @@
         z-index: 10;
     }
 </style>
+{:else}
+    <div class="min-h-[92svh] flex flex-col items-center justify-center text-white p-4 text-center">
+        <Loader2 class="animate-spin mb-4" size={48}/>
+        <p class="text-xl font-medium">Loading Todolist...</p>
+        <p class="text-sm text-white/70">Please wait a moment.</p>
+    </div>
+{/if}
