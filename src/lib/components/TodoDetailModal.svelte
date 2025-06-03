@@ -429,7 +429,7 @@
 			</div>
 		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
-			Status: {todo.status === "Done" ? "Completed" : "Pending"}
+			Status: {todo.status}
 		</p>
 		{#if isEditingDescription}
 			<div class="mb-4" bind:this={descriptionEditorWrapper}>
