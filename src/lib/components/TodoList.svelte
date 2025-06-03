@@ -398,11 +398,15 @@
 
     async function setupRealtimeSubscription(currentListId: string) {
         try {
-            for (const sub of subscription) { await sub.unsubscribe(); }
+            for (const sub of subscription) { await sub.unsubscribe().catch(err => console.warn("[TodoList] Failed to unsubscribe from existing channel:", err)); }
             subscription = [];
 
+            const uniqueSuffix = Date.now(); // Add unique suffix to channel names
+            const todosChannelName = `todos-changes-${currentListId}-${uniqueSuffix}`;
+            const listsChannelName = `lists-changes-${currentListId}-${uniqueSuffix}`;
+
             const todosChannel =
-				supabase.channel(`todos-changes-${currentListId}`)
+				supabase.channel(todosChannelName)
                 .on(
                 	'postgres_changes',
                     {
@@ -419,7 +423,7 @@
                 );
 
             const listsChannel =
-				supabase.channel(`lists-changes-${currentListId}`)
+				supabase.channel(listsChannelName)
                 .on(
                 	'postgres_changes',
                     {
@@ -450,6 +454,18 @@
     async function initializeList(currentListId: string) {
         if (!currentListId) return;
 
+        // Unsubscribe from old list's realtime updates if subscriptions exist and listId is changing
+        if (subscription.length > 0 && previousListId && previousListId !== currentListId) {
+            for (const sub of subscription) {
+                try {
+                    await sub.unsubscribe();
+                } catch (err) {
+                    console.warn("Failed to unsubscribe from old list:", err);
+                }
+            }
+            subscription = []; // Reset subscriptions
+        }
+
         todosStore.setLoading(true);
         listStore.setLoading(true);
 
@@ -457,6 +473,9 @@
             listStore.initialize(currentListId),
             todosStore.load(currentListId),
         ]);
+        
+        // Always set up new subscriptions for the current list after loading its data
+        // setupRealtimeSubscription handles its own channel creation/subscription logic
         await setupRealtimeSubscription(currentListId);
 
         todosStore.setLoading(false);
@@ -483,14 +502,16 @@
     onMount(async () => {
         isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         if (listId) {
-            previousListId = listId;
+            // previousListId = listId; // No longer set here, will be set by reactive block after first init
             await initializeList(listId);
+            previousListId = listId; // Set after the very first initialization
         }
     });
 
     $: if (browser && listId && listId !== previousListId) {
-        previousListId = listId;
-        initializeList(listId);
+        initializeList(listId).then(() => {
+            previousListId = listId; // Update previousListId AFTER initialization for the new list completes
+        });
     }
 
     // Reactive block to update document.title based on the current list's title
@@ -761,109 +782,56 @@
             </div>
         {:else}
             <ScrollArea class="h-[50rem]" scrollColorClass="bg-white/20">
-                {#if workingDndItems.length > 0}
-                    <div class="my-4">
-                        <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingDndItems.length})</h3>
-                        <div
-                            class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
-                            style="overflow-y: auto;"
-                            id="working-todos"
-                            use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                            on:consider={handleDndConsiderWorking}
-                            on:finalize={handleDndFinalizeWorking}
-                        >
-                            {#each workingDndItems as todo (todo.id)}
-                                {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
-                                <div
-                                    id={`todo-item-${todo.id}`}
-                                    class:dnd-item={$sortBy === 'order'}
-                                    class:primed-for-drag={isPrimed}
-                                    animate:flip={{duration: 250}}
-                                    on:touchstart|passive={e => handleTouchStart(e, todo)}
-                                    on:touchmove|passive={handleTouchMove}
-                                    on:touchend={handleTouchEnd}
-                                >
-                                    <TodoItem
-                                        isCompleted={false}
-                                        isPrimedForDrag={isPrimed}
-                                        onDelete={() => todosStore.delete(todo)}
-                                        onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                        onToggle={() => todosStore.toggle(todo)}
-                                        onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                        onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                        onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                        searchQuery={searchQuery}
-                                        {todo}
-                                    />
-                                </div>
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
-
-                <div
-                    class="space-y-2 p-3"
-                    style="overflow-y: auto;"
-                    id="active-todos"
-                    use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                    on:consider={handleDndConsiderActive}
-                    on:finalize={handleDndFinalizeActive}
-                >
-                    {#each activeDndItems as todo (todo.id)}
-                        {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
-                        <div
-							id={`todo-item-${todo.id}`}
-                            class:dnd-item={$sortBy === 'order'}
-                            class:primed-for-drag={isPrimed}
-                            animate:flip={{duration: 250}}
-                            on:touchstart|passive={e => handleTouchStart(e, todo)}
-                            on:touchmove|passive={handleTouchMove}
-                            on:touchend={handleTouchEnd}
-                        >
-                            <TodoItem
-                                isCompleted={false}
-                                isPrimedForDrag={isPrimed}
-                                onDelete={() => todosStore.delete(todo)}
-                                onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                onToggle={() => todosStore.toggle(todo)}
-                                onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                searchQuery={searchQuery}
-                                {todo}
-                            />
-                        </div>
-                    {/each}
-                </div>
-
-                {#if completedDndItems.length > 0}
-                    <div class="my-6 border-t border-white/30"/>
-
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
-                        {#if completedDndItems.length > 0}
-                            <Button
-                                variant="icon"
-                                icon={true}
-                                onClick={openDeleteDialog}
-                                ariaLabel="Delete all completed tasks"
-                                title="Delete all completed tasks"
-                                class="hover:text-red-500 transition-colors"
+                {#key listId}
+                    {#if workingDndItems.length > 0}
+                        <div class="my-4">
+                            <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingDndItems.length})</h3>
+                            <div
+                                class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
+                                style="overflow-y: auto;"
+                                id="working-todos"
+                                use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                                on:consider={handleDndConsiderWorking}
+                                on:finalize={handleDndFinalizeWorking}
                             >
-                                <Trash2 size={20}/>
-                            </Button>
-                        {/if}
-                    </div>
+                                {#each workingDndItems as todo (todo.id)}
+                                    {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                    <div
+                                        id={`todo-item-${todo.id}`}
+                                        class:dnd-item={$sortBy === 'order'}
+                                        class:primed-for-drag={isPrimed}
+                                        animate:flip={{duration: 250}}
+                                        on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                        on:touchmove|passive={handleTouchMove}
+                                        on:touchend={handleTouchEnd}
+                                    >
+                                        <TodoItem
+                                            isCompleted={false}
+                                            isPrimedForDrag={isPrimed}
+                                            onDelete={() => todosStore.delete(todo)}
+                                            onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                            onToggle={() => todosStore.toggle(todo)}
+                                            onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                            onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                            onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                            searchQuery={searchQuery}
+                                            {todo}
+                                        />
+                                    </div>
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
 
                     <div
-                        class="space-y-2"
+                        class="space-y-2 p-3"
                         style="overflow-y: auto;"
-                        id="completed-todos"
-                        use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                        on:consider={handleDndConsiderCompleted}
-                        on:finalize={handleDndFinalizeCompleted}
+                        id="active-todos"
+                        use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                        on:consider={handleDndConsiderActive}
+                        on:finalize={handleDndFinalizeActive}
                     >
-                        {#each completedDndItems as todo (todo.id)}
+                        {#each activeDndItems as todo (todo.id)}
                             {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
                             <div
 								id={`todo-item-${todo.id}`}
@@ -875,7 +843,7 @@
                                 on:touchend={handleTouchEnd}
                             >
                                 <TodoItem
-                                    isCompleted={true}
+                                    isCompleted={false}
                                     isPrimedForDrag={isPrimed}
                                     onDelete={() => todosStore.delete(todo)}
                                     onOpenDetails={(item) => handleOpenTodoDetails(item)}
@@ -889,7 +857,62 @@
                             </div>
                         {/each}
                     </div>
-                {/if}
+
+                    {#if completedDndItems.length > 0}
+                        <div class="my-6 border-t border-white/30"/>
+
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
+                            {#if completedDndItems.length > 0}
+                                <Button
+                                    variant="icon"
+                                    icon={true}
+                                    onClick={openDeleteDialog}
+                                    ariaLabel="Delete all completed tasks"
+                                    title="Delete all completed tasks"
+                                    class="hover:text-red-500 transition-colors"
+                                >
+                                    <Trash2 size={20}/>
+                                </Button>
+                            {/if}
+                        </div>
+
+                        <div
+                            class="space-y-2"
+                            style="overflow-y: auto;"
+                            id="completed-todos"
+                            use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                            on:consider={handleDndConsiderCompleted}
+                            on:finalize={handleDndFinalizeCompleted}
+                        >
+                            {#each completedDndItems as todo (todo.id)}
+                                {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                <div
+									id={`todo-item-${todo.id}`}
+                                    class:dnd-item={$sortBy === 'order'}
+                                    class:primed-for-drag={isPrimed}
+                                    animate:flip={{duration: 250}}
+                                    on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                    on:touchmove|passive={handleTouchMove}
+                                    on:touchend={handleTouchEnd}
+                                >
+                                    <TodoItem
+                                        isCompleted={true}
+                                        isPrimedForDrag={isPrimed}
+                                        onDelete={() => todosStore.delete(todo)}
+                                        onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                        onToggle={() => todosStore.toggle(todo)}
+                                        onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                        onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                        onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                        searchQuery={searchQuery}
+                                        {todo}
+                                    />
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
+                {/key}
             </ScrollArea>
         {/if}
     </Card>
