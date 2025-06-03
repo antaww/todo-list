@@ -486,22 +486,24 @@
         todosStore.setLoading(false);
         listStore.setLoading(false);
 
-        isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // isTouchDevice is now initialized in onMount only
 
-		const urlParams = new URLSearchParams(window.location.search);
-		const taskIdFromUrl = urlParams.get('task_id');
+		if (browser) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const taskIdFromUrl = urlParams.get('task_id');
 
-		if (taskIdFromUrl) {
-			const todoToOpen = $todosStore.items.find(t => t.id === taskIdFromUrl);
-			if (todoToOpen) {
-				openTodoDetailModal(todoToOpen);
-				await tick();
-				const element = document.getElementById(`todo-item-${taskIdFromUrl}`);
-				if (element) {
-					element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				}
-			}
-		}
+            if (taskIdFromUrl) {
+                const todoToOpen = $todosStore.items.find(t => t.id === taskIdFromUrl);
+                if (todoToOpen) {
+                    openTodoDetailModal(todoToOpen);
+                    await tick();
+                    const element = document.getElementById(`todo-item-${taskIdFromUrl}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        }
     }
 
     onMount(async () => {
@@ -624,7 +626,9 @@
                 },
             });
 
-            window.location.href = '/';
+            if (browser) {
+                window.location.href = '/';
+            }
 
         } catch (error) {
             console.error('Failed to delete list:', error);
