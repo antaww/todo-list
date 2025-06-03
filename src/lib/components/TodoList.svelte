@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {RealtimeChannel} from '@supabase/supabase-js';
-    import {Copy, FoldHorizontal, Loader2, Trash2, UnfoldHorizontal} from 'lucide-svelte';
+    import {Copy, FoldHorizontal, Loader2, Trash2, UnfoldHorizontal, ChevronsRight, List, CheckCircle2} from 'lucide-svelte';
     import {onDestroy, onMount, tick} from 'svelte';
     import {dragHandleZone} from 'svelte-dnd-action';
     import {flip} from 'svelte/animate';
@@ -787,31 +787,34 @@
 
         <div class="flex border-b border-white/20 mb-4">
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Working' ? 'border-orange-400 text-orange-400' :
-                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                    'border-transparent text-orange-400/60 hover:text-orange-400 hover:border-orange-400/50'
                 }"
                 on:click={() => currentTab = 'Working'}
             >
-                In Progress ({workingTodos.length})
+                <ChevronsRight size={18} />
+                <span>In Progress ({workingTodos.length})</span>
             </button>
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Todo' ? 'border-blue-400 text-blue-400' :
-                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                    'border-transparent text-blue-400/60 hover:text-blue-400 hover:border-blue-400/50'
                 }"
                 on:click={() => currentTab = 'Todo'}
             >
-                To Do ({activeTodos.length})
+                <List size={18} />
+                <span>To Do ({activeTodos.length})</span>
             </button>
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none {
+                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Done' ? 'border-green-400 text-green-400' :
-                    'border-transparent text-white/70 hover:text-white hover:border-white/50'
+                    'border-transparent text-green-400/60 hover:text-green-400 hover:border-green-400/50'
                 }"
                 on:click={() => currentTab = 'Done'}
             >
-                Completed ({completedTodos.length})
+                <CheckCircle2 size={18} />
+                <span>Completed ({completedTodos.length})</span>
             </button>
         </div>
 
