@@ -10,6 +10,7 @@ export interface Todo {
 	description?: string;
 	order?: number;
 	assigned_to?: string;
+	priority?: number;
 }
 
 export interface List {

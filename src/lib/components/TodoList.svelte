@@ -723,6 +723,11 @@
 			});
 		}
 	}
+
+	function handleUpdatePriority({ todo, priority }: { todo: Todo; priority: number }) {
+		todosStore.updatePriority(todo, priority);
+		// Toast notification is handled within the store method
+	}
 </script>
 
 <div class="min-h-[92svh] max-h-[92svh] p-4 sm:p-4 {$displayStore ? 'sm:max-w-[80vw]' : 'sm:max-w-2xl'} mx-auto lg:p-4 pt-16 sm:pt-20 lg:pt-4 transition-all duration-300 relative flex flex-col">
@@ -972,6 +977,7 @@
         onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
         onToggle={(item) => todosStore.toggle(item)}
         onUpdateAssignedTo={handleUpdateAssignedTo}
+        onUpdatePriority={handleUpdatePriority}
         todo={selectedTodoForModal}
     />
 {/if}

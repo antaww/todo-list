@@ -505,6 +505,47 @@ function createTodosStore() {
 			}
 		},
 
+		updatePriority: async (todo: Todo, newPriority: number) => {
+			const oldPriority = todo.priority;
+			const updateStartTime = Date.now();
+			lastUpdateTime = updateStartTime;
+
+			// Optimistic update
+			update(state => ({
+				...state,
+				items: state.items.map((t: Todo) =>
+					t.id === todo.id ? { ...t, priority: newPriority } : t
+				)
+			}));
+
+			try {
+				const { error: supabaseError } = await supabase
+					.from("todos")
+					.update({ priority: newPriority })
+					.eq("id", todo.id);
+
+				if (supabaseError) throw supabaseError;
+
+				addToast({
+					data: {
+						title: 'Priority Updated',
+						description: `Task "${todo.title.substring(0, 30)}${todo.title.length > 30 ? '...' : ''}" priority set.`,
+						type: 'success'
+					}
+				});
+			} catch (e) {
+				if (lastUpdateTime === updateStartTime) {
+					update(state => ({
+						...state,
+						items: state.items.map((t: Todo) =>
+							t.id === todo.id ? { ...t, priority: oldPriority } : t // Revert on error
+						),
+						error: "Failed to update todo priority"
+					}));
+				}
+			}
+		},
+
 		move: async (todo: Todo, direction: "up" | "down") => {
 			if (isMoving) return;
 			isMoving = true;

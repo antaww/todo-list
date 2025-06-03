@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-	import type { Todo } from '$lib/types';
-	import Button from '@components/ui/Button.svelte';
-	import Checkbox from '@components/ui/Checkbox.svelte';
-	import DifficultyStars from '@components/DifficultyStars.svelte';
-	import { Edit2, Save, Share2, X } from 'lucide-svelte';
-	import Dialog from '@components/ui/Dialog.svelte';
-	import Input from '@components/ui/Input.svelte';
-	import Markdown from '@components/ui/Markdown.svelte';
-	import { tick, onMount, onDestroy } from 'svelte';
-	import type { SvelteComponent } from 'svelte';
+	import { fade } from "svelte/transition";
+	import type { Todo } from "$lib/types";
+	import Button from "@components/ui/Button.svelte";
+	import Checkbox from "@components/ui/Checkbox.svelte";
+	import DifficultyStars from "@components/DifficultyStars.svelte";
+	import { Edit2, Save, Share2, X, ZapOff, ChevronUp, ChevronsUp, Flame, ChevronDown } from "lucide-svelte";
+	import Dialog from "@components/ui/Dialog.svelte";
+	import Input from "@components/ui/Input.svelte";
+	import Markdown from "@components/ui/Markdown.svelte";
+	import { tick, onMount, onDestroy } from "svelte";
+	import type { SvelteComponent } from "svelte";
 
-	import { Carta, MarkdownEditor } from 'carta-md';
-	import 'carta-md/default.css';
-	import { code } from '@cartamd/plugin-code';
-	import '@cartamd/plugin-code/default.css';
-	import DOMPurify from 'isomorphic-dompurify';
+	import { Carta, MarkdownEditor } from "carta-md";
+	import "carta-md/default.css";
+	import { code } from "@cartamd/plugin-code";
+	import "@cartamd/plugin-code/default.css";
+	import DOMPurify from "isomorphic-dompurify";
 
 	export let isOpen = false;
 	export let todo: Todo | null = null;
@@ -26,35 +26,47 @@
 	export let onUpdateDifficulty: ((detail: { todo: Todo; difficulty: number }) => void) | undefined = undefined;
 	export let onUpdateTitle: ((detail: { todo: Todo; title: string }) => void) | undefined = undefined;
 	export let onUpdateAssignedTo: ((detail: { todo: Todo; assignedTo: string }) => void) | undefined = undefined;
+	export let onUpdatePriority: ((detail: { todo: Todo; priority: number }) => void) | undefined = undefined;
 	export let onToggle: ((item: Todo) => void) | undefined = undefined;
 
 	let showCopyTooltip = false;
-	let tooltipMessage = '';
+	let tooltipMessage = "";
 	let tooltipTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	let isEditingTitle = false;
-	let editableTitle = '';
-	let titleInputInstance: SvelteComponent & { focus: () => void; } | null = null;
+	let editableTitle = "";
+	let titleInputInstance: (SvelteComponent & { focus: () => void }) | null = null;
 
 	let isEditingDescription = false;
-	let editableDescription = '';
+	let editableDescription = "";
 	let descriptionEditorWrapper: HTMLDivElement;
 
 	let isEditingAssignedTo = false;
-	let editableAssignedTo = '';
-	let assignedToInputInstance: SvelteComponent & { focus: () => void; } | null = null;
+	let editableAssignedTo = "";
+	let assignedToInputInstance: (SvelteComponent & { focus: () => void }) | null = null;
+
+	let showPrioritySelect = false;
+	let displayDifficulty: number = 0;
+
+	const priorityLevels = [
+		{ text: "Anytime", icon: ZapOff, colorClass: "text-green-500 dark:text-green-400", title: "Priority: Anytime" },
+		{ text: "Need it", icon: ChevronUp, colorClass: "text-yellow-500 dark:text-yellow-400", title: "Priority: Need it" },
+		{ text: "Fast", icon: ChevronsUp, colorClass: "text-orange-500 dark:text-orange-400", title: "Priority: Fast" },
+		{ text: "Critic", icon: Flame, colorClass: "text-red-500 dark:text-red-400", title: "Priority: Critic" },
+	];
 
 	// Logic for checkbox state and toggling, reflecting todo.status
-	let internalStatusIsDone = todo?.status === 'Done';
+	let internalStatusIsDone = todo?.status === "Done";
 	let previousStatusIsDone = internalStatusIsDone; // Initialize previous with the current state
 
 	// Update internalStatusIsDone when the todo prop changes (e.g., from store update or new todo in modal)
 	// This ensures the checkbox reflects the true state of the todo item.
 	$: if (todo) {
+		displayDifficulty = todo.difficulty ?? 0;
 		// Update previousStatusIsDone *before* internalStatusIsDone is potentially changed by the new todo prop.
 		// This is crucial to prevent onToggle from firing just because the todo prop changed.
 		previousStatusIsDone = internalStatusIsDone;
-		internalStatusIsDone = todo.status === 'Done';
+		internalStatusIsDone = todo.status === "Done";
 		// After internalStatusIsDone reflects the new todo.status, update previousStatusIsDone again
 		// so that the next actual user interaction with the checkbox is compared against the correct previous state.
 		previousStatusIsDone = internalStatusIsDone;
@@ -77,15 +89,15 @@
 	$: {
 		if (isEditingDescription) {
 			tick().then(() => {
-				document.addEventListener('click', handleClickOutsideDescription, true);
+				document.addEventListener("click", handleClickOutsideDescription, true);
 			});
 		} else {
-			document.removeEventListener('click', handleClickOutsideDescription, true);
+			document.removeEventListener("click", handleClickOutsideDescription, true);
 		}
 	}
 
 	onDestroy(() => {
-		document.removeEventListener('click', handleClickOutsideDescription, true);
+		document.removeEventListener("click", handleClickOutsideDescription, true);
 	});
 
 	$: if (todo && !isEditingTitle) {
@@ -93,7 +105,7 @@
 	}
 
 	$: if (todo && !isEditingAssignedTo) {
-		editableAssignedTo = todo.assigned_to || '';
+		editableAssignedTo = todo.assigned_to || "";
 	}
 
 	$: if (isEditingTitle && todo) {
@@ -103,7 +115,7 @@
 	}
 
 	$: if (todo && !isEditingDescription) {
-		editableDescription = todo.description || '';
+		editableDescription = todo.description || "";
 	}
 
 	$: if (isEditingAssignedTo && todo) {
@@ -115,7 +127,7 @@
 	const carta = new Carta({
 		sanitizer: DOMPurify.sanitize,
 		extensions: [code()],
-		theme: 'github-dark'
+		theme: "github-dark",
 	});
 
 	function requestClose() {
@@ -130,8 +142,8 @@
 	function formatDate(dateString: string) {
 		const date = new Date(dateString);
 		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
 		return `${year}/${month}/${day}`;
 	}
 
@@ -162,10 +174,10 @@
 	}
 
 	function handleTitleInputKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
+		if (event.key === "Enter") {
 			event.preventDefault();
 			handleSaveTitle();
-		} else if (event.key === 'Escape') {
+		} else if (event.key === "Escape") {
 			event.preventDefault();
 			handleCancelEditTitle();
 		}
@@ -173,20 +185,20 @@
 
 	function handleEditDescription() {
 		if (!todo) return;
-		editableDescription = todo.description || '';
+		editableDescription = todo.description || "";
 		isEditingDescription = true;
 	}
 
 	function handleCancelEditDescription() {
 		isEditingDescription = false;
 		if (todo) {
-			editableDescription = todo.description || '';
+			editableDescription = todo.description || "";
 		}
 	}
 
 	function handleSaveDescription() {
 		if (todo && onUpdateDescription) {
-			if (editableDescription.trim() !== (todo.description || '').trim()) {
+			if (editableDescription.trim() !== (todo.description || "").trim()) {
 				onUpdateDescription({ todo, description: editableDescription.trim() });
 			}
 		}
@@ -196,21 +208,21 @@
 	function handleEditAssignedTo(event?: MouseEvent) {
 		if (event) event.stopPropagation(); // Prevent click on parent div from re-triggering
 		if (!todo) return;
-		editableAssignedTo = todo.assigned_to || '';
+		editableAssignedTo = todo.assigned_to || "";
 		isEditingAssignedTo = true;
 	}
 
 	function handleCancelEditAssignedTo() {
 		isEditingAssignedTo = false;
 		if (todo) {
-			editableAssignedTo = todo.assigned_to || '';
+			editableAssignedTo = todo.assigned_to || "";
 		}
 	}
 
 	function handleSaveAssignedTo() {
 		if (todo && onUpdateAssignedTo) {
 			const newAssignedTo = editableAssignedTo.trim();
-			if (newAssignedTo !== (todo.assigned_to || '').trim()) {
+			if (newAssignedTo !== (todo.assigned_to || "").trim()) {
 				onUpdateAssignedTo({ todo, assignedTo: newAssignedTo });
 			}
 		}
@@ -218,10 +230,10 @@
 	}
 
 	function handleAssignedToInputKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
+		if (event.key === "Enter") {
 			event.preventDefault();
 			handleSaveAssignedTo();
-		} else if (event.key === 'Escape') {
+		} else if (event.key === "Escape") {
 			event.preventDefault();
 			handleCancelEditAssignedTo();
 		}
@@ -231,10 +243,10 @@
 		if (!todo) return;
 		try {
 			await navigator.clipboard.writeText(window.location.href);
-			tooltipMessage = 'Copied!';
+			tooltipMessage = "Copied!";
 		} catch (err) {
-			console.error('Failed to copy link:', err);
-			tooltipMessage = 'Failed to copy!';
+			console.error("Failed to copy link:", err);
+			tooltipMessage = "Failed to copy!";
 		}
 		showCopyTooltip = true;
 		if (tooltipTimeout) {
@@ -244,16 +256,42 @@
 			showCopyTooltip = false;
 		}, 2000);
 	}
+
+	function handlePrioritySelect(priority: number) {
+		if (todo && onUpdatePriority) {
+			onUpdatePriority({ todo, priority });
+		}
+		showPrioritySelect = false;
+	}
+
+	function handleClickOutsidePriority(event: MouseEvent) {
+		if (
+			showPrioritySelect &&
+			event.target &&
+			!(event.target as HTMLElement).closest(".priority-select-trigger") &&
+			!(event.target as HTMLElement).closest(".priority-select-dropdown")
+		) {
+			showPrioritySelect = false;
+		}
+	}
+
+	$: {
+		if (showPrioritySelect) {
+			tick().then(() => {
+				document.addEventListener("click", handleClickOutsidePriority, true);
+			});
+		} else {
+			document.removeEventListener("click", handleClickOutsidePriority, true);
+		}
+	}
+
+	onDestroy(() => {
+		document.removeEventListener("click", handleClickOutsideDescription, true);
+		document.removeEventListener("click", handleClickOutsidePriority, true);
+	});
 </script>
 
-<Dialog
-	open={isOpen && !!todo}
-	onCancel={requestClose}
-	showCloseButton={true}
-	confirmLabel=""
-	cancelLabel=""
-	size="large"
->
+<Dialog open={isOpen && !!todo} onCancel={requestClose} showCloseButton={true} confirmLabel="" cancelLabel="" size="large">
 	<div slot="title" class="w-full mr-3 relative">
 		{#if todo}
 			<div class="flex items-center gap-3">
@@ -268,7 +306,14 @@
 						onKeydown={handleTitleInputKeydown}
 					/>
 				{:else}
-					<h2 class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.status === 'Done' ? 'line-through text-white/60 dark:text-dark-gray-400' : ''}" on:click={handleEditTitle}>{todo?.title}</h2>
+					<h2
+						class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.status === 'Done'
+							? 'line-through text-white/60 dark:text-dark-gray-400'
+							: ''}"
+						on:click={handleEditTitle}
+					>
+						{todo?.title}
+					</h2>
 				{/if}
 			</div>
 		{/if}
@@ -277,7 +322,53 @@
 	{#if todo}
 		{#if todo.difficulty !== undefined}
 			<div class="mb-3">
-				<DifficultyStars difficulty={todo.difficulty} interactive={true} onUpdate={handleUpdateDifficulty} size={20} />
+				<DifficultyStars difficulty={displayDifficulty} interactive={true} onUpdate={handleUpdateDifficulty} size={20} />
+			</div>
+		{/if}
+		<div class="flex items-center gap-2 mb-3">
+			<span class="text-sm text-gray-400">Priority:</span>
+			{#if todo.priority !== undefined && todo.priority !== null && todo.priority >= 0 && todo.priority <= 3}
+				{@const level = priorityLevels[todo.priority]}
+				<button
+					class="flex items-center gap-1.5 p-1 -ml-1 rounded hover:bg-white/10 dark:hover:bg-dark-gray-100 transition priority-select-trigger {level.colorClass}"
+					on:click={() => (showPrioritySelect = !showPrioritySelect)}
+					title={level.title}
+				>
+					<svelte:component this={level.icon} size={18} />
+					<span class="text-sm">{level.text}</span>
+					<ChevronDown size={16} class="transition-transform {showPrioritySelect ? 'rotate-180' : ''}" />
+				</button>
+			{:else}
+				<button
+					class="flex items-center gap-1.5 p-1 -ml-1 rounded hover:bg-white/10 dark:hover:bg-dark-gray-100 transition text-gray-500 dark:text-dark-gray-300 priority-select-trigger"
+					on:click={() => (showPrioritySelect = !showPrioritySelect)}
+					title="Set Priority"
+				>
+					<ZapOff size={18} />
+					<span class="text-sm">Set Priority</span>
+					<ChevronDown size={16} class="transition-transform {showPrioritySelect ? 'rotate-180' : ''}" />
+				</button>
+			{/if}
+		</div>
+		{#if showPrioritySelect}
+			<div class="flex items-center gap-2 relative">
+				<div
+					transition:fade={{ duration: 150 }}
+					class="absolute top-full left-0 mt-1.5 w-48 bg-white/20 dark:bg-black backdrop-blur-md border border-white/30 dark:border-dark-gray-300 rounded-lg shadow-xl z-10 p-1 priority-select-dropdown"
+				>
+					{#each priorityLevels as level, index}
+						<button
+							class="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-white/20 dark:hover:bg-dark-gray-200 transition {level.colorClass} {todo.priority ===
+							index
+								? 'bg-white/10 dark:bg-dark-gray-100 font-semibold'
+								: ''}"
+							on:click={() => handlePrioritySelect(index)}
+						>
+							<svelte:component this={level.icon} size={16} />
+							<span>{level.text}</span>
+						</button>
+					{/each}
+				</div>
 			</div>
 		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
@@ -303,24 +394,42 @@
 						<Save size={16} />
 					</Button>
 				{:else}
-					<span class="cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors" on:click={() => handleEditAssignedTo()} title="Edit assigned person">
-						{todo.assigned_to || 'Nobody assigned.'}
+					<span
+						class="cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors"
+						on:click={() => handleEditAssignedTo()}
+						title="Edit assigned person"
+					>
+						{todo.assigned_to || "Nobody assigned."}
 					</span>
-					<Button variant="icon" onClick={(e) => handleEditAssignedTo(e)} title="Edit assigned person" class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity">
+					<Button
+						variant="icon"
+						onClick={(e) => handleEditAssignedTo(e)}
+						title="Edit assigned person"
+						class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity"
+					>
 						<Edit2 size={14} />
 					</Button>
 				{/if}
 			</div>
 		{:else}
-			<div class="text-sm text-white/70 dark:text-dark-gray-300 mb-2 flex items-center group/assigned cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors" on:click={() => handleEditAssignedTo()} title="Assign to someone">
+			<div
+				class="text-sm text-white/70 dark:text-dark-gray-300 mb-2 flex items-center group/assigned cursor-pointer hover:text-white dark:hover:text-dark-foreground transition-colors"
+				on:click={() => handleEditAssignedTo()}
+				title="Assign to someone"
+			>
 				Assigned to: Nobody assigned.
-				<Button variant="icon" onClick={(e) => handleEditAssignedTo(e)} title="Assign to someone" class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity">
+				<Button
+					variant="icon"
+					onClick={(e) => handleEditAssignedTo(e)}
+					title="Assign to someone"
+					class="p-1 ml-1 opacity-0 group-hover/assigned:opacity-100 transition-opacity"
+				>
 					<Edit2 size={14} />
 				</Button>
 			</div>
 		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-4">
-			Status: {todo.status === 'Done' ? 'Completed' : 'Pending'}
+			Status: {todo.status === "Done" ? "Completed" : "Pending"}
 		</p>
 		{#if isEditingDescription}
 			<div class="mb-4" bind:this={descriptionEditorWrapper}>
@@ -331,32 +440,51 @@
 					<MarkdownEditor bind:value={editableDescription} {carta} placeholder="Enter task description (Markdown supported)" />
 				</div>
 				<div class="mt-3 flex justify-end gap-2">
-					<Button variant="icon" onClick={handleCancelEditDescription} title="Cancel" class="border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100">
-						<X size={16} class="mr-1 sm:mr-2"/> Cancel
+					<Button
+						variant="icon"
+						onClick={handleCancelEditDescription}
+						title="Cancel"
+						class="border border-white/30 hover:bg-white/20 dark:hover:bg-dark-gray-100"
+					>
+						<X size={16} class="mr-1 sm:mr-2" /> Cancel
 					</Button>
-					<Button variant="primary" onClick={handleSaveDescription} title="Save description" class="bg-green-500/80 hover:bg-green-600/90 border-green-500/30">
-						<Save size={16} class="mr-1 sm:mr-2"/> Save
+					<Button
+						variant="primary"
+						onClick={handleSaveDescription}
+						title="Save description"
+						class="bg-green-500/80 hover:bg-green-600/90 border-green-500/30"
+					>
+						<Save size={16} class="mr-1 sm:mr-2" /> Save
 					</Button>
 				</div>
 			</div>
 		{:else if todo.description}
-			<div class="mb-4" in:fade={{duration: 150}}>
+			<div class="mb-4" in:fade={{ duration: 150 }}>
 				<h3 class="text-md font-semibold text-white dark:text-dark-foreground mb-1 flex items-center justify-between">
 					Description
 					<Button variant="icon" onClick={handleEditDescription} title="Edit description" class="p-1">
 						<Edit2 size={16} />
 					</Button>
 				</h3>
-				<div class="cursor-pointer hover:bg-black/10 dark:hover:bg-dark-gray-800/30 transition-all duration-150 p-0.5 rounded-lg min-h-[40px]"
-				     on:click={handleEditDescription} title="Edit description">
+				<div
+					class="cursor-pointer hover:bg-black/10 dark:hover:bg-dark-gray-800/30 transition-all duration-150 p-0.5 rounded-lg min-h-[40px]"
+					on:click={handleEditDescription}
+					title="Edit description"
+				>
 					<Markdown content={todo.description} />
 				</div>
 			</div>
 		{:else}
-			<div class="mb-4 py-3 px-2 -mx-2 rounded-md hover:bg-white/5 dark:hover:bg-dark-gray-700/40 transition-colors duration-150 cursor-pointer group/add-desc"
-			     on:click={handleEditDescription} title="Add description" in:fade={{duration: 150}}>
-				<div class="flex items-center text-white/60 dark:text-dark-gray-400 group-hover/add-desc:text-white dark:group-hover/add-desc:text-dark-foreground transition-colors">
-					<Edit2 size={18} class="mr-2.5 flex-shrink-0"/>
+			<div
+				class="mb-4 py-3 px-2 -mx-2 rounded-md hover:bg-white/5 dark:hover:bg-dark-gray-700/40 transition-colors duration-150 cursor-pointer group/add-desc"
+				on:click={handleEditDescription}
+				title="Add description"
+				in:fade={{ duration: 150 }}
+			>
+				<div
+					class="flex items-center text-white/60 dark:text-dark-gray-400 group-hover/add-desc:text-white dark:group-hover/add-desc:text-dark-foreground transition-colors"
+				>
+					<Edit2 size={18} class="mr-2.5 flex-shrink-0" />
 					<span class="text-sm font-medium">Add a description for this task</span>
 				</div>
 			</div>
@@ -370,7 +498,10 @@
 					<Share2 size={18} />
 				</Button>
 				{#if showCopyTooltip}
-					<div transition:fade={{duration: 150}} class="absolute left-full ml-2 px-2 py-1 bg-gray-700 text-white text-xs rounded shadow-lg">
+					<div
+						transition:fade={{ duration: 150 }}
+						class="absolute left-full ml-2 px-2 py-1 bg-gray-700 text-white text-xs rounded shadow-lg"
+					>
 						{tooltipMessage}
 					</div>
 				{/if}
@@ -380,5 +511,4 @@
 </Dialog>
 
 <style>
-  
 </style>

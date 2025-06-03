@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen, Clock, PauseCircle, PlayCircle} from 'lucide-svelte';
+	import {Edit2, GripVertical, Trash2, Eye, FileText, NotebookPen, Clock, PauseCircle, PlayCircle, ZapOff, ChevronUp, ChevronsUp, Flame} from 'lucide-svelte';
 	import {tick} from 'svelte';
 	import {dragHandle} from 'svelte-dnd-action';
 	import Checkbox from '@components/ui/Checkbox.svelte';
@@ -105,6 +105,13 @@
 	function handleUpdateDifficulty(newDifficulty: number) {
 		onUpdateDifficulty({ todo, difficulty: newDifficulty });
 	}
+
+	const priorityLevels = [
+		{ text: 'Anytime', icon: ZapOff, colorClass: 'text-green-500 dark:text-green-400', title: 'Priority: Anytime' },
+		{ text: 'Need it', icon: ChevronUp, colorClass: 'text-yellow-500 dark:text-yellow-400', title: 'Priority: Need it' },
+		{ text: 'Fast', icon: ChevronsUp, colorClass: 'text-orange-500 dark:text-orange-400', title: 'Priority: Fast' },
+		{ text: 'Critic', icon: Flame, colorClass: 'text-red-500 dark:text-red-400', title: 'Priority: Critic' }
+	];
 </script>
 
 <Card
@@ -166,7 +173,7 @@
 						</div>
 					{/if}
 					{#if todo.assigned_to}
-						<span class="text-xs text-white/70 dark:text-dark-gray-300 ml-1 truncate" title={todo.assigned_to}>
+						<span class="text-xs text-white/70 dark:text-dark-gray-300 truncate" title={todo.assigned_to}>
 							(@{todo.assigned_to})
 						</span>
 					{/if}
@@ -188,6 +195,14 @@
 							<NotebookPen size={14} class="sm:hidden" />
 							<NotebookPen size={16} class="hidden sm:block" />
 						</button>
+					{/if}
+					{#if todo.priority !== undefined && todo.priority !== null && todo.priority >= 0 && todo.priority <= 3}
+						{@const level = priorityLevels[todo.priority]}
+						<div class="flex items-center ml-0.5 {level.colorClass}" title={level.title}>
+							<svelte:component this={level.icon} size={14} class="sm:hidden" />
+							<svelte:component this={level.icon} size={16} class="hidden sm:block" />
+							<span class="text-xs ml-0.5 hidden sm:inline">{level.text}</span>
+						</div>
 					{/if}
 				</div>
 			</span>
