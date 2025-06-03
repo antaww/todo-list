@@ -823,45 +823,53 @@
                         </div>
                     {/if}
 
-                    <div
-                        class="space-y-2 p-3"
-                        style="overflow-y: auto;"
-                        id="active-todos"
-                        use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
-                        on:consider={handleDndConsiderActive}
-                        on:finalize={handleDndFinalizeActive}
-                    >
-                        {#each activeDndItems as todo (todo.id)}
-                            {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                    {#if activeDndItems.length > 0 || (workingDndItems.length === 0 && completedDndItems.length === 0)}
+                        {#if workingDndItems.length > 0}
+                            <div class="my-6 border-t border-white/30"/>
+                        {/if}
+                        <div class="my-4">
+                            <h3 class="text-white/80 text-sm font-medium mb-2 px-1">To Do ({activeDndItems.length})</h3>
                             <div
-								id={`todo-item-${todo.id}`}
-                                class:dnd-item={$sortBy === 'order'}
-                                class:primed-for-drag={isPrimed}
-                                animate:flip={{duration: 250}}
-                                on:touchstart|passive={e => handleTouchStart(e, todo)}
-                                on:touchmove|passive={handleTouchMove}
-                                on:touchend={handleTouchEnd}
+                                class="space-y-2 p-3 {activeDndItems.length > 0 ? 'border border-gray-300/30 rounded-md bg-gray-300/5' : ''}"
+                                style="overflow-y: auto;"
+                                id="active-todos"
+                                use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
+                                on:consider={handleDndConsiderActive}
+                                on:finalize={handleDndFinalizeActive}
                             >
-                                <TodoItem
-                                    isCompleted={false}
-                                    isPrimedForDrag={isPrimed}
-                                    onDelete={() => todosStore.delete(todo)}
-                                    onOpenDetails={(item) => handleOpenTodoDetails(item)}
-                                    onToggle={() => todosStore.toggle(todo)}
-                                    onToggleWorking={() => todosStore.toggleWorking(todo)}
-                                    onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
-                                    onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
-                                    searchQuery={searchQuery}
-                                    {todo}
-                                />
+                                {#each activeDndItems as todo (todo.id)}
+                                    {@const isPrimed = successfullyLongPressedTodoId === todo.id && $sortBy === 'order'}
+                                    <div
+										id={`todo-item-${todo.id}`}
+                                        class:dnd-item={$sortBy === 'order'}
+                                        class:primed-for-drag={isPrimed}
+                                        animate:flip={{duration: 250}}
+                                        on:touchstart|passive={e => handleTouchStart(e, todo)}
+                                        on:touchmove|passive={handleTouchMove}
+                                        on:touchend={handleTouchEnd}
+                                    >
+                                        <TodoItem
+                                            isCompleted={false}
+                                            isPrimedForDrag={isPrimed}
+                                            onDelete={() => todosStore.delete(todo)}
+                                            onOpenDetails={(item) => handleOpenTodoDetails(item)}
+                                            onToggle={() => todosStore.toggle(todo)}
+                                            onToggleWorking={() => todosStore.toggleWorking(todo)}
+                                            onUpdateDifficulty={(detail) => todosStore.updateDifficulty(detail.todo, detail.difficulty)}
+                                            onUpdateTitle={(detail) => todosStore.updateTitle(detail.todo, detail.title)}
+                                            searchQuery={searchQuery}
+                                            {todo}
+                                        />
+                                    </div>
+                                {/each}
                             </div>
-                        {/each}
-                    </div>
+                        </div>
+                    {/if}
 
                     {#if completedDndItems.length > 0}
-                        <div class="my-6 border-t border-white/30"/>
+                        <div class="my-6 border-t border-white/30" />
 
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex justify-between items-center mb-4 px-1">
                             <h3 class="text-white/80 text-sm font-medium">Completed tasks ({completedDndItems.length})</h3>
                             {#if completedDndItems.length > 0}
                                 <Button
@@ -878,7 +886,7 @@
                         </div>
 
                         <div
-                            class="space-y-2"
+                            class="space-y-2 p-3 border border-gray-500/30 rounded-md bg-gray-500/5"
                             style="overflow-y: auto;"
                             id="completed-todos"
                             use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
