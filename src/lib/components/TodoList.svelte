@@ -791,33 +791,33 @@
 
         <div class="flex border-b border-white/20 mb-4">
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
+                class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Working' ? 'border-orange-400 text-orange-400' :
                     'border-transparent text-orange-400/60 hover:text-orange-400 hover:border-orange-400/50'
                 }"
                 on:click={() => currentTab = 'Working'}
             >
-                <ChevronsRight size={18} />
+                <ChevronsRight size={16} />
                 <span>In Progress ({workingTodos.length})</span>
             </button>
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
+                class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Todo' ? 'border-blue-400 text-blue-400' :
                     'border-transparent text-blue-400/60 hover:text-blue-400 hover:border-blue-400/50'
                 }"
                 on:click={() => currentTab = 'Todo'}
             >
-                <List size={18} />
+                <List size={16} />
                 <span>To Do ({activeTodos.length})</span>
             </button>
             <button
-                class="px-4 py-3 text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
+                class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium flex-1 text-center -mb-px border-b-2 transition-colors duration-150 ease-in-out focus:outline-none flex items-center justify-center gap-2 {
                     currentTab === 'Done' ? 'border-green-400 text-green-400' :
                     'border-transparent text-green-400/60 hover:text-green-400 hover:border-green-400/50'
                 }"
                 on:click={() => currentTab = 'Done'}
             >
-                <CheckCircle2 size={18} />
+                <CheckCircle2 size={16} />
                 <span>Completed ({completedTodos.length})</span>
             </button>
         </div>
@@ -835,7 +835,7 @@
                             <h3 class="text-white/80 text-sm font-medium mb-2">In Progress ({workingTodos.length})</h3>
                             {#if workingDndItems.length > 0}
                                 <div
-                                    class="space-y-2 p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
+                                    class="space-y-2 p-2 sm:p-3 border border-orange-400/30 rounded-md bg-orange-500/5"
                                     style="overflow-y: auto;"
                                     id="working-todos"
                                     use:dragHandleZone={{items: workingDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
@@ -881,7 +881,7 @@
                             <h3 class="text-white/80 text-sm font-medium mb-2 px-1">To Do ({activeTodos.length})</h3>
                             {#if activeDndItems.length > 0}
                                 <div
-                                    class="space-y-2 p-3 border border-gray-300/30 rounded-md bg-gray-300/5"
+                                    class="space-y-2 p-2 sm:p-3 border border-gray-300/30 rounded-md bg-gray-300/5"
                                     style="overflow-y: auto;"
                                     id="active-todos"
                                     use:dragHandleZone={{items: activeDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
@@ -941,7 +941,7 @@
                             </div>
                             {#if completedDndItems.length > 0}
                                 <div
-                                    class="space-y-2 p-3 border border-gray-500/30 rounded-md bg-gray-500/5"
+                                    class="space-y-2 p-2 sm:p-3 border border-gray-500/30 rounded-md bg-gray-500/5"
                                     style="overflow-y: auto;"
                                     id="completed-todos"
                                     use:dragHandleZone={{items: completedDndItems, flipDurationMs, dragDisabled: dndDragDisabled}}
