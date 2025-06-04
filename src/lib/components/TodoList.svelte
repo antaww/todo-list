@@ -45,7 +45,7 @@
     let touchStartCoords: { x: number, y: number } | null = null;
     const TOUCH_MOVE_THRESHOLD = 10;
 
-    let currentTab: Todo['status'] = 'Working';
+    let currentTab: Todo['status'] = 'Todo';
 
     const flipDurationMs = 300;
     let isDragging = false;
