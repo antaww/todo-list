@@ -534,6 +534,25 @@
         }
     }
 
+    // Reactive block to manage list history based on title and task count
+    $: if (
+        browser &&
+        listId && // Ensure the component has a listId
+        $listStore.id === listId && // Ensure listStore is loaded for this listId
+        $listStore.title && // Ensure title is available
+        !$todosStore.loading && // Ensure todos for this listId are loaded
+        !$listStore.loading // Ensure list meta itself is loaded
+    ) {
+        const isUntitled = $listStore.title === 'Untitled List';
+        const hasTasks = $todosStore.items.length > 0;
+
+        if (!isUntitled || hasTasks) {
+            historyStore.add(listId, $listStore.title);
+        } else { // This covers: isUntitled && !hasTasks
+            historyStore.remove(listId);
+        }
+    }
+
     onDestroy(() => {
         for (const sub of subscription) {
             sub.unsubscribe().catch(() => {
