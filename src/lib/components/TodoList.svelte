@@ -377,6 +377,7 @@
                             title,
                             difficulty: isNaN(difficulty) ? 0 : Math.max(0, Math.min(10, difficulty)),
                             status,
+                            priority: 0,
                         });
                         importedCount++;
                     }

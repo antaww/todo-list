@@ -8,7 +8,8 @@
 	import Input from '@components/ui/Input.svelte';
 	import Select from '@components/ui/Select.svelte';
 	import { fade } from 'svelte/transition';
-	import { tick } from 'svelte';
+	import { tick, onDestroy } from 'svelte';
+	import PrioritySelector from '@components/PrioritySelector.svelte';
 
 	export let hasCompletedTodos = false;
 	export let loading = false;
@@ -23,14 +24,6 @@
 	let newTodoTitle = '';
 	let newTodoAssignedTo = '';
 	let searchMode = persistentStore<boolean>('searchMode', false);
-	let showPrioritySelect = false;
-
-	const priorityLevels = [
-		{ text: "Anytime", icon: ZapOff, colorClass: "text-green-500 dark:text-green-400", title: "Priority: Anytime" },
-		{ text: "Need it", icon: ChevronUp, colorClass: "text-yellow-500 dark:text-yellow-400", title: "Priority: Need it" },
-		{ text: "Fast", icon: ChevronsUp, colorClass: "text-orange-500 dark:text-orange-400", title: "Priority: Fast" },
-		{ text: "Critic", icon: Flame, colorClass: "text-red-500 dark:text-red-400", title: "Priority: Critic" },
-	];
 
 	const sortOptions = [
 		{
@@ -70,7 +63,6 @@
 		newTodoAssignedTo = '';
 		$searchMode = false;
 		onSearch('');
-		showPrioritySelect = false; // Reset priority dropdown
 	}
 
 	function handleSortChange(newSortValue: string | undefined) {
@@ -98,22 +90,6 @@
 		}
 	}, 250);
 
-	function handlePrioritySelect(priority: number) {
-		newTodoPriority = priority;
-		showPrioritySelect = false;
-	}
-
-	function handleClickOutsidePriority(event: MouseEvent) {
-		if (
-			showPrioritySelect &&
-			event.target &&
-			!(event.target as HTMLElement).closest(".priority-select-trigger-form") &&
-			!(event.target as HTMLElement).closest(".priority-select-dropdown-form")
-		) {
-			showPrioritySelect = false;
-		}
-	}
-
 	$: {
 		if (newTodoTitle.trim()) {
 			debouncedSearch(newTodoTitle);
@@ -121,17 +97,12 @@
 			debouncedSearch.cancel();
 			onSearch('');
 			$searchMode = false;
-			showPrioritySelect = false; // Hide priority when input is cleared
-		}
-
-		if (showPrioritySelect) {
-			tick().then(() => {
-				document.addEventListener('click', handleClickOutsidePriority, true);
-			});
-		} else {
-			document.removeEventListener('click', handleClickOutsidePriority, true);
 		}
 	}
+
+	// onDestroy(() => {
+	// 	document.removeEventListener('click', handleClickOutsidePriority, true);
+	// });
 </script>
 
 <div class="mb-2 space-y-2">
@@ -165,35 +136,9 @@
 					onUpdate={(d) => (newTodoDifficulty = d)}
 					size={18}
 				/>
-				<div class="flex items-center gap-2 relative mt-1">
+				<div class="flex items-center gap-1 mt-1">
 					<span class="text-xs sm:text-sm text-white/70 dark:text-dark-gray-300">Priority:</span>
-					<button
-						type="button"
-						class="flex items-center gap-1.5 p-1 -ml-1 rounded hover:bg-white/10 dark:hover:bg-dark-gray-100 transition priority-select-trigger-form {priorityLevels[newTodoPriority].colorClass}"
-						on:click={() => (showPrioritySelect = !showPrioritySelect)}
-						title={priorityLevels[newTodoPriority].title}
-					>
-						<svelte:component this={priorityLevels[newTodoPriority].icon} size={16} />
-						<span class="text-xs sm:text-sm">{priorityLevels[newTodoPriority].text}</span>
-						<ChevronDown size={14} class="transition-transform {showPrioritySelect ? 'rotate-180' : ''}" />
-					</button>
-					{#if showPrioritySelect}
-						<div
-							transition:fade={{ duration: 150 }}
-							class="absolute top-full left-0 mt-1.5 w-40 bg-white/20 dark:bg-black backdrop-blur-md border border-white/30 dark:border-dark-gray-300 rounded-lg shadow-xl z-20 p-1 priority-select-dropdown-form"
-						>
-							{#each priorityLevels as level, index}
-								<button
-									type="button"
-									class="w-full flex items-center gap-2 px-2 py-1.5 text-xs sm:text-sm rounded hover:bg-white/20 dark:hover:bg-dark-gray-200 transition {level.colorClass} {newTodoPriority === index ? 'bg-white/10 dark:bg-dark-gray-100 font-semibold' : ''}"
-									on:click={() => handlePrioritySelect(index)}
-								>
-									<svelte:component this={level.icon} size={14} />
-									<span>{level.text}</span>
-								</button>
-							{/each}
-						</div>
-					{/if}
+					<PrioritySelector bind:currentPriority={newTodoPriority} on:update={(e) => newTodoPriority = e.detail} />
 				</div>
 				<Input
 					bind:value={newTodoAssignedTo}

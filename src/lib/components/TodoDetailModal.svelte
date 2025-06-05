@@ -10,6 +10,7 @@
 	import Markdown from "@components/ui/Markdown.svelte";
 	import { tick, onMount, onDestroy } from "svelte";
 	import type { SvelteComponent } from "svelte";
+	import PrioritySelector from '@components/PrioritySelector.svelte';
 
 	import { Carta, MarkdownEditor } from "carta-md";
 	import "carta-md/default.css";
@@ -45,15 +46,7 @@
 	let editableAssignedTo = "";
 	let assignedToInputInstance: (SvelteComponent & { focus: () => void }) | null = null;
 
-	let showPrioritySelect = false;
 	let displayDifficulty: number = 0;
-
-	const priorityLevels = [
-		{ text: "Anytime", icon: ZapOff, colorClass: "text-green-500 dark:text-green-400", title: "Priority: Anytime" },
-		{ text: "Need it", icon: ChevronUp, colorClass: "text-yellow-500 dark:text-yellow-400", title: "Priority: Need it" },
-		{ text: "Fast", icon: ChevronsUp, colorClass: "text-orange-500 dark:text-orange-400", title: "Priority: Fast" },
-		{ text: "Critic", icon: Flame, colorClass: "text-red-500 dark:text-red-400", title: "Priority: Critic" },
-	];
 
 	// Logic for checkbox state and toggling, reflecting todo.status
 	let internalStatusIsDone = todo?.status === "Done";
@@ -256,58 +249,25 @@
 			showCopyTooltip = false;
 		}, 2000);
 	}
-
-	function handlePrioritySelect(priority: number) {
-		if (todo && onUpdatePriority) {
-			onUpdatePriority({ todo, priority });
-		}
-		showPrioritySelect = false;
-	}
-
-	function handleClickOutsidePriority(event: MouseEvent) {
-		if (
-			showPrioritySelect &&
-			event.target &&
-			!(event.target as HTMLElement).closest(".priority-select-trigger") &&
-			!(event.target as HTMLElement).closest(".priority-select-dropdown")
-		) {
-			showPrioritySelect = false;
-		}
-	}
-
-	$: {
-		if (showPrioritySelect) {
-			tick().then(() => {
-				document.addEventListener("click", handleClickOutsidePriority, true);
-			});
-		} else {
-			document.removeEventListener("click", handleClickOutsidePriority, true);
-		}
-	}
-
-	onDestroy(() => {
-		document.removeEventListener("click", handleClickOutsideDescription, true);
-		document.removeEventListener("click", handleClickOutsidePriority, true);
-	});
 </script>
 
 <Dialog open={isOpen && !!todo} onCancel={requestClose} showCloseButton={true} confirmLabel="" cancelLabel="" size="large">
 	<div slot="title" class="w-full mr-3 relative">
 		{#if todo}
-			<div class="flex items-center gap-3">
+			<div class="flex items-center gap-3 w-full">
 				<Checkbox bind:checked={internalStatusIsDone} size="h-5 w-5" />
 				{#if isEditingTitle}
 					<Input
 						bind:this={titleInputInstance}
 						bind:value={editableTitle}
 						placeholder="Todo title"
-						class="w-full"
+						class="w-full flex-grow"
 						onBlur={handleSaveTitle}
 						onKeydown={handleTitleInputKeydown}
 					/>
 				{:else}
 					<h2
-						class="text-xl font-semibold text-white dark:text-dark-foreground break-all {todo?.status === 'Done'
+						class="text-xl font-semibold text-white dark:text-dark-foreground break-all flex-grow {todo?.status === 'Done'
 							? 'line-through text-white/60 dark:text-dark-gray-400'
 							: ''}"
 						on:click={handleEditTitle}
@@ -325,52 +285,10 @@
 				<DifficultyStars difficulty={displayDifficulty} interactive={true} onUpdate={handleUpdateDifficulty} size={20} />
 			</div>
 		{/if}
-		<div class="flex items-center gap-2 mb-3">
+		<div class="flex items-center gap-2 mb-3 -ml-1">
 			<span class="text-sm text-gray-400">Priority:</span>
-			{#if todo.priority !== undefined && todo.priority !== null && todo.priority >= 0 && todo.priority <= 3}
-				{@const level = priorityLevels[todo.priority]}
-				<button
-					class="flex items-center gap-1.5 p-1 -ml-1 rounded hover:bg-white/10 dark:hover:bg-dark-gray-100 transition priority-select-trigger {level.colorClass}"
-					on:click={() => (showPrioritySelect = !showPrioritySelect)}
-					title={level.title}
-				>
-					<svelte:component this={level.icon} size={18} />
-					<span class="text-sm">{level.text}</span>
-					<ChevronDown size={16} class="transition-transform {showPrioritySelect ? 'rotate-180' : ''}" />
-				</button>
-			{:else}
-				<button
-					class="flex items-center gap-1.5 p-1 -ml-1 rounded hover:bg-white/10 dark:hover:bg-dark-gray-100 transition text-gray-500 dark:text-dark-gray-300 priority-select-trigger"
-					on:click={() => (showPrioritySelect = !showPrioritySelect)}
-					title="Set Priority"
-				>
-					<ZapOff size={18} />
-					<span class="text-sm">Set Priority</span>
-					<ChevronDown size={16} class="transition-transform {showPrioritySelect ? 'rotate-180' : ''}" />
-				</button>
-			{/if}
+			<PrioritySelector currentPriority={todo.priority || 0} on:update={(e) => onUpdatePriority && onUpdatePriority({ todo, priority: e.detail })} />
 		</div>
-		{#if showPrioritySelect}
-			<div class="flex items-center gap-2 relative">
-				<div
-					transition:fade={{ duration: 150 }}
-					class="absolute top-full left-0 mt-1.5 w-48 bg-white/20 dark:bg-black backdrop-blur-md border border-white/30 dark:border-dark-gray-300 rounded-lg shadow-xl z-10 p-1 priority-select-dropdown"
-				>
-					{#each priorityLevels as level, index}
-						<button
-							class="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-white/20 dark:hover:bg-dark-gray-200 transition {level.colorClass} {todo.priority ===
-							index
-								? 'bg-white/10 dark:bg-dark-gray-100 font-semibold'
-								: ''}"
-							on:click={() => handlePrioritySelect(index)}
-						>
-							<svelte:component this={level.icon} size={16} />
-							<span>{level.text}</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-		{/if}
 		<p class="text-sm text-white/70 dark:text-dark-gray-300 mb-2">
 			Created at: {formatDate(todo.created_at)}
 		</p>
