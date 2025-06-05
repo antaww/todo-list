@@ -107,7 +107,7 @@ function createTodosStore() {
 			}
 		},
 
-		add: async (listId: string, { title, difficulty, description, assignedTo, status }: { title: string; difficulty: number; description?: string; assignedTo?: string; status?: Todo['status'] }) => {
+		add: async (listId: string, { title, difficulty, priority, description, assignedTo, status }: { title: string; difficulty: number; priority: number; description?: string; assignedTo?: string; status?: Todo['status'] }) => {
 			const state = get(store);
 			const order = state.items.filter((t: Todo) => t.status === 'Todo').length;
 			const tempId = 'temp_' + Date.now();
@@ -117,6 +117,7 @@ function createTodosStore() {
 				created_at: new Date().toISOString(),
 				description,
 				difficulty,
+				priority,
 				id: tempId,
 				list_id: listId,
 				order,
@@ -143,6 +144,7 @@ function createTodosStore() {
 							status: newTodo.status,
 							description: newTodo.description,
 							difficulty: newTodo.difficulty,
+							priority: newTodo.priority,
 							list_id: newTodo.list_id,
 							order: newTodo.order,
 							title: newTodo.title,
