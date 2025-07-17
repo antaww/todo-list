@@ -4,7 +4,7 @@
 	import Button from "@components/ui/Button.svelte";
 	import Checkbox from "@components/ui/Checkbox.svelte";
 	import DifficultyStars from "@components/DifficultyStars.svelte";
-	import { Edit2, Save, Share2, X, ZapOff, ChevronUp, ChevronsUp, Flame, ChevronDown } from "lucide-svelte";
+	import { Edit2, Save, Share2, X } from "lucide-svelte";
 	import Dialog from "@components/ui/Dialog.svelte";
 	import Input from "@components/ui/Input.svelte";
 	import Markdown from "@components/ui/Markdown.svelte";
@@ -17,7 +17,6 @@
 	import "carta-md/default.css";
 	import { code } from "@cartamd/plugin-code";
 	import "@cartamd/plugin-code/default.css";
-	import DOMPurify from "isomorphic-dompurify";
 
 	export let isOpen = false;
 	export let todo: Todo | null = null;
@@ -48,6 +47,7 @@
 	let assignedToInputInstance: (SvelteComponent & { focus: () => void }) | null = null;
 
 	let displayDifficulty: number = 0;
+	let carta: Carta | null = null;
 
 	// Logic for checkbox state and toggling, reflecting todo.status
 	let internalStatusIsDone = todo?.status === "Done";
@@ -118,10 +118,16 @@
 		});
 	}
 
-	const carta = new Carta({
-		sanitizer: DOMPurify.sanitize,
-		extensions: [code()],
-		theme: "github-dark",
+	// Carta will be initialized client-side to avoid SSR issues with DOMPurify
+	onMount(async () => {
+		if (browser) {
+			const { default: DOMPurify } = await import("isomorphic-dompurify");
+			carta = new Carta({
+				sanitizer: DOMPurify.sanitize,
+				extensions: [code()],
+				theme: "github-dark",
+			});
+		}
 	});
 
 	function requestClose() {
@@ -356,7 +362,11 @@
 					Description
 				</h3>
 				<div class="carta-wrapper border border-white/20 dark:border-dark-gray-600 rounded-md">
-					<MarkdownEditor bind:value={editableDescription} {carta} placeholder="Enter task description (Markdown supported)" />
+					{#if carta}
+						<MarkdownEditor bind:value={editableDescription} {carta} placeholder="Enter task description (Markdown supported)" />
+					{:else}
+						<div class="p-4 text-center text-gray-500">Loading editor...</div>
+					{/if}
 				</div>
 				<div class="mt-3 flex justify-end gap-2">
 					<Button
