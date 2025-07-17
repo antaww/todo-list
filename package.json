@@ -14,25 +14,24 @@
 	"devDependencies": {
 		"@melt-ui/pp": "^0.3.2",
 		"@sveltejs/adapter-cloudflare": "^4.9.0",
-		"@sveltejs/kit": "^2.21.0",
+		"@sveltejs/kit": "^2.25.0",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
-		"@tsconfig/svelte": "^5.0.4",
-		"autoprefixer": "^10.4.20",
-		"postcss": "^8.5.3",
-		"svelte": "^4.2.19",
+		"autoprefixer": "^10.4.21",
+		"postcss": "^8.5.6",
+		"svelte": "^4.2.20",
 		"svelte-check": "^3.8.6",
 		"tailwindcss": "^3.4.17",
-		"typescript": "^5.7.3",
-		"vite": "^5.4.14"
+		"typescript": "^5.8.3",
+		"vite": "^5.4.19"
 	},
 	"dependencies": {
-		"@cartamd/plugin-code": "^4.0.6",
-		"@melt-ui/svelte": "^0.86.3",
-		"@supabase/supabase-js": "^2.48.1",
-		"carta-md": "4.6.4",
-		"isomorphic-dompurify": "^2.25.0",
-		"lucide-svelte": "^0.475.0",
-		"marked": "^15.0.11",
-		"svelte-dnd-action": "^0.9.61"
+		"@cartamd/plugin-code": "4.0.6",
+		"@melt-ui/svelte": "^0.86.6",
+		"@supabase/supabase-js": "^2.51.0",
+		"carta-md": "4.7.0",
+		"isomorphic-dompurify": "^2.26.0",
+		"lucide-svelte": "^0.525.0",
+		"marked": "^16.0.0",
+		"svelte-dnd-action": "^0.9.63"
 	}
 }
