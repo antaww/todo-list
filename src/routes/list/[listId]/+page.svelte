@@ -10,6 +10,7 @@
 	export let data: PageData;
 	$: task = data?.task;
 	$: listId = data?.listId; // Get listId from server data
+	$: url = data?.url;
 
 	let isSidebarOpen = true;
 	let cleanup: (() => void) | null = null;
@@ -32,7 +33,7 @@
 		<meta property="og:title" content={`Task: ${task.title}`} />
 		<meta property="og:description" content={`Difficulty: ${(Math.round((task.difficulty / 2) * 10) / 10)}/5 | Status: ${task.completed ? 'Completed' : 'Pending'}`} />
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+		<meta property="og:url" content={url || ''} />
 		<meta name="twitter:card" content="summary" />
 		<meta name="twitter:title" content={`Task: ${task.title}`} />
 		<meta name="twitter:description" content={`Difficulty: ${(Math.round((task.difficulty / 2) * 10) / 10)}/5 | Status: ${task.completed ? 'Completed' : 'Pending'}`} />

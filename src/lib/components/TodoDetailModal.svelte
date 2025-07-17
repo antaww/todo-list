@@ -11,6 +11,7 @@
 	import { tick, onMount, onDestroy } from "svelte";
 	import type { SvelteComponent } from "svelte";
 	import PrioritySelector from '@components/PrioritySelector.svelte';
+	import { browser } from '$app/environment';
 
 	import { Carta, MarkdownEditor } from "carta-md";
 	import "carta-md/default.css";
@@ -233,7 +234,7 @@
 	}
 
 	async function handleShare() {
-		if (!todo) return;
+		if (!todo || !browser) return;
 		try {
 			await navigator.clipboard.writeText(window.location.href);
 			tooltipMessage = "Copied!";

@@ -1,4 +1,11 @@
+import {browser} from '$app/environment';
+
 export function exportToCsv(data: any[], fileName: string): void {
+	if (!browser) {
+		console.warn('CSV export is only available in browser environment.');
+		return;
+	}
+
 	if (!data || data.length === 0) {
 		console.warn('No data to export.');
 		return;
@@ -101,4 +108,4 @@ export async function importFromCsv(file: File): Promise<any[]> {
 
 		reader.readAsText(file);
 	});
-} 
+}

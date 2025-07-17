@@ -11,6 +11,7 @@
 	import { sortBy } from '$stores/sort';
 	import DifficultyStars from '@components/DifficultyStars.svelte';
 	import { pushState } from '$app/navigation';
+	import { browser } from '$app/environment';
 
 	export let todo: Todo;
 	export let isCompleted = false;
@@ -182,7 +183,7 @@
 							class="text-white/60 dark:text-dark-gray-600 ml-0.5 cursor-pointer hover:text-white/80 dark:hover:text-dark-gray-500 transition-colors"
 							title="Has description"
 							on:click|stopPropagation={() => {
-								if (!isPrimedForDrag) {
+								if (!isPrimedForDrag && browser) {
 									const url = new URL(window.location.href);
 									url.searchParams.set('task_id', todo.id);
 									pushState(url.toString(), {});
@@ -215,7 +216,7 @@
 				class="h-6 w-6 sm:h-7 sm:w-7"
 				icon={true}
 				onClick={() => {
-					if (!isPrimedForDrag) {
+					if (!isPrimedForDrag && browser) {
 						const url = new URL(window.location.href);
 						url.searchParams.set('task_id', todo.id);
 						pushState(url.toString(), {});

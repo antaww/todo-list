@@ -2,6 +2,7 @@
 	import {BookmarkPlus, History, Loader2, PanelLeft, PanelLeftClose, Plus, Star, X} from 'lucide-svelte';
 	import {onMount} from 'svelte';
 	import {fade, fly} from 'svelte/transition';
+	import {browser} from '$app/environment';
 	import {debounce} from '$helpers/debounce';
 	import {favoritesStore} from '$stores/favorites';
 	import {historyStore} from '$stores/history';
@@ -23,13 +24,11 @@
 	let checkError: string | null = null;
 
 	onMount(() => {
+		if (!browser) return;
+
 		const checkMobile = () => {
 			isMobile = window.innerWidth <= 1024;
-			if (isMobile) {
-				isOpen = false;
-			} else {
-				isOpen = true;
-			}
+			isOpen = !isMobile;
 		};
 
 		checkMobile();
@@ -90,7 +89,9 @@
 
 	function createNewList() {
 		const newListId = crypto.randomUUID();
-		window.location.href = `/list/${newListId}`;
+		if (browser) {
+			window.location.href = `/list/${newListId}`;
+		}
 		if (isMobile) {
 			isOpen = false;
 		}
@@ -102,7 +103,9 @@
 	}
 
 	function openList(id: string) {
-		window.location.href = `/list/${id}`;
+		if (browser) {
+			window.location.href = `/list/${id}`;
+		}
 		if (isMobile) {
 			isOpen = false;
 		}

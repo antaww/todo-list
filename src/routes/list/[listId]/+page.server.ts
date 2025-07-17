@@ -56,5 +56,6 @@ export const load: PageServerLoad = async ({ url, params }) => {
 		task,
 		dbError,
 		listId,
+		url: url.href,
 	};
 };

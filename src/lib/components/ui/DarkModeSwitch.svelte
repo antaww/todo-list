@@ -24,10 +24,14 @@
 	onMount(() => {
 		let currentTheme = $themeStore;
 
-		if (!currentTheme) { // No theme stored, check system preference
+		if (!currentTheme && browser) { // No theme stored, check system preference
 			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 			currentTheme = prefersDark ? 'dark' : 'light';
-			themeStore.set(currentTheme); // Save the determined theme
+			$themeStore = currentTheme; // Save the determined theme
+		} else if (!currentTheme) {
+			// Fallback if not in browser environment
+			currentTheme = 'light';
+			$themeStore = currentTheme;
 		}
 
 		$checked = currentTheme === 'dark';
@@ -45,10 +49,10 @@
 
 			if (isChecked) {
 				document.documentElement.classList.add('dark');
-				themeStore.set('dark');
+				$themeStore = 'dark';
 			} else {
 				document.documentElement.classList.remove('dark');
-				themeStore.set('light');
+				$themeStore = 'light';
 			}
 		});
 

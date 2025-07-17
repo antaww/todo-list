@@ -2,6 +2,7 @@
 	import {X} from 'lucide-svelte';
 	import {onMount} from 'svelte';
 	import {fade} from 'svelte/transition';
+	import {browser} from '$app/environment';
 	import Button from '@components/ui/Button.svelte';
 	import Card from '@components/ui/Card.svelte';
 
@@ -27,6 +28,7 @@
 	}
 
 	onMount(() => {
+		if (!browser) return;
 		window.addEventListener('keydown', handleKeydown);
 		return () => window.removeEventListener('keydown', handleKeydown);
 	});
