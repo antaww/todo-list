@@ -333,6 +333,8 @@
     }
 
     async function handleImportCsv() {
+        if (!browser) return;
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.csv';
@@ -481,7 +483,7 @@
             listStore.initialize(currentListId),
             todosStore.load(currentListId),
         ]);
-        
+
         // Always set up new subscriptions for the current list after loading its data
         // setupRealtimeSubscription handles its own channel creation/subscription logic
         await setupRealtimeSubscription(currentListId);
@@ -511,7 +513,7 @@
 
     onMount(async () => {
         mounted = true; // Set mounted to true on client
-        isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        isTouchDevice = ('ontouchstart' in window) || (navigator && navigator.maxTouchPoints > 0);
         if (listId) {
             // previousListId = listId; // No longer set here, will be set by reactive block after first init
             await initializeList(listId);
@@ -690,6 +692,11 @@
     }
 
     async function copyListNameForDialog() {
+        if (!browser || !navigator?.clipboard) {
+            addToast({ data: { title: 'Copy Failed', description: 'Clipboard not available.', type: 'error' } });
+            return;
+        }
+
         try {
             await navigator.clipboard.writeText($listStore.title);
             addToast({ data: { title: 'Copied!', description: 'List name copied to clipboard.', type: 'info' } });

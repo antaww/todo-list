@@ -2,8 +2,13 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8"/>
-		<script>
-			(function() {
+		<script type="module">
+			function main() {
+				// Only run in browser environment
+				if (typeof window === 'undefined' || typeof document === 'undefined') {
+					return;
+				}
+
 				const THEME_STORAGE_KEY = 'todo-list-theme';
 				try {
 					const storedThemeValue = localStorage.getItem(THEME_STORAGE_KEY);
@@ -40,12 +45,39 @@
 					}
 				} catch (e) {
 					// Fallback in case of any error (e.g. localStorage disabled)
-					// console.error('Error applying initial theme:', e);
-					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-						document.documentElement.classList.add('dark');
+					console.error('Error applying initial theme:', e);
+					try {
+						if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+							document.documentElement.classList.add('dark');
+						}
+					} catch (fallbackError) {
+						console.error('Error in theme fallback:', fallbackError);
 					}
 				}
-			})();
+			}
+
+			main();
+		</script>
+		<script>
+			// Global error handler for SSR debugging
+			if (typeof window !== 'undefined') {
+				window.addEventListener('error', function(e) {
+					console.error('Global error:', {
+						message: e.message,
+						filename: e.filename,
+						lineno: e.lineno,
+						colno: e.colno,
+						stack: e.error ? e.error.stack : 'No stack trace available'
+					});
+				});
+
+				window.addEventListener('unhandledrejection', function(e) {
+					console.error('Unhandled promise rejection:', {
+						reason: e.reason,
+						stack: e.reason && e.reason.stack ? e.reason.stack : 'No stack trace available'
+					});
+				});
+			}
 		</script>
 		%sveltekit.head%
 		<meta content="antaww, ayfri" name="author"/>
